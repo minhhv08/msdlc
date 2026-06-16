@@ -1,0 +1,7 @@
+{
+  "name": "msdlc",
+  "version": "0.1.0",
+  "description": "Stack-agnostic delivery pipeline: spec → architect → planner → dev-backend/dev-frontend (parallel, file-disjoint) → qc-designer/qc-executor → doc-syncer. Project specifics come from .claude/profile.md, not hardcoded.",
+  "author": { "name": "minhhv" },
+  "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "planner"]
+}
