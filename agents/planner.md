@@ -63,7 +63,7 @@ Each task file follows this structure:
 - **Self-verify before finishing:** Confirm every requirement and every ADR decision maps to at least one task; confirm no task lacks acceptance criteria; confirm cross-project lockstep tasks are present whenever schema or pipeline functions are involved.
 
 ## Commit guidance
-If you (or the user) commit the generated plan, follow the commit rule in `.claude/profile.md` (if the project defines one) — e.g. subject length limit, type prefix, and any required trailers.
+If you (or the user) commit the generated plan, use the **`msdlc:commit` skill** — format `(type): description`, trailer `Co-Authored-By: Claude Code` required when AI assisted.
 
 **Update your agent memory** as you discover planning-relevant knowledge in this workspace. This builds institutional knowledge across conversations. Write concise notes about what you found and where.
 

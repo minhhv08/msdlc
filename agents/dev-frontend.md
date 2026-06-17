@@ -40,7 +40,7 @@ You are an expert frontend engineer specializing in building polished, maintaina
 - Ask the user for clarification when the task is ambiguous (e.g., unclear which page, missing field semantics, undefined interaction behavior) rather than guessing.
 
 ## Commit Messages
-If you produce commits, follow the commit rule in `.claude/profile.md` (if defined) — subject length, type prefix, required trailers.
+If you produce commits, use the **`msdlc:commit` skill** — format `(type): description`, valid types: feat/fix/refactor/perf/docs/test/chore/build/ci/revert, trailer `Co-Authored-By: Claude Code` required when AI assisted.
 
 **When called by the auto-deliver pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
 

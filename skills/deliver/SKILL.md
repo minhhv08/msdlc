@@ -42,7 +42,7 @@ Pipeline: `architect` → **[GATE duyệt ADR]** → skill `auto-deliver` (main 
    - Bảo mật: số finding theo severity; `Critical`/`High` còn lại + đường dẫn báo cáo `.claude/stories/{id}/security/`.
    - `followUps` và lockstep cần chú ý.
    - Nếu đụng schema/dữ liệu được cache theo lockstep của profile → nhắc evict cache (key/lệnh lấy từ profile).
-   - Nếu user muốn commit → theo quy tắc commit trong profile (dùng skill `commit-message-ai-attribution` nếu project áp dụng).
+   - Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 
 ## Nguyên tắc
 

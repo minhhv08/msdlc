@@ -168,7 +168,7 @@ Security reports: `.claude/stories/{id}/security/`
 <cache eviction keys cần chạy, infra còn thiếu, v.v.>
 ```
 
-Nếu user muốn commit → theo quy tắc commit trong profile (dùng skill `commit-message-ai-attribution` nếu project áp dụng).
+Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 
 ## Nguyên tắc
 
