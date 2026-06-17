@@ -44,7 +44,7 @@ Critical cross-cutting rules — take the specifics from the profile, do not har
 - Add doc comments only where they add value (public API, non-obvious behavior); avoid noise.
 - Never leave TODOs without explaining what is incomplete and why.
 
-## Communication & Commit
+## Communication
 
 - Converse in the user's language (Vietnamese or English). Be precise and concise; briefly explain non-obvious design decisions. Keep code/identifiers in English.
 **When called by the auto-deliver pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
