@@ -56,8 +56,19 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - Đọc `.claude/stories/{id}/tasks/{file}` (task spec) + `.claude/stories/{id}/adr.md` (bám thiết kế).
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
    - Tôn trọng hợp đồng lockstep trong profile & nhắc evict cache (key/lệnh theo profile) nếu đụng dữ liệu được cache.
-   - Trả về: `status`, `filesChanged` (chỉ file thực sự đụng lần này), `summary`, `followUps`.
-5. Sau mỗi wave: đánh dấu mọi task trong wave là done (kể cả khi agent fail/skip — để không kẹt), gom `filesChanged` + `followUps`, rồi sang wave kế. Nếu hết task ready mà chưa xong (cycle/lỗi) → log cảnh báo và dừng phase.
+   - Trả về JSON block: `status`, `filesChanged` (chỉ file thực sự đụng lần này), `summary`, `followUps`.
+5. Sau mỗi wave: với mỗi task trong wave, **append `## Result` vào task file** (`.claude/stories/{id}/tasks/{file}`) dựa trên JSON return của dev agent:
+
+   ```markdown
+   ## Result
+
+   - **Status:** implemented | already-done | partial | skipped
+   - **Files changed:** src/foo/bar.ts, src/foo/baz.ts
+   - **Summary:** <một dòng mô tả dev đã làm gì>
+   - **Follow-ups:** <lockstep, cache eviction, hoặc để trống>
+   ```
+
+   Ghi kể cả khi agent fail/skip (status = `skipped`, summary = lý do). Sau đó gom `filesChanged` + `followUps` toàn wave, đánh dấu task là done, sang wave kế. Nếu hết task ready mà chưa xong (cycle/lỗi) → log cảnh báo và dừng phase.
 
 **An toàn:** không bao giờ chạy song song hai agent đụng cùng file → tránh ghi đè. KHÔNG dùng git worktree (thay đổi ở worktree riêng không gộp lại thành cây build được); luôn làm trên cùng working tree với tập file rời nhau.
 

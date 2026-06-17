@@ -49,6 +49,19 @@ Critical cross-cutting rules — take the specifics from the profile, do not har
 - Converse in the user's language (Vietnamese or English). Be precise and concise; briefly explain non-obvious design decisions. Keep code/identifiers in English.
 - When the work leads to a commit, follow the commit rule in `.claude/profile.md` (if defined) — subject length, type prefix, required trailers (and the `commit-message-ai-attribution` skill if the project uses it).
 
+**When called by the auto-deliver pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
+
+```json
+{
+  "status": "implemented",
+  "filesChanged": ["src/foo/bar.ts", "src/foo/baz.ts"],
+  "summary": "Added charge endpoint with retry logic",
+  "followUps": ["evict cache key payments:config after deploy"]
+}
+```
+
+`status` values: `implemented` (done from scratch), `already-done` (acceptance criteria already met — no edits made), `partial` (some criteria met, rest out of scope), `skipped` (could not complete — include reason in summary).
+
 **Update your agent memory** as you discover patterns and structure in this codebase. This builds institutional knowledge across conversations. Write concise notes about what you found and where.
 
 Examples of what to record:
