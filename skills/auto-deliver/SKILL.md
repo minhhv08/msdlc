@@ -126,13 +126,49 @@ Gọi **Agent `doc-syncer`**: đồng bộ README/docs/docstring/inline comment 
 
 ## Phase 5 — Báo cáo
 
-Tóm tắt cho user:
-- Số task plan / đã chạy, phân bố `status` (already-done/implemented/partial/skipped), danh sách `filesChanged`.
-- Trạng thái test: pass / fail (kèm failures) / `infraMissing` — **trung thực**.
-- **Bảo mật**: số finding theo severity; `Critical`/`High` còn lại (nếu có) + đường dẫn báo cáo `.claude/stories/{id}/security/`. `Medium`/`Low`/`Info` đưa vào `followUps`.
-- `followUps` + lockstep cần chú ý.
-- Nếu đụng schema/dữ liệu được cache theo lockstep của profile → nhắc evict cache (key/lệnh lấy từ profile).
-- Nếu user muốn commit → theo quy tắc commit trong profile (dùng skill `commit-message-ai-attribution` nếu project áp dụng).
+Ghi **`.claude/stories/{id}/report.md`** với nội dung sau, rồi tóm tắt ngắn cho user trong conversation và dẫn link file:
+
+```markdown
+# Delivery Report — {id}
+
+> Generated: {date}
+
+## Tasks
+
+| # | Title | Agent | Status | Files changed |
+|---|---|---|---|---|
+| 01 | ... | dev-backend | implemented | src/foo.ts |
+
+**Summary:** {N} tasks — {implemented} implemented, {already-done} already-done, {partial} partial, {skipped} skipped.
+
+## Tests
+
+| Project | Status | Passed | Failed | Attempts | Report |
+|---|---|---|---|---|---|
+| payment-service | PASS | 42 | 0 | 1 | tests/payment-service-execution-attempt-1.md |
+
+> BLOCKED projects (infra missing): ...
+
+## Security
+
+| Severity | Count | Status |
+|---|---|---|
+| Critical | 0 | — |
+| High | 1 | fixed |
+| Medium | 2 | followUp |
+
+Security reports: `.claude/stories/{id}/security/`
+
+## Follow-ups
+
+- [ ] <lockstep, cache eviction, open items>
+
+## Notes
+
+<cache eviction keys cần chạy, infra còn thiếu, v.v.>
+```
+
+Nếu user muốn commit → theo quy tắc commit trong profile (dùng skill `commit-message-ai-attribution` nếu project áp dụng).
 
 ## Nguyên tắc
 
