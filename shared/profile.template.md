@@ -1,6 +1,6 @@
 # Project Profile (template)
 
-> Các agent của pipeline (planner, architect, dev, qc-*, doc-syncer) đọc file này để biết đặc thù dự án —
+> Các agent của pipeline (planner, architect, dev, qc-*, chronicler) đọc file này để biết đặc thù dự án —
 > stack, đường dẫn, lệnh build/test, hợp đồng lockstep, quy tắc commit. **Plugin không nhúng cứng các thông tin này.**
 >
 > Cách dùng: copy file này về `.claude/profile.md` ở dự án của bạn rồi điền. Xóa các mục không áp dụng.

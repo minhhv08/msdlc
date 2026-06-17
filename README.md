@@ -5,14 +5,14 @@ Một plugin Claude Code đóng gói pipeline giao hàng **độc lập stack**:
 ```
 idea → /spec → architect → [GATE duyệt ADR] → planner
      → dev-backend / dev-frontend (song song, file-disjoint)
-     → qc-designer / qc-executor (auto-fix ≤2) → doc-syncer
+     → qc-designer / qc-executor (auto-fix ≤2) → chronicler
 ```
 
 Mọi đặc thù dự án (stack, đường dẫn, lệnh test, hợp đồng lockstep, quy tắc commit) **không nhúng cứng** trong agent — chúng đọc từ `.claude/profile.md` của dự án tiêu thụ lúc chạy.
 
 ## Thành phần
 
-- **agents/**: `architect`, `planner`, `dev-backend`, `dev-frontend`, `qc-designer`, `qc-executor`, `security-auditor`, `doc-syncer`
+- **agents/**: `architect`, `planner`, `dev-backend`, `dev-frontend`, `qc-designer`, `qc-executor`, `security-auditor`, `chronicler`
 - **commands/**: `init` — cấu hình project hiện tại để dùng plugin (copy file + dò stack + điền profile)
 - **skills/**: `spec`, `deliver`, `auto-deliver`
 - **shared/**: `agent-memory.md` (giao thức memory dùng chung), `profile.template.md` (mẫu profile)

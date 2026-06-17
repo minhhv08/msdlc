@@ -8,7 +8,7 @@ description: >-
 
 Điều phối chuỗi agent đã có trong workspace để hoàn thành một requirement từ đầu tới cuối, với **đúng một cổng duyệt sau ADR**.
 
-Pipeline: `architect` → **[GATE duyệt ADR]** → skill `auto-deliver` (main tự điều phối: `planner` → `dev-*` song song theo file-disjoint → `qc-designer` → `qc-executor`+`security-auditor` song song (auto-fix ≤2) → `doc-syncer`).
+Pipeline: `architect` → **[GATE duyệt ADR]** → skill `auto-deliver` (main tự điều phối: `planner` → `dev-*` song song theo file-disjoint → `qc-designer` → `qc-executor`+`security-auditor` song song (auto-fix ≤2) → `chronicler`).
 
 ## Input
 
@@ -32,7 +32,7 @@ Pipeline: `architect` → **[GATE duyệt ADR]** → skill `auto-deliver` (main 
 
 ### Bước B — Build tự động (skill auto-deliver)
 6. Chỉ khi user đã duyệt: gọi **skill `auto-deliver`** với story `{id}` (Skill tool). Main agent **tự điều phối** theo hướng dẫn của skill đó bằng Agent tool — KHÔNG dùng Workflow.
-   Trình tự: planner vỡ task → dev agent implement theo wave topo, **song song mọi task có tập file rời nhau** (nhiều lệnh Agent trong một message), tuần tự khi đụng file chung → qc-designer thiết kế test → qc-executor chạy test + security-auditor audit (song song; test fail hoặc lỗ hổng Critical/High thì dev fix rồi chạy lại, tối đa 2 vòng) → doc-syncer.
+   Trình tự: planner vỡ task → dev agent implement theo wave topo, **song song mọi task có tập file rời nhau** (nhiều lệnh Agent trong một message), tuần tự khi đụng file chung → qc-designer thiết kế test → qc-executor chạy test + security-auditor audit (song song; test fail hoặc lỗ hổng Critical/High thì dev fix rồi chạy lại, tối đa 2 vòng) → chronicler.
 7. Main theo sát từng phase và tổng hợp kết quả khi xong.
 
 ### Bước C — Báo cáo

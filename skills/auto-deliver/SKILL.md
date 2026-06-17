@@ -1,7 +1,7 @@
 ---
 name: auto-deliver
 description: >-
-  Từ ADR đã duyệt của một story id: vỡ task (planner) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (doc-syncer). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
+  Từ ADR đã duyệt của một story id: vỡ task (planner) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
 ---
 
 # auto-deliver — Build tự động một story (main điều phối)
@@ -74,6 +74,19 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 ---
 
+## Phase 2.5 — Code Review (reviewer, auto-fix ≤ 1 vòng)
+
+Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md`, review implementation theo 6 dimensions (correctness vs spec, lockstep, logic, convention, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`.
+
+**Xử lý kết quả:**
+- `approved: true` → tiếp Phase 3.
+- `approved: false` (có `blockingFindings`) → gọi **Agent dev** (backend/frontend tùy file bị flag) để **chỉ sửa các blocking findings, KHÔNG đổi scope** → re-run reviewer 1 lần nữa (ghi `review-attempt-2.md`).
+- Sau 1 vòng fix: tiếp Phase 3 dù còn blocking findings — đưa findings còn lại vào Phase 5 dưới dạng `followUps`.
+
+> Ngân sách: ≤ 1 vòng fix, độc lập với ngân sách ≤ 2 vòng của Phase 3.
+
+---
+
 ## Phase 3 — QC + Security (song song, auto-fix ≤ 2)
 
 > Test case đã được `qc-designer` thiết kế song song từ Phase 1 (ghi tại `.claude/stories/{id}/tests/`). Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
@@ -118,9 +131,9 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 ---
 
-## Phase 4 — Docs (doc-syncer)
+## Phase 4 — Docs (chronicler)
 
-Gọi **Agent `doc-syncer`**: đồng bộ README/docs/docstring/inline comment với code vừa đổi. Lưu ý `docs/architecture.md` đã được architect cập nhật ở bước thiết kế — chỉ bổ sung phần còn lệch, không tự thêm tính năng chưa có trong code.
+Gọi **Agent `chronicler`**: đồng bộ README/docs/docstring/inline comment với code vừa đổi. Lưu ý `docs/architecture.md` đã được architect cập nhật ở bước thiết kế — chỉ bổ sung phần còn lệch, không tự thêm tính năng chưa có trong code.
 
 ---
 
@@ -140,6 +153,13 @@ Ghi **`.claude/stories/{id}/report.md`** với nội dung sau, rồi tóm tắt 
 | 01 | ... | dev-backend | implemented | src/foo.ts |
 
 **Summary:** {N} tasks — {implemented} implemented, {already-done} already-done, {partial} partial, {skipped} skipped.
+
+## Code Review
+
+| Attempt | Approved | Blocking | Suggestions | Report |
+|---|---|---|---|---|
+| 1 | No | 2 | 4 | review/review-attempt-1.md |
+| 2 | Yes | 0 | 2 | review/review-attempt-2.md |
 
 ## Tests
 
