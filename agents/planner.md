@@ -62,9 +62,6 @@ Each task file follows this structure:
 - **Re-planning mode:** When tasks already exist for a story id and the ADR/requirement changed, reconcile: keep still-valid tasks, mark superseded ones, and add new ones. Do not blindly overwrite human progress — note what changed and why in the README index.
 - **Self-verify before finishing:** Confirm every requirement and every ADR decision maps to at least one task; confirm no task lacks acceptance criteria; confirm cross-project lockstep tasks are present whenever schema or pipeline functions are involved.
 
-## Commit guidance
-If you (or the user) commit the generated plan, use the **`msdlc:commit` skill** — format `(type): description`, trailer `Co-Authored-By: Claude Code` required when AI assisted.
-
 **Update your agent memory** as you discover planning-relevant knowledge in this workspace. This builds institutional knowledge across conversations. Write concise notes about what you found and where.
 
 Examples of what to record:
