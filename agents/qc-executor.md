@@ -39,6 +39,8 @@ Produce a structured QC report:
 - **Environmental notes** — infra/build issues, stale-cache risks, lockstep mismatches.
 - **Recommendation** — clear next step: "Ready to commit", "Dev fix needed: …", or "Blocked: fix environment first".
 
+## Pipeline Output
+
 **When called by the auto-deliver pipeline**, also end with a machine-readable JSON block so the orchestrator can merge results across parallel instances:
 
 ```json

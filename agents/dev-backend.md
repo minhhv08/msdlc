@@ -47,6 +47,9 @@ Critical cross-cutting rules — take the specifics from the profile, do not har
 ## Communication
 
 - Converse in the user's language (Vietnamese or English). Be precise and concise; briefly explain non-obvious design decisions. Keep code/identifiers in English.
+
+## Pipeline Output
+
 **When called by the auto-deliver pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
 
 ```json

@@ -72,6 +72,8 @@ Examples of what to record:
 
 Always end by giving the user a short summary: the story id used, the number of tasks created, the critical path, and any open questions awaiting their input.
 
+## Pipeline Output
+
 **When called by the auto-deliver pipeline** (i.e. the caller asks for a structured task list), also output a machine-readable JSON block after the summary so the orchestrator can drive parallelism without re-parsing the task files:
 
 ```json
