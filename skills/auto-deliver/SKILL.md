@@ -67,16 +67,18 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 > Test case đã được `qc-designer` thiết kế song song từ Phase 1 (ghi tại `.claude/stories/{id}/tests/`). Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
 
-Phát **cùng một message** hai Agent độc lập (qc-executor đọc/chạy test; security-auditor đọc diff + ghi báo cáo ra `.claude/stories/{id}/security/`) — không đụng nhau nên chạy song song được:
+Phát **cùng một message** tất cả Agent sau song song — chúng chạy trên project/scope rời nhau nên không đụng file:
 
-1a. **Agent `qc-executor`** — chạy test liên quan (lệnh lấy từ `.claude/profile.md`). Trả về `allPassed`, `infraMissing`, `failures[{project,test,message}]`, `report`.
+1a. **Agent `qc-executor` × N project** — lấy danh sách project đã có task trong story này (từ structured task list của planner, Phase 1). Với **mỗi project** có lệnh test trong `.claude/profile.md`, phát **một Agent `qc-executor` riêng** trong cùng message, chỉ định rõ project scope. Mỗi instance trả về `project`, `allPassed`, `infraMissing`, `failures[{test,message}]`, `report`.
 
-1b. **Agent `security-auditor`** — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation}]`.
+> Ví dụ: story đụng 2 project backend + 1 project frontend → phát 3 `qc-executor` song song trong 1 message.
+
+1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation}]`.
 
 2. **Gom kết quả & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
-   - `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
+   - Mọi project `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
    - `infraMissing` (hạ tầng test chưa up) → phần test **không tự fix được**, báo cáo trung thực; vẫn xử lý phần security.
-   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **đúng checker liên quan** (qc-executor và/hoặc security-auditor).
+   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **chỉ qc-executor cho project bị lỗi** (và/hoặc security-auditor nếu có finding chưa fix).
    - **Tối đa 2 vòng fix.** Sau 2 vòng vẫn còn → dừng, báo cáo `failures` + findings còn lại.
    - Finding `Medium`/`Low`/`Info` → **không chặn**, đưa vào báo cáo Phase 5 dưới dạng `followUps`.
 

@@ -32,7 +32,9 @@ Each task file follows this structure:
 # NN — <concise title>
 
 - **Project:** <one of the project names from profile.md> | docs | cross-cutting
+- **Agent:** dev-backend | dev-frontend
 - **Depends on:** [list of task numbers, or none]
+- **Touches files:** [comma-separated relative paths from workspace root that this task will CREATE or MODIFY — include shared files like build configs, route registries, DI containers, migration files. Leave empty only if truly unknown.]
 - **Source:** ADR-<id> §<section> / requirement <ref>
 
 ## Goal
@@ -49,6 +51,8 @@ Each task file follows this structure:
 ## Notes / risks
 <edge cases, contract implications, cache eviction, etc.>
 ```
+
+**Critical:** `Agent` and `Touches files` are required fields — they determine parallelism in the delivery pipeline. Tasks with non-overlapping `Touches files` across the same project are run in parallel; tasks with empty or overlapping `Touches files` are run sequentially. Declare file paths as precisely as possible (file-level, not directory-level) so more tasks can be parallelized safely.
 
 ## Operating Principles
 
@@ -70,6 +74,26 @@ Examples of what to record:
 - Naming and sequencing conventions the user prefers for task files.
 
 Always end by giving the user a short summary: the story id used, the number of tasks created, the critical path, and any open questions awaiting their input.
+
+**When called by the auto-deliver pipeline** (i.e. the caller asks for a structured task list), also output a machine-readable JSON block after the summary so the orchestrator can drive parallelism without re-parsing the task files:
+
+```json
+{
+  "tasks": [
+    {
+      "id": "01",
+      "file": "01-slug.md",
+      "title": "...",
+      "project": "...",
+      "agent": "dev-backend",
+      "dependsOn": [],
+      "touchesFiles": ["src/foo/bar.ts", "src/foo/baz.ts"]
+    }
+  ]
+}
+```
+
+`touchesFiles` must list every file/path this task will create or modify — the orchestrator uses this to determine which tasks can run in parallel (non-overlapping sets) vs. sequentially (overlapping sets).
 
 # Persistent Agent Memory
 
