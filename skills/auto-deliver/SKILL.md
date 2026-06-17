@@ -86,10 +86,33 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation}]`.
 
-2. **Gom kết quả & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
+2. **Ghi execution report & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
+
+   Sau mỗi lần chạy qc-executor (lần đầu hoặc re-run), với mỗi project **ghi** `.claude/stories/{id}/tests/{project}-execution-attempt-{N}.md`:
+
+   ```markdown
+   # Execution Report — {project} (attempt {N})
+
+   - **Status:** PASS | FAIL | BLOCKED
+   - **Commands run:** <lệnh thực tế đã chạy>
+   - **Result:** {passed}/{total} passed, {skipped} skipped
+   - **Infra missing:** yes | no
+
+   ## Failures
+   | Test | Message |
+   |---|---|
+   | TestFoo#testBar | AssertionError: expected 200 but was 500 |
+
+   ## Notes
+   <environmental issues, stale-cache risk, lockstep mismatches>
+   ```
+
+   (Nếu `allPassed` và không có failure, mục Failures để trống.)
+
+   Sau khi đã ghi report:
    - Mọi project `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
    - `infraMissing` (hạ tầng test chưa up) → phần test **không tự fix được**, báo cáo trung thực; vẫn xử lý phần security.
-   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **chỉ qc-executor cho project bị lỗi** (và/hoặc security-auditor nếu có finding chưa fix).
+   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **chỉ qc-executor cho project bị lỗi** (và/hoặc security-auditor nếu có finding chưa fix) — ghi report của lần chạy mới với `attempt` tăng lên.
    - **Tối đa 2 vòng fix.** Sau 2 vòng vẫn còn → dừng, báo cáo `failures` + findings còn lại.
    - Finding `Medium`/`Low`/`Info` → **không chặn**, đưa vào báo cáo Phase 5 dưới dạng `followUps`.
 
