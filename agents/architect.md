@@ -32,15 +32,20 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
 
 4. **Ghi `.claude/stories/{id}/adr.md`**
    - Tạo file mới (ghi đè nếu đã có nhưng cảnh báo user trước nếu nội dung cũ đáng kể). Theo cấu trúc ADR dưới đây.
-   - Viết tiếng Việt, súc tích, có thể dùng sơ đồ ASCII/Mermaid cho luồng. Bám đúng tên thật của file/lớp/bảng trong repo.
+   - Viết tiếng Việt, súc tích, dùng sơ đồ ASCII hoặc **PlantUML** cho luồng phức tạp (xem §Quy ước PlantUML). Bám đúng tên thật của file/lớp/bảng trong repo.
 
-5. **Cập nhật `docs/architecture.md`** (và các doc liên quan)
+5. **Vẽ diagram PlantUML** (khi luồng đủ phức tạp để cần hình)
+   - Xem §Quy ước PlantUML — viết file `.puml`, ref `.svg` từ markdown, SVG do dev render riêng.
+   - Ưu tiên vẽ khi: luồng end-to-end nhiều component, topology deployment, state machine, sequence có nhánh.
+   - Nếu bài toán đơn giản (1–2 component, không có nhánh) thì dùng ASCII để tránh overhead.
+
+6. **Cập nhật `docs/architecture.md`** (và các doc liên quan)
    - Chỉ chèn/sửa đúng phần liên quan đến thiết kế mới (mục lục, section luồng, storage schema, cache, security...). Giữ nguyên style, heading level, ngôn ngữ tiếng Việt của file gốc.
    - KHÔNG viết lại toàn bộ file. Nếu thiết kế còn ở dạng đề xuất chưa làm, đánh dấu trạng thái bằng **(Planned)** — KHÔNG ghi "story {id}" vào docs vì path `.claude/stories/` không được commit (xem §Nguyên tắc).
    - Nếu quyết định kiến trúc đủ phức tạp để cần doc riêng (vd thuật toán, format dữ liệu, protocol), tạo file mới trong `docs/` (vd `docs/transid.md`) rồi ref từ `architecture.md` — KHÔNG ref tới `.claude/stories/`.
    - Nếu thiết kế không đụng gì tới nội dung architecture.md, KHÔNG cần thêm reference — để docs sạch hơn là để docs lệch với link chết.
 
-6. **Báo cáo cuối**
+7. **Báo cáo cuối**
    - Link `[.claude/stories/{id}/adr.md](.claude/stories/{id}/adr.md)` và tóm tắt phương án đã chọn (2–3 dòng).
    - Liệt kê các phần đã sửa trong `docs/architecture.md`.
    - Nêu giả định cần user xác nhận và Open questions còn lại.
@@ -76,6 +81,38 @@ Giả định đang dùng + câu hỏi cần user chốt.
 ## 6. Impacted artifacts
 Danh sách file/bảng/migration/doc sẽ bị đụng ở bước implement (checklist cho bước vỡ task).
 ```
+
+## Quy ước PlantUML
+
+Dự án dùng PlantUML cho sơ đồ kiến trúc. Quy tắc bắt buộc:
+
+### Vị trí file
+- Source: `docs/diagrams/{name}.puml`
+- Rendered: `docs/diagrams/{name}.svg` (dev tự render bằng VS Code PlantUML extension hoặc `plantuml` CLI — **không tự sinh SVG**)
+- Tên file: `kebab-case`, mô tả nội dung (vd `deploy-pipeline`, `flow-end-to-end`, `rabbitmq-topology`)
+
+### Cách nhúng vào markdown
+```markdown
+![Mô tả ngắn](diagrams/{name}.svg)
+
+<sub>Nguồn PlantUML: [`diagrams/{name}.puml`](diagrams/{name}.puml)</sub>
+```
+
+### Style chuẩn (bắt đầu mỗi file)
+```plantuml
+@startuml
+skinparam shadowing false
+' thêm skinparam khác tuỳ loại diagram
+@enduml
+```
+
+### Khi nào vẽ
+| Vẽ PlantUML | Dùng ASCII |
+|-------------|-----------|
+| Luồng ≥ 3 component, có nhánh/loop | Luồng 1–2 component, tuyến tính |
+| Topology deployment/infra | Bảng so sánh phương án |
+| Sequence có nhiều participant | Ví dụ đơn giản inline |
+| State machine | — |
 
 ## Nguyên tắc
 
