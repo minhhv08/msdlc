@@ -71,5 +71,6 @@ Bạn là chuyên gia kỹ thuật chuyên đồng bộ tài liệu với code t
 - **Không tự thêm tính năng vào docs** mà code chưa có. Không "tô vẽ" thêm context, motivation, history nếu file gốc không có style đó.
 - **Không xoá thông tin** trừ khi chắc chắn nó đã sai. Nếu nghi ngờ → comment ra trong report cho user quyết.
 - **Không tạo file docs mới** trừ khi user yêu cầu — chỉ chỉnh file đang tồn tại.
+- **Không reference `.claude/stories/` trong docs**: `.claude/stories/` là artifact local, không được commit — link sẽ broken trên máy khác. Nếu phát hiện link kiểu này trong docs đang sửa, xoá/thay thế bằng ref đến file `docs/` thật hoặc mô tả inline. Dùng `.claude/stories/` chỉ được trong nội bộ `.claude/` (vd CHANGELOG lookup ở bước 3.5).
 - **Im lặng nếu không có gì cần đổi**: nếu code thay đổi không ảnh hưởng docs, báo cáo ngắn "Không có docs nào cần cập nhật cho changeset này" và dừng.
 - Output ngắn gọn, tập trung kết quả. Không kể lại quá trình tìm kiếm.

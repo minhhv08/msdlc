@@ -34,10 +34,11 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
    - Tạo file mới (ghi đè nếu đã có nhưng cảnh báo user trước nếu nội dung cũ đáng kể). Theo cấu trúc ADR dưới đây.
    - Viết tiếng Việt, súc tích, có thể dùng sơ đồ ASCII/Mermaid cho luồng. Bám đúng tên thật của file/lớp/bảng trong repo.
 
-5. **Cập nhật `docs/architecture.md`**
+5. **Cập nhật `docs/architecture.md`** (và các doc liên quan)
    - Chỉ chèn/sửa đúng phần liên quan đến thiết kế mới (mục lục, section luồng, storage schema, cache, security...). Giữ nguyên style, heading level, ngôn ngữ tiếng Việt của file gốc.
-   - KHÔNG viết lại toàn bộ file. Nếu thiết kế còn ở dạng đề xuất chưa làm, đánh dấu rõ trạng thái (vd "**(Planned — story {id})**") để docs không mô tả nhầm là đã có.
-   - Nếu thiết kế chưa đụng gì tới nội dung architecture.md hiện có, vẫn thêm tham chiếu ngắn tới ADR thay vì để docs lệch.
+   - KHÔNG viết lại toàn bộ file. Nếu thiết kế còn ở dạng đề xuất chưa làm, đánh dấu trạng thái bằng **(Planned)** — KHÔNG ghi "story {id}" vào docs vì path `.claude/stories/` không được commit (xem §Nguyên tắc).
+   - Nếu quyết định kiến trúc đủ phức tạp để cần doc riêng (vd thuật toán, format dữ liệu, protocol), tạo file mới trong `docs/` (vd `docs/transid.md`) rồi ref từ `architecture.md` — KHÔNG ref tới `.claude/stories/`.
+   - Nếu thiết kế không đụng gì tới nội dung architecture.md, KHÔNG cần thêm reference — để docs sạch hơn là để docs lệch với link chết.
 
 6. **Báo cáo cuối**
    - Link `[.claude/stories/{id}/adr.md](.claude/stories/{id}/adr.md)` và tóm tắt phương án đã chọn (2–3 dòng).
@@ -82,5 +83,6 @@ Danh sách file/bảng/migration/doc sẽ bị đụng ở bước implement (ch
 - **Tôn trọng ràng buộc cứng** của dự án theo `profile.md` (hợp đồng lockstep, migration, cache evict). Nếu thiết kế vi phạm → tự sửa hoặc nêu rõ lý do.
 - **Không code implementation**: chỉ thiết kế & quyết định. Để bước sau làm.
 - **Không bịa requirement**: thiếu spec thì hỏi, không tự nghĩ ra scope.
-- **Trung thực về trạng thái docs**: thiết kế chưa làm phải đánh dấu "Planned", không mô tả như đã có.
+- **Trung thực về trạng thái docs**: thiết kế chưa làm phải đánh dấu "(Planned)", không mô tả như đã có.
+- **Không reference `.claude/stories/` trong docs**: `.claude/stories/` là artifact local, không được commit — link sẽ bị broken trên máy khác. Nội dung quan trọng cần ref thì tạo file thật trong `docs/` (vd `docs/{topic}.md`). Trong ADR (`.claude/stories/{id}/adr.md`) vẫn có thể ref sang nhau thoải mái.
 - **Quyết đoán**: nêu trade-off ngắn gọn rồi CHỐT 1 phương án kèm lý do, không liệt kê dài dòng mọi lựa chọn mà không khuyến nghị.
