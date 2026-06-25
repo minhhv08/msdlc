@@ -1,7 +1,7 @@
 {
   "name": "msdlc",
   "version": "0.1.0",
-  "description": "Stack-agnostic delivery pipeline: spec → architect → planner → dev-backend/dev-frontend (parallel, file-disjoint) → qc-designer/qc-executor → doc-syncer. Project specifics come from .claude/profile.md, not hardcoded.",
+  "description": "Stack-agnostic delivery pipeline for Claude Code: spec → architect → [ADR gate] → planner → dev + qc-designer (parallel) → reviewer → qc-executor + security-auditor → chronicler. Project specifics (stack, commands, lockstep contracts) come from .claude/profile.md at runtime, never hardcoded.",
   "author": { "name": "minhhv" },
   "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "planner"],
   "hooks": {

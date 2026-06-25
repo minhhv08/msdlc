@@ -14,13 +14,9 @@ Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool**
 
 ---
 
-## Phase 1 — Plan + QC design (song song)
+## Phase 1 — Plan
 
-Phát **cùng một message** hai Agent chạy song song — chúng chỉ đọc `requirement.md` + `adr.md` (có sẵn trước phase này) và ghi ra **thư mục rời nhau** (`tasks/` vs `tests/`) nên không bao giờ đụng file:
-
-### 1a. Agent `planner`
-
-Gọi **Agent `planner`** (1 lần): đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task atomic, GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
+Gọi **Agent `planner`** (1 lần, riêng): đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task atomic, GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
 
 - `id` (vd `"01"`), `file` (tên file task đã ghi), `title`
 - `project`: một trong các project tên trong `.claude/profile.md` | `docs` | `cross-cutting`
@@ -34,15 +30,9 @@ Nếu planner không trả task nào → dừng và báo user.
 
 > Nguồn sự thật cho graph là danh sách planner trả về. Nếu cần, đọc lại `.claude/stories/{id}/tasks/` để đối chiếu/dọn file trùng số thứ tự.
 
-### 1b. Agent `qc-designer` (song song với planner)
-
-Gọi **Agent `qc-designer`**: đọc `requirement.md` + `adr.md`, thiết kế test case (positive/negative/boundary/edge) + traceability + coverage/gaps, ghi vào `.claude/stories/{id}/tests/`. Vì chạy trước implement nên **thiết kế bám spec/ADR** (không bám diff — chưa có code thay đổi). Test suite này làm input cho qc-executor ở Phase 3.
-
-> qc-designer **không phụ thuộc** output của planner: không đọc `tasks/`, không ghi vào `tasks/`. Hai agent độc lập hoàn toàn → an toàn chạy chung một wave.
-
 ---
 
-## Phase 2 — Implement (wave song song theo file-disjoint)
+## Phase 2 — Implement (wave song song theo file-disjoint) + QC design song song
 
 Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
@@ -51,7 +41,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - Hai task **khác project** → không bao giờ đụng file chung → luôn chạy song song được.
    - Hai task **cùng project** → song song được **chỉ khi** `touchesFiles` không giao nhau (so cả prefix thư mục). Nếu giao dù 1 file → để task sau sang wave kế.
    - Task không khai báo `touchesFiles` (rỗng) → thận trọng: chỉ chạy một mình trong project đó ở wave này.
-3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). Đây là điểm tăng tốc chính so với chạy lần lượt.
+3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent `qc-designer` vào cùng message** — `qc-designer` chỉ đọc `requirement.md` + `adr.md` và ghi vào `tests/` (hoàn toàn rời với `tasks/` và mọi file code), nên an toàn chạy chung. Các wave sau không cần kèm `qc-designer` nữa. Đây là điểm tăng tốc chính so với chạy lần lượt.
 4. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**:
    - Đọc `.claude/stories/{id}/tasks/{file}` (task spec) + `.claude/stories/{id}/adr.md` (bám thiết kế).
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
@@ -89,7 +79,7 @@ Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/
 
 ## Phase 3 — QC + Security (song song, auto-fix ≤ 2)
 
-> Test case đã được `qc-designer` thiết kế song song từ Phase 1 (ghi tại `.claude/stories/{id}/tests/`). Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
+> Test case đã được `qc-designer` thiết kế song song từ Wave 1 của Phase 2 (ghi tại `.claude/stories/{id}/tests/`). `qc-designer` chạy trong lúc dev Wave 1 implement, nên đến Phase 3 đã có test suite sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
 
 Phát **cùng một message** tất cả Agent sau song song — chúng chạy trên project/scope rời nhau nên không đụng file:
 

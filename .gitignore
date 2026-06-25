@@ -1,0 +1,19 @@
+# Agent memory local (per-project, không commit)
+.claude/agent-memory-local/
+
+# Profile dự án tiêu thụ (per-project)
+.claude/profile.md
+.claude/shared/agent-memory.md
+
+# Story artifacts (không thuộc plugin)
+.claude/stories/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
