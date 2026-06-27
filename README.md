@@ -11,7 +11,9 @@ idea → /spec → architect → [GATE duyệt ADR]
      → chronicler
 ```
 
-Mọi đặc thù dự án (stack, đường dẫn, lệnh test, hợp đồng lockstep, quy tắc commit) **không nhúng cứng** trong agent — chúng đọc từ `.claude/profile.md` của dự án tiêu thụ lúc chạy.
+Mọi đặc thù dự án **không nhúng cứng** trong agent — chúng đọc lúc chạy từ hai nguồn của dự án tiêu thụ:
+- `.claude/profile.md` — **facts**: stack, đường dẫn, lệnh test, hợp đồng lockstep.
+- `.claude/rules/` — **rule theo project**: convention, kiến trúc, bảo mật, Definition-of-Done, commit; chia theo scope (`global`/`backend`/`frontend`/`security`/`testing`), mỗi rule có `id` + `severity` (`MUST` chặn / `SHOULD` gợi ý). Không có rule → agent suy convention từ code lân cận như cũ.
 
 ## Thành phần
 
@@ -27,8 +29,8 @@ Mỗi agent là một vai trò AI chuyên biệt — được gọi qua `Agent t
 | `dev-frontend` | Implement UI web theo task spec — đọc profile để biết framework/component convention của dự án. |
 | `qc-designer` | Thiết kế test case (positive/negative/boundary/edge) từ spec + ADR, ghi ra `tests/` — chạy trước khi có code. |
 | `qc-executor` | Chạy test suite thực tế bằng lệnh trong profile, báo pass/fail/infraMissing, auto-fix ≤2 vòng. |
-| `reviewer` | Review diff theo 6 chiều (đúng spec, lockstep, logic, convention, test alignment, readability), trả verdict có cấu trúc. |
-| `security-auditor` | Audit diff tìm lỗ hổng bảo mật (injection, auth/authz, secrets leak, crypto, SSRF, XSS/CSRF, IDOR…), auto-fix Critical/High ≤2 vòng. |
+| `reviewer` | Review diff theo nhiều chiều (đúng spec, lockstep, logic, convention & **rule dự án**, test alignment, readability); vi phạm rule `MUST` → blocking (kèm `ruleId`). Trả verdict có cấu trúc. |
+| `security-auditor` | Audit diff tìm lỗ hổng bảo mật (injection, auth/authz, secrets leak, crypto, SSRF, XSS/CSRF, IDOR…) **và rule `R-SEC-*`**, auto-fix Critical/High ≤2 vòng. |
 | `chronicler` | Đồng bộ README/docs/docstring/inline comment với code vừa thay đổi — không tự thêm tính năng chưa có trong code. |
 
 ### Skills
@@ -40,7 +42,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 | `spec` | `/spec` | Phỏng vấn có cấu trúc để biến ý tưởng còn mơ hồ thành `requirement.md` rõ ràng (mục tiêu, scope, AC, ràng buộc). |
 | `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → auto-deliver. |
 | `auto-deliver` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: planner → dev + qc-designer → reviewer → qc-executor + security-auditor → chronicler. |
-| `commit` | `/commit` | Tạo git commit tuân thủ quy ước msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
+| `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
 ### Commands
 
@@ -48,7 +50,7 @@ Commands là lệnh `/plugin:tên` dùng để setup — thường chỉ chạy 
 
 | Command | Lệnh | Mô tả |
 |---|---|---|
-| `init` | `/msdlc:init` | Copy `agent-memory.md` + tạo `profile.md` vào `.claude/` của dự án, tự dò stack và hướng dẫn điền profile. |
+| `init` | `/msdlc:init` | Copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào `.claude/` của dự án, tự dò stack điền profile và auto-seed rule từ config sẵn có. |
 
 ### Hooks
 
@@ -66,7 +68,8 @@ File dùng chung — copy vào `.claude/` của dự án tiêu thụ khi init.
 | File | Mô tả |
 |---|---|
 | `shared/agent-memory.md` | Giao thức memory ~140 dòng dùng chung cho mọi agent — định nghĩa cách đọc/ghi/cập nhật memory cục bộ. |
-| `shared/profile.template.md` | Mẫu `profile.md` — nguồn sự thật cho mọi đặc thù dự án (stack, lệnh build/test, lockstep, quy tắc commit). |
+| `shared/profile.template.md` | Mẫu `profile.md` — nguồn sự thật cho *facts* của dự án (stack, lệnh build/test, lockstep). |
+| `shared/rules/*.md` | Mẫu `.claude/rules/` — nguồn *rule* theo project (`global`/`backend`/`frontend`/`security`/`testing`); mỗi rule có `id` + `severity`. |
 
 ## Cài đặt
 
@@ -90,22 +93,23 @@ Chạy một lần trong mỗi dự án muốn dùng pipeline:
 /msdlc:init
 ```
 
-Lệnh này copy `agent-memory.md` + tạo `profile.md` vào `.claude/`, tự dò stack và hướng dẫn điền profile.
+Lệnh này copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào `.claude/`, tự dò stack điền profile và auto-seed rule từ config sẵn có (CLAUDE.md/CONTRIBUTING/.editorconfig/linter).
 
 <details>
 <summary>Làm thủ công nếu không dùng lệnh init</summary>
 
 ```bash
-mkdir -p .claude/shared
+mkdir -p .claude/shared .claude/rules
 cp "$(claude plugin path msdlc)/shared/agent-memory.md" .claude/shared/agent-memory.md
 cp "$(claude plugin path msdlc)/shared/profile.template.md" .claude/profile.md
+cp "$(claude plugin path msdlc)"/shared/rules/*.md .claude/rules/
 ```
 
-Rồi **điền `.claude/profile.md`** cho dự án (stack, đường dẫn, lệnh build/test, hạ tầng, hợp đồng lockstep, quy tắc commit).
+Rồi **điền `.claude/profile.md`** (stack, đường dẫn, lệnh build/test, hạ tầng, hợp đồng lockstep) và **`.claude/rules/`** (convention, kiến trúc, bảo mật, DoD, commit).
 
 </details>
 
-> **Vì sao phải copy 2 file vào `.claude/`?** Subagent đọc file theo đường dẫn tương đối từ gốc dự án. Agent tham chiếu `.claude/profile.md` và `.claude/shared/agent-memory.md` — nên hai file đó phải tồn tại trong `.claude/` của dự án tiêu thụ. `profile.md` là per-project; `agent-memory.md` là bản giao thức dùng chung copy về.
+> **Vì sao phải copy file vào `.claude/`?** Subagent đọc file theo đường dẫn tương đối từ gốc dự án. Agent tham chiếu `.claude/profile.md`, `.claude/rules/` và `.claude/shared/agent-memory.md` — nên chúng phải tồn tại trong `.claude/` của dự án tiêu thụ. `profile.md` + `rules/` là per-project; `agent-memory.md` là bản giao thức dùng chung copy về.
 
 ### Bước 3 — Gitignore (tùy chọn)
 
@@ -113,6 +117,8 @@ Thêm vào `.gitignore` của dự án tiêu thụ:
 ```
 .claude/agent-memory-local/
 ```
+
+> `.claude/profile.md` và `.claude/rules/` thì **nên commit** — đây là cấu hình dùng chung cho cả team.
 
 ## Dùng
 
@@ -142,7 +148,9 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **skill** | Lệnh `/tên` do người dùng gọi trực tiếp trong Claude Code. Skill điều phối nhiều agent để hoàn thành một luồng lớn (vd `/deliver`). |
 | **command** | Lệnh `/plugin:tên` dùng để cài đặt/cấu hình một lần (vd `/msdlc:init`). Khác skill ở chỗ thường chỉ chạy một lần khi setup. |
 | **hook** | Script shell tự động chạy trước/sau khi Claude Code dùng một tool (vd trước `Bash`, `Read`). Plugin đăng ký hook qua `plugin.json`. |
-| **profile** | File `.claude/profile.md` trong *dự án tiêu thụ* — chứa toàn bộ đặc thù dự án: stack, lệnh build/test, hợp đồng lockstep, quy tắc commit. Agents đọc file này thay vì hardcode. |
+| **profile** | File `.claude/profile.md` trong *dự án tiêu thụ* — chứa *facts* của dự án: stack, lệnh build/test, hợp đồng lockstep. Agents đọc file này thay vì hardcode. |
+| **rules** | Thư mục `.claude/rules/` trong *dự án tiêu thụ* — *rule theo project* (convention, kiến trúc, bảo mật, Definition-of-Done, commit), chia theo scope. Mỗi rule có `id` + `severity` (`MUST` chặn / `SHOULD` gợi ý); `reviewer`/`security-auditor` enforce. Trống → suy convention từ code lân cận. |
+| **ruleId** | Định danh một rule trong `.claude/rules/` (vd `R-BE-1`, `R-SEC-2`). `reviewer`/`security-auditor` gắn `ruleId` vào finding để truy vết về rule bị vi phạm. |
 | **agent-memory** | Cơ chế agent ghi nhớ context giữa các lần chạy, lưu trong `.claude/agent-memory-local/<tên-agent>/`. Giao thức định nghĩa tại `shared/agent-memory.md`. |
 | **story** | Một feature/yêu cầu cụ thể, được đặt id (vd `001`). Mọi artifact của story nằm trong `.claude/stories/{id}/`. |
 | **ADR** | *Architecture Decision Record* — tài liệu quyết định thiết kế do `architect` tạo ra (`adr.md`). Phải được user duyệt trước khi pipeline tự động chạy tiếp. |
@@ -159,6 +167,7 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 
 ## Thiết kế "sạch hardcode"
 
-- Agent chỉ giữ **vai trò + quy trình**; sự thật dự án nằm trong `profile.md`.
+- Agent chỉ giữ **vai trò + quy trình**; *facts* dự án nằm trong `profile.md`, *rule* dự án nằm trong `.claude/rules/`.
 - `dev-backend` phục vụ mọi ngôn ngữ/framework backend (tự nhận diện theo file đụng tới); `dev-frontend` phục vụ UI web.
 - Giao thức memory ~140 dòng gom 1 bản tại `shared/agent-memory.md` thay vì lặp trong từng agent.
+- Rule là *cấu hình per-project*, không phải prompt: thêm/sửa rule trong dự án tiêu thụ không cần đụng định nghĩa agent. Dự án chưa có `.claude/rules/` chạy y hệt như trước.

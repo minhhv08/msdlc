@@ -46,6 +46,8 @@ Group test cases logically (by requirement, feature, or scenario). After the cas
 ## Domain Awareness
 Read `.claude/profile.md` for the project's domain realities, then design test cases that respect them. Pay special attention to anything the profile lists under the **lockstep contract** — shared schema/DB tables, cache TTL + explicit eviction keys, migration immutability, cross-service request flow, resilience behaviors. These constraints frequently imply integration, staleness, and negative cases that the requirement alone won't surface (e.g., stale cache after a write, schema lockstep across projects).
 
+Also read `.claude/rules/global.md` and `.claude/rules/testing.md` (if present). Treat the project's **Definition-of-Done** and testing rules there as an additional source of test conditions — every `MUST` rule that is verifiable should map to at least one test case (cite the rule `id` in that case's Traceability field). If the rules dir/files don't exist or the tables are empty, fall back to current behavior.
+
 ## Boundaries
 - You design test cases; you do not write production code or test automation code unless explicitly asked.
 - If inputs are missing or contradictory, ask targeted questions before producing partial output, but still deliver whatever can be confidently designed.

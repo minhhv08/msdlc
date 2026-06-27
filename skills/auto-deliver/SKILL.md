@@ -66,7 +66,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 ## Phase 2.5 — Code Review (reviewer, auto-fix ≤ 1 vòng)
 
-Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md`, review implementation theo 6 dimensions (correctness vs spec, lockstep, logic, convention, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`.
+Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md` + `.claude/rules/` (mọi file rule), review implementation theo các dimensions (correctness vs spec, lockstep, logic, convention & project rules, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`. Mỗi finding bám một rule mang thêm field `ruleId` (vd `"R-BE-1"`); vi phạm rule `MUST` → `blockingFindings`, vi phạm rule `SHOULD` → `suggestions`.
 
 **Xử lý kết quả:**
 - `approved: true` → tiếp Phase 3.
@@ -87,7 +87,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 > Ví dụ: story đụng 2 project backend + 1 project frontend → phát 3 `qc-executor` song song trong 1 message.
 
-1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation}]`.
+1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile **và rule `R-SEC-*` trong `.claude/rules/security.md`**). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` trong `security.md` được nâng severity tối thiểu `High` (kèm `ruleId`) nên sẽ lọt vòng auto-fix Critical/High dưới đây.
 
 2. **Ghi execution report & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
 
@@ -175,8 +175,10 @@ Security reports: `.claude/stories/{id}/security/`
 
 ## Notes
 
-<cache eviction keys cần chạy, infra còn thiếu, v.v.>
+<cache eviction keys cần chạy, infra còn thiếu, vi phạm rule còn lại (kèm ruleId), v.v.>
 ```
+
+> Khi liệt kê blocking findings / security findings còn lại trong report, ghi kèm `ruleId` nếu finding bám một rule trong `.claude/rules/` — để truy vết về rule cụ thể.
 
 Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 

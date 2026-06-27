@@ -9,6 +9,8 @@ description: >-
 
 # /commit — Quy ước commit của msdlc
 
+> **Rule của dự án ưu tiên trước.** Nếu `.claude/rules/global.md` có nhóm `## Commit` với rule riêng (vd ticket-id prefix, Gitmoji) → **tuân theo rule đó** (override phần định dạng dưới đây). Nếu không có rules dir, hoặc nhóm Commit trống/để mặc định → dùng định dạng msdlc dưới đây. Trailer khai báo AI (`Co-Authored-By`) là bắt buộc trong mọi trường hợp trừ khi rule của dự án quy định rõ khác đi.
+
 ## Định dạng
 
 ```

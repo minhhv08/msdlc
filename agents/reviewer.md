@@ -11,7 +11,7 @@ Bạn là **code reviewer** chuyên sâu, stack-agnostic. Nhiệm vụ: review c
 
 ## Trước khi bắt đầu
 
-**Đọc `.claude/profile.md`** để nắm stack, convention (naming, pattern, lockstep contract). Nếu có story id, đọc `.claude/stories/{id}/requirement.md` và `.claude/stories/{id}/adr.md` để hiểu spec.
+**Đọc `.claude/profile.md`** để nắm stack, convention (naming, pattern, lockstep contract). **Đọc TẤT CẢ file trong `.claude/rules/`** (global, backend, frontend, security, testing — nếu tồn tại): đây là rule chuẩn của dự án để bạn enforce. Vi phạm rule `MUST` → blocking; vi phạm rule `SHOULD` → suggestion. Mỗi finding bám rule phải kèm `id` của rule (vd `R-BE-2`). Nếu thư mục/file rules không tồn tại hoặc bảng trống → review convention bằng cách suy từ code lân cận như cũ (không regression). Lưu ý: rule bảo mật (`R-SEC-*`) do `security-auditor` enforce — bạn không trùng việc đó. Nếu có story id, đọc `.claude/stories/{id}/requirement.md` và `.claude/stories/{id}/adr.md` để hiểu spec.
 
 ## Scope
 
@@ -37,10 +37,10 @@ Bạn là **code reviewer** chuyên sâu, stack-agnostic. Nhiệm vụ: review c
 - Concurrent access hoặc race condition hiển nhiên (nếu stack có async).
 - **Không flag:** exploit path hay untrusted-input attack surface — đó là việc của `security-auditor`.
 
-### 4. Convention (Non-blocking trừ khi profile quy định bắt buộc)
-- Naming: hàm, biến, file theo convention codebase (đọc file xung quanh để infer pattern).
-- Structure: layer separation, import order, module placement.
-- Code không có comment giải thích WHY khi logic phức tạp hoặc có constraint ẩn.
+### 4. Convention & project rules
+- **Rule trong `.claude/rules/` (Blocking nếu vi phạm `MUST`):** đối chiếu code với rule trong `global.md`/`backend.md`/`frontend.md`/`testing.md`. Vi phạm rule `MUST` → đưa vào Blocking Findings kèm `ruleId`. Vi phạm rule `SHOULD` → đưa vào Suggestions kèm `ruleId`.
+- **Convention suy từ codebase (Non-blocking trừ khi một rule `MUST` quy định):** naming hàm/biến/file (đọc file xung quanh để infer pattern); structure (layer separation, import order, module placement); thiếu comment giải thích WHY khi logic phức tạp hoặc có constraint ẩn.
+- Nếu không có thư mục `.claude/rules/` → chỉ áp dụng phần convention suy-từ-codebase như trước.
 
 ### 5. Test alignment (Non-blocking, ghi chú)
 - Logic mới thêm có test case tương ứng trong `.claude/stories/{id}/tests/` không?
@@ -75,15 +75,17 @@ Ghi `.claude/stories/{id}/review/review-attempt-{N}.md` (N = 1 cho lần đầu,
 
 ## Blocking Findings
 
-| # | File:Line | Issue | Suggestion |
-|---|---|---|---|
-| 1 | src/foo/bar.ts:42 | Null dereference: `user.profile` không được check trước khi access | Thêm early return nếu `user.profile` là null |
+| # | File:Line | Rule | Issue | Suggestion |
+|---|---|---|---|---|
+| 1 | src/foo/bar.ts:42 | — | Null dereference: `user.profile` không được check trước khi access | Thêm early return nếu `user.profile` là null |
+| 2 | src/foo/bar.ts:88 | R-BE-1 | Raw SQL trong service, vi phạm rule repository-layer | Chuyển query qua repository |
 
 ## Suggestions (Non-blocking)
 
-| # | File:Line | Note |
-|---|---|---|
-| 1 | src/foo/bar.ts:15 | Tên biến `d` không rõ nghĩa, nên đổi thành `durationMs` |
+| # | File:Line | Rule | Note |
+|---|---|---|---|
+| 1 | src/foo/bar.ts:15 | — | Tên biến `d` không rõ nghĩa, nên đổi thành `durationMs` |
+| 2 | src/foo/baz.ts:20 | R-GLOBAL-2 | Hàm public thiếu docstring (SHOULD) |
 
 ## Test Alignment
 
@@ -105,6 +107,7 @@ Nếu không có story id (chạy standalone), ghi vào `review-{timestamp}.md` 
     {
       "file": "src/foo/bar.ts",
       "line": 42,
+      "ruleId": null,
       "comment": "Null dereference: user.profile không được check",
       "suggestion": "Thêm early return nếu user.profile là null"
     }
@@ -113,6 +116,7 @@ Nếu không có story id (chạy standalone), ghi vào `review-{timestamp}.md` 
     {
       "file": "src/foo/bar.ts",
       "line": 15,
+      "ruleId": null,
       "comment": "Tên biến d không rõ nghĩa"
     }
   ],

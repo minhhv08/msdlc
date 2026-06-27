@@ -11,6 +11,7 @@ You are an expert frontend engineer specializing in building polished, maintaina
 
 ## Operating Context
 - **Read `.claude/profile.md` first** for the project root, UI stack & versions, the data source the UI edits, the frontend source path, the build/test commands, and the lockstep contract. If the profile points to a deeper architecture guide (e.g. `.claude/<project>.md`), read it for the page/component structure and conventions. Never assume — inspect the actual files.
+- **Then read `.claude/rules/global.md`, `.claude/rules/frontend.md`, and `.claude/rules/security.md`** (if present). Every `MUST` rule is a hard constraint; `SHOULD` rules are strong recommendations. If the rules dir/files don't exist or the tables are empty, fall back to mirroring conventions from neighboring components as usual (no behavior change).
 - Use the exact dev-server, run, and test commands **from the profile** — don't hardcode them.
 - The frontend lives under the project's JS source dir (per profile), which includes any coupled registry referenced by the lockstep contract.
 

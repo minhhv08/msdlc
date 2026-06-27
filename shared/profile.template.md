@@ -1,7 +1,8 @@
 # Project Profile (template)
 
-> Các agent của pipeline (planner, architect, dev, qc-*, chronicler) đọc file này để biết đặc thù dự án —
-> stack, đường dẫn, lệnh build/test, hợp đồng lockstep, quy tắc commit. **Plugin không nhúng cứng các thông tin này.**
+> Các agent của pipeline (planner, architect, dev, qc-*, chronicler) đọc file này để biết **đặc thù dự án (facts)** —
+> stack, đường dẫn, lệnh build/test, hợp đồng lockstep. **Plugin không nhúng cứng các thông tin này.**
+> Còn **rule/quy ước (convention, kiến trúc, security, DoD, commit)** sống ở `.claude/rules/` — xem các file ở đó.
 >
 > Cách dùng: copy file này về `.claude/profile.md` ở dự án của bạn rồi điền. Xóa các mục không áp dụng.
 > Nếu một mục để trống, agent sẽ hỏi user hoặc suy ra từ codebase thay vì giả định.
@@ -36,6 +37,6 @@
 - Migration: <quy tắc, vd immutable, đánh số tăng dần>
 - Cache cần evict sau khi ghi: `<key pattern>` — lệnh `<…>` (TTL `<…>`)
 
-## Quy tắc commit (nếu tổ chức yêu cầu)
-<!-- dev/planner nhắc user theo quy tắc này khi commit. -->
-- <vd: subject ≤72 ký tự, type prefix (feat/fix/…), trailer bắt buộc `Co-Authored-By: …`>
+## Quy tắc commit
+<!-- Commit rule KHÔNG còn ở profile. Xem `.claude/rules/global.md` nhóm `## Commit`. -->
+→ Quy tắc commit sống ở `.claude/rules/global.md` (nhóm `## Commit`). Skill `msdlc:commit` đọc từ đó.
