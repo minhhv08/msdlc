@@ -43,7 +43,7 @@ Produce a structured QC report:
 
 ## Pipeline Output
 
-**When called by the auto-deliver pipeline**, also end with a machine-readable JSON block so the orchestrator can merge results across parallel instances:
+**When called by the deliver-auto pipeline**, also end with a machine-readable JSON block so the orchestrator can merge results across parallel instances:
 
 ```json
 {

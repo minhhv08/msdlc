@@ -40,8 +40,8 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 | Skill | Lệnh | Mô tả |
 |---|---|---|
 | `spec` | `/spec` | Phỏng vấn có cấu trúc để biến ý tưởng còn mơ hồ thành `requirement.md` rõ ràng (mục tiêu, scope, AC, ràng buộc). |
-| `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → auto-deliver. |
-| `auto-deliver` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: planner → dev + qc-designer → reviewer → qc-executor + security-auditor → chronicler. |
+| `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → deliver-auto. |
+| `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: planner → dev + qc-designer → reviewer → qc-executor + security-auditor → chronicler. |
 | `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
 ### Commands

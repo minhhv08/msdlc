@@ -1,10 +1,10 @@
 ---
-name: auto-deliver
+name: deliver-auto
 description: >-
   Từ ADR đã duyệt của một story id: vỡ task (planner) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
 ---
 
-# auto-deliver — Build tự động một story (main điều phối)
+# deliver-auto — Build tự động một story (main điều phối)
 
 Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool** — không dùng Workflow. Mục tiêu: nhanh và minh bạch, main giữ quyền kiểm soát, chạy song song tối đa những việc không đụng nhau, và báo cáo trung thực.
 

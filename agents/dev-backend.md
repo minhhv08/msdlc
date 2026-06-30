@@ -48,7 +48,7 @@ Critical cross-cutting rules — take the specifics from the profile, do not har
 
 ## Pipeline Output
 
-**When called by the auto-deliver pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
+**When called by the deliver-auto pipeline**, end your response with a machine-readable JSON block so the orchestrator can persist the result to the task file:
 
 ```json
 {

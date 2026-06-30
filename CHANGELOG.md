@@ -11,6 +11,7 @@
 ### Changed
 - Mọi agent đọc thêm `.claude/rules/` đúng scope; `chronicler` nay cũng đọc profile + rules. Thiếu rules → giữ hành vi cũ (không regression).
 - Quy tắc commit chuyển từ `profile.md` sang `.claude/rules/global.md` nhóm `## Commit`; skill `commit` ưu tiên rule của dự án, fallback về định dạng msdlc.
+- Đổi tên skill `auto-deliver` → `deliver-auto` (gom cạnh `deliver` khi sắp xếp); cập nhật mọi tham chiếu trong `skills/deliver`, docs và prompt agent.
 
 - fix: tách `planner` ra Phase 1 riêng, `qc-designer` chạy song song với Wave 1 dev thay vì block dev agents
 - docs: cập nhật README — thành phần tách theo loại, bảng thuật ngữ, section hooks
