@@ -79,10 +79,13 @@ File dùng chung — copy vào `.claude/` của dự án tiêu thụ khi init.
 
 ### Bước 1 — Cài plugin
 
-**Từ GitHub (khuyên dùng):**
+**Từ GitHub (khuyên dùng):** add marketplace trước, rồi install theo `plugin@marketplace`:
 ```
-/plugin install github:minhhv08/msdlc
+/plugin marketplace add minhhv08/msdlc
+/plugin install msdlc@minhhv
 ```
+> `minhhv` là tên marketplace (trường `name` trong `.claude-plugin/marketplace.json`), `msdlc` là tên plugin. Lưu ý `/plugin install github:...` KHÔNG hợp lệ — phải add marketplace trước.
+> Tương đương ngoài phiên tương tác: `claude plugin marketplace add minhhv08/msdlc && claude plugin install msdlc@minhhv`.
 
 **Hoặc từ local** (nếu đã clone về máy):
 ```
