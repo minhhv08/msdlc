@@ -4,8 +4,9 @@ Một plugin Claude Code đóng gói pipeline giao hàng **độc lập stack**:
 
 ```
 idea → /spec → architect → [GATE duyệt ADR]
-     → planner
-     → qc-designer + dev-backend / dev-frontend (song song — qc-designer chạy cùng Wave 1)
+     → dev-leader  ∥  qc-leader (enumerate)          (song song ở Phase 1)
+     → dev-backend / dev-frontend (song song theo file-disjoint)
+       ∥ qc-designer ×N (design-subset, fan-out từ Wave 1) → qc-leader (merge)
      → reviewer (auto-fix ≤1)
      → qc-executor + security-auditor (song song, auto-fix ≤2)
      → chronicler
@@ -24,10 +25,11 @@ Mỗi agent là một vai trò AI chuyên biệt — được gọi qua `Agent t
 | Agent | Vai trò |
 |---|---|
 | `architect` | Đọc `requirement.md`, thiết kế phương án kỹ thuật, ghi `adr.md` và cập nhật `docs/architecture.md`. |
-| `planner` | Đọc `adr.md` + `requirement.md`, vỡ thành danh sách task atomic có dependency graph, ghi ra `tasks/`. |
+| `dev-leader` | Đọc `adr.md` + `requirement.md`, vỡ thành danh sách task atomic có dependency graph, ghi ra `tasks/`. |
 | `dev-backend` | Implement code server-side (bất kỳ ngôn ngữ/framework theo profile): service, controller, repository, migration, API endpoint… |
 | `dev-frontend` | Implement UI web theo task spec — đọc profile để biết framework/component convention của dự án. |
-| `qc-designer` | Thiết kế test case (positive/negative/boundary/edge) từ spec + ADR, ghi ra `tests/` — chạy trước khi có code. |
+| `qc-leader` | Điều phối thiết kế test theo map/reduce: *enumerate* (liệt kê test-case stub + chia bucket cân bằng + coverage) và *merge* (gộp các part → Traceability Matrix + Coverage & Gaps ở `tests/README.md`). Đối xứng với `dev-leader`. |
+| `qc-designer` | Thiết kế test case (positive/negative/boundary/edge) từ spec + ADR, ghi ra `tests/`. Chế độ *design-subset*: flesh-out một bucket stub do `qc-leader` giao (fan-out song song); chế độ *full*: tự làm trọn gói khi gọi lẻ. |
 | `qc-executor` | Chạy test suite thực tế bằng lệnh trong profile, báo pass/fail/infraMissing, auto-fix ≤2 vòng. |
 | `reviewer` | Review diff theo nhiều chiều (đúng spec, lockstep, logic, convention & **rule dự án**, test alignment, readability); vi phạm rule `MUST` → blocking (kèm `ruleId`). Trả verdict có cấu trúc. |
 | `security-auditor` | Audit diff tìm lỗ hổng bảo mật (injection, auth/authz, secrets leak, crypto, SSRF, XSS/CSRF, IDOR…) **và rule `R-SEC-*`**, auto-fix Critical/High ≤2 vòng. |
@@ -41,7 +43,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 |---|---|---|
 | `spec` | `/spec` | Phỏng vấn có cấu trúc để biến ý tưởng còn mơ hồ thành `requirement.md` rõ ràng (mục tiêu, scope, AC, ràng buộc). |
 | `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → deliver-auto. |
-| `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: planner → dev + qc-designer → reviewer → qc-executor + security-auditor → chronicler. |
+| `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
 | `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
 ### Commands

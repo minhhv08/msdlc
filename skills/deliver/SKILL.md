@@ -1,14 +1,14 @@
 ---
 name: deliver
 description: >-
-  Tự động hoá toàn bộ pipeline từ requirement đến done cho một story id: thiết kế kiến trúc (architect) → DỪNG chờ duyệt ADR → vỡ task + implement + QC + sync docs (skill deliver-auto, main tự điều phối). LUÔN dùng skill này khi user gõ `/deliver {id}`, hoặc nói "chạy pipeline cho story X", "tự động làm requirement X từ đầu tới cuối", "deliver story X", "build feature từ requirement". Tiền đề: đã có .claude/stories/{id}/requirement.md (tạo bằng /spec). KHÔNG dùng khi user chỉ muốn chạy lẻ một bước (architect/planner/dev) — gọi thẳng agent tương ứng.
+  Tự động hoá toàn bộ pipeline từ requirement đến done cho một story id: thiết kế kiến trúc (architect) → DỪNG chờ duyệt ADR → vỡ task + implement + QC + sync docs (skill deliver-auto, main tự điều phối). LUÔN dùng skill này khi user gõ `/deliver {id}`, hoặc nói "chạy pipeline cho story X", "tự động làm requirement X từ đầu tới cuối", "deliver story X", "build feature từ requirement". Tiền đề: đã có .claude/stories/{id}/requirement.md (tạo bằng /spec). KHÔNG dùng khi user chỉ muốn chạy lẻ một bước (architect/dev-leader/dev) — gọi thẳng agent tương ứng.
 ---
 
 # /deliver — Tự động hoá pipeline requirement → done
 
 Điều phối chuỗi agent đã có trong workspace để hoàn thành một requirement từ đầu tới cuối, với **đúng một cổng duyệt sau ADR**.
 
-Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main tự điều phối: `planner` → `dev-*` song song theo file-disjoint → `qc-designer` → `qc-executor`+`security-auditor` song song (auto-fix ≤2) → `chronicler`).
+Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main tự điều phối: `dev-leader` → `dev-*` song song theo file-disjoint, **song song** thiết kế test map/reduce `qc-leader` → `qc-designer` ×N → `qc-leader` merge → `reviewer` (auto-fix ≤1) → `qc-executor`+`security-auditor` song song (auto-fix ≤2) → `chronicler`).
 
 ## Input
 
@@ -32,7 +32,7 @@ Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main 
 
 ### Bước B — Build tự động (skill deliver-auto)
 6. Chỉ khi user đã duyệt: gọi **skill `deliver-auto`** với story `{id}` (Skill tool). Main agent **tự điều phối** theo hướng dẫn của skill đó bằng Agent tool — KHÔNG dùng Workflow.
-   Trình tự: planner vỡ task → dev agent implement theo wave topo, **song song mọi task có tập file rời nhau** (nhiều lệnh Agent trong một message), tuần tự khi đụng file chung → qc-designer thiết kế test → qc-executor chạy test + security-auditor audit (song song; test fail hoặc lỗ hổng Critical/High thì dev fix rồi chạy lại, tối đa 2 vòng) → chronicler.
+   Trình tự: dev-leader vỡ task → dev agent implement theo wave topo, **song song mọi task có tập file rời nhau** (nhiều lệnh Agent trong một message), tuần tự khi đụng file chung; **song song** với dev, thiết kế test theo map/reduce (qc-leader enumerate → qc-designer ×N flesh-out → qc-leader merge) → reviewer → qc-executor chạy test + security-auditor audit (song song; test fail hoặc lỗ hổng Critical/High thì dev fix rồi chạy lại, tối đa 2 vòng) → chronicler.
 7. Main theo sát từng phase và tổng hợp kết quả khi xong.
 
 ### Bước C — Báo cáo

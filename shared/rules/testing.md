@@ -1,6 +1,6 @@
 # Rules — testing (scope: testing) — template
 
-> Convention test + Definition-of-Done cho QC. `qc-designer` dùng làm nguồn test case; `planner` sinh test-task thoả các tiêu chí; `qc-executor` coi là tiêu chí PASS bổ sung nếu đo được; `reviewer` enforce.
+> Convention test + Definition-of-Done cho QC. `qc-designer` dùng làm nguồn test case; `dev-leader` sinh test-task thoả các tiêu chí; `qc-executor` coi là tiêu chí PASS bổ sung nếu đo được; `reviewer` enforce.
 > `MUST` = ràng buộc cứng (blocking). `SHOULD` = khuyến nghị. **Bảng trống = thiết kế/chạy test theo thực hành hiện có của dự án.**
 > Prefix id: `R-TEST-*`. Không bịa rule — chỉ ghi điều dự án thực sự yêu cầu.
 

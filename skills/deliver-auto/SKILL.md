@@ -1,7 +1,7 @@
 ---
 name: deliver-auto
 description: >-
-  Từ ADR đã duyệt của một story id: vỡ task (planner) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
+  Từ ADR đã duyệt của một story id: vỡ task (dev-leader) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
 ---
 
 # deliver-auto — Build tự động một story (main điều phối)
@@ -14,9 +14,14 @@ Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool**
 
 ---
 
-## Phase 1 — Plan
+## Phase 1 — Plan + QC enumerate (song song)
 
-Gọi **Agent `planner`** (1 lần, riêng): đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task atomic, GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
+Phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
+
+- **Agent `dev-leader`** — vỡ task (mô tả ngay dưới).
+- **Agent `qc-leader` (chế độ enumerate)** — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
+
+Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task atomic, GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
 
 - `id` (vd `"01"`), `file` (tên file task đã ghi), `title`
 - `project`: một trong các project tên trong `.claude/profile.md` | `docs` | `cross-cutting`
@@ -24,11 +29,11 @@ Gọi **Agent `planner`** (1 lần, riêng): đọc ĐẦY ĐỦ `.claude/storie
 - `dependsOn`: danh sách task id phụ thuộc (rỗng nếu không)
 - `touchesFiles`: đường dẫn (từ gốc workspace) các file/thư mục task sẽ TẠO/SỬA — **kể cả file dùng chung** (file build/deps, file cấu hình, lớp đăng ký route/bean/filter, registry/đối tượng dùng chung của lockstep…). Khai báo càng đầy đủ càng song song được nhiều; để rỗng nếu không chắc (sẽ bị xếp tuần tự cho an toàn).
 
-Yêu cầu planner tôn trọng **hợp đồng lockstep** mô tả trong `.claude/profile.md`: vd migration immutable (thêm bản mới thay vì sửa bản đã apply), các artifact phải đồng bộ 1-1, thứ tự migration của project sở hữu schema trước các phía phụ thuộc.
+Yêu cầu dev-leader tôn trọng **hợp đồng lockstep** mô tả trong `.claude/profile.md`: vd migration immutable (thêm bản mới thay vì sửa bản đã apply), các artifact phải đồng bộ 1-1, thứ tự migration của project sở hữu schema trước các phía phụ thuộc.
 
-Nếu planner không trả task nào → dừng và báo user.
+Nếu dev-leader không trả task nào → dừng và báo user.
 
-> Nguồn sự thật cho graph là danh sách planner trả về. Nếu cần, đọc lại `.claude/stories/{id}/tasks/` để đối chiếu/dọn file trùng số thứ tự.
+> Nguồn sự thật cho graph là danh sách dev-leader trả về. Nếu cần, đọc lại `.claude/stories/{id}/tasks/` để đối chiếu/dọn file trùng số thứ tự.
 
 ---
 
@@ -41,7 +46,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - Hai task **khác project** → không bao giờ đụng file chung → luôn chạy song song được.
    - Hai task **cùng project** → song song được **chỉ khi** `touchesFiles` không giao nhau (so cả prefix thư mục). Nếu giao dù 1 file → để task sau sang wave kế.
    - Task không khai báo `touchesFiles` (rỗng) → thận trọng: chỉ chạy một mình trong project đó ở wave này.
-3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent `qc-designer` vào cùng message** — `qc-designer` chỉ đọc `requirement.md` + `adr.md` và ghi vào `tests/` (hoàn toàn rời với `tasks/` và mọi file code), nên an toàn chạy chung. Các wave sau không cần kèm `qc-designer` nữa. Đây là điểm tăng tốc chính so với chạy lần lượt.
+3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm các Agent `qc-designer` (chế độ design-subset) — một cho mỗi bucket mà `qc-leader` đã trả ở Phase 1** — vào cùng message để flesh-out test song song với dev (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
 4. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**:
    - Đọc `.claude/stories/{id}/tasks/{file}` (task spec) + `.claude/stories/{id}/adr.md` (bám thiết kế).
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
@@ -62,6 +67,24 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 **An toàn:** không bao giờ chạy song song hai agent đụng cùng file → tránh ghi đè. KHÔNG dùng git worktree (thay đổi ở worktree riêng không gộp lại thành cây build được); luôn làm trên cùng working tree với tập file rời nhau.
 
+### Thiết kế test song song (map/reduce, chạy trong lúc dev implement)
+
+Khâu thiết kế test được cắt thành **map/reduce** để không thành đường găng của Phase 3. Ba bước, chạy song song với việc vỡ task + implement:
+
+1. **Map — `qc-leader` (enumerate).** Đã chạy **song song với `dev-leader` ở Phase 1** (không phụ thuộc task breakdown). Nó đọc `requirement.md` + `adr.md` + `profile.md` + `rules/`, **chỉ liệt kê stub** (id + title + source + type + priority — KHÔNG viết steps chi tiết), cấp **id toàn cục duy nhất**, đề xuất **bucket cân bằng**, và trả JSON:
+
+   ```json
+   { "stubs": [ { "id": "TC-001", "title": "...", "source": "REQ-3 / ADR §2", "type": "Functional|Negative|Boundary|NFR|Integration|Regression", "priority": "High|Medium|Low" } ],
+     "buckets": [ ["TC-001", "TC-004"], ["TC-002", "TC-003"] ],
+     "coverageGaps": [ "<item requirement/ADR chưa phủ / ambiguity / open question>" ] }
+   ```
+
+2. **Fan-out — `qc-designer` × N (chế độ design-subset).** Vì `buckets` đã sẵn sau Phase 1, phát fan-out **ngay ở Wave 1** (kèm cùng message với dev, xem step 3). Với **mỗi bucket** trong `buckets`, phát **một Agent `qc-designer` riêng**, truyền danh sách stub của bucket đó + **file output riêng** `.claude/stories/{id}/tests/testcases-part-{k}.md` (k = 1..N). Mỗi instance flesh-out stub thành đặc tả đầy đủ (Preconditions/Test Data/Steps/Expected/Notes), **giữ nguyên `id`/`source` từ stub**, không đẻ case ngoài stub, trả JSON `{ file, casesWritten, followUps }`. Các file part rời nhau và rời hoàn toàn với `tasks/`/code → an toàn chạy song song với nhau và với dev. Nếu chỉ có 1 bucket (story nhỏ) → chỉ 1 `qc-designer`, không fan-out thừa.
+
+3. **Reduce — `qc-leader` (merge).** Sau khi tất cả `qc-designer` design-subset xong, phát lại **Agent `qc-leader` (chế độ merge)**: đọc các `tests/testcases-part-*.md` + `coverageGaps` từ bước enumerate, ghi `.claude/stories/{id}/tests/README.md` (Traceability Matrix tổng + Coverage & Gaps), trả JSON `{ totalCases, gaps }`. Gap rõ → đưa vào `followUps` của Phase 5.
+
+> enumerate overlap với khâu vỡ task ở Phase 1; fan-out design + merge overlap với dev implement (bắt đầu ngay Wave 1). Đến Phase 3 đã có test suite + traceability sẵn.
+
 ---
 
 ## Phase 2.5 — Code Review (reviewer, auto-fix ≤ 1 vòng)
@@ -79,11 +102,11 @@ Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/
 
 ## Phase 3 — QC + Security (song song, auto-fix ≤ 2)
 
-> Test case đã được `qc-designer` thiết kế song song từ Wave 1 của Phase 2 (ghi tại `.claude/stories/{id}/tests/`). `qc-designer` chạy trong lúc dev Wave 1 implement, nên đến Phase 3 đã có test suite sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
+> Test case đã được thiết kế theo map/reduce (`qc-leader` enumerate → `qc-designer` × N design-subset → `qc-leader` merge) song song từ Wave 1 của Phase 2 (ghi tại `.claude/stories/{id}/tests/`, tổng hợp ở `tests/README.md`). Việc này chạy trong lúc dev implement, nên đến Phase 3 đã có test suite + traceability sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
 
 Phát **cùng một message** tất cả Agent sau song song — chúng chạy trên project/scope rời nhau nên không đụng file:
 
-1a. **Agent `qc-executor` × N project** — lấy danh sách project đã có task trong story này (từ structured task list của planner, Phase 1). Với **mỗi project** có lệnh test trong `.claude/profile.md`, phát **một Agent `qc-executor` riêng** trong cùng message, chỉ định rõ project scope. Mỗi instance trả về `project`, `allPassed`, `infraMissing`, `failures[{test,message}]`, `report`.
+1a. **Agent `qc-executor` × N project** — lấy danh sách project đã có task trong story này (từ structured task list của dev-leader, Phase 1). Với **mỗi project** có lệnh test trong `.claude/profile.md`, phát **một Agent `qc-executor` riêng** trong cùng message, chỉ định rõ project scope. Mỗi instance trả về `project`, `allPassed`, `infraMissing`, `failures[{test,message}]`, `report`.
 
 > Ví dụ: story đụng 2 project backend + 1 project frontend → phát 3 `qc-executor` song song trong 1 message.
 

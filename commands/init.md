@@ -64,4 +64,4 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 
 - Đề xuất thêm `.claude/agent-memory-local/` vào `.gitignore` (memory cục bộ, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
 - Tóm tắt cho user: đã copy file gì, đã điền mục nào của profile, rule nào được seed (kèm nguồn), mục/rule nào còn cần user xác nhận.
-- Nhắc: chạy thử một mắt xích (`/spec`, hoặc gọi `architect`/`planner`) để xác nhận agent đọc được profile + rules.
+- Nhắc: chạy thử một mắt xích (`/spec`, hoặc gọi `architect`/`dev-leader`) để xác nhận agent đọc được profile + rules.

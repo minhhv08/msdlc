@@ -1,6 +1,6 @@
 # Project Profile (template)
 
-> Các agent của pipeline (planner, architect, dev, qc-*, chronicler) đọc file này để biết **đặc thù dự án (facts)** —
+> Các agent của pipeline (dev-leader, architect, dev, qc-*, chronicler) đọc file này để biết **đặc thù dự án (facts)** —
 > stack, đường dẫn, lệnh build/test, hợp đồng lockstep. **Plugin không nhúng cứng các thông tin này.**
 > Còn **rule/quy ước (convention, kiến trúc, security, DoD, commit)** sống ở `.claude/rules/` — xem các file ở đó.
 >

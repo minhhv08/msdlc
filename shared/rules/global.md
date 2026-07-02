@@ -27,7 +27,7 @@
 
 ## Definition of Done (scope: all)
 
-<!-- Tiêu chí "done" chung cho mọi story. planner sinh task thoả các tiêu chí này; qc-executor coi là tiêu chí PASS bổ sung nếu đo được. -->
+<!-- Tiêu chí "done" chung cho mọi story. dev-leader sinh task thoả các tiêu chí này; qc-executor coi là tiêu chí PASS bổ sung nếu đo được. -->
 
 | id | severity | rule |
 | --- | --- | --- |
