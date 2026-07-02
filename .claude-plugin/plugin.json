@@ -1,9 +1,9 @@
 {
   "name": "msdlc",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Stack-agnostic delivery pipeline for Claude Code: spec → architect → [ADR gate] → dev-leader → dev + qc-leader/qc-designer (parallel map/reduce test design) → reviewer → qc-executor + security-auditor → chronicler. Project specifics (stack, commands, lockstep contracts) come from .claude/profile.md at runtime, never hardcoded.",
   "author": { "name": "minhhv" },
-  "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "dev-leader"],
+  "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "dev-leader", "tracking", "jira", "board-sync"],
   "hooks": {
     "PreToolUse": [
       {

@@ -75,7 +75,7 @@ Nội dung file theo ĐÚNG template sau:
 ```markdown
 # Spec: [Tên sản phẩm/tính năng]
 
-> Status: Draft · Ngày: [YYYY-MM-DD] · Người tạo: [tên]
+> Status: Draft · Ngày: [YYYY-MM-DD] · Người tạo: [tên] · Ticket: [ID|URL hoặc —]
 
 ## 1. Problem
 - **Vấn đề:** ...
@@ -116,6 +116,10 @@ Quy tắc khi điền:
 - Mỗi mục phải dựa trên câu trả lời thực của người dùng. Mục nào chưa rõ → để vào "Open questions", KHÔNG bịa.
 - Giữ Scope ngắn gọn ở vòng đầu — thà ít story rõ ràng còn hơn nhiều story mơ hồ.
 - Dùng ngôn ngữ cụ thể, đo được; thay "nhanh" bằng con số, thay "nhiều user" bằng đối tượng cụ thể.
+
+## Gắn ticket board (nếu dự án dùng tracker)
+
+Nếu `.claude/profile.md` có mục `## Task tracker` đã cấu hình: hỏi (optional) story này có gắn ticket trên board không. Nếu có → ghi ID/URL vào trường `Ticket:` ở header, rồi gọi skill **`msdlc:tracking {id} todo`** để đưa ticket về cột intake. Không có tracker hoặc không có ticket → bỏ qua (skill `msdlc:tracking` tự no-op, không cần điều kiện gì thêm).
 
 ## Sau khi xong
 

@@ -44,6 +44,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 | `spec` | `/spec` | Phỏng vấn có cấu trúc để biến ý tưởng còn mơ hồ thành `requirement.md` rõ ràng (mục tiêu, scope, AC, ràng buộc). |
 | `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → deliver-auto. |
 | `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
+| `tracking` | `/msdlc:tracking {id} {phase}` | Đồng bộ trạng thái story sang cột board ngoài (Jira/Asana/Linear/Monday) tại một mốc (`todo`/`planning`/`validate`/`approved`/`in-progress`/`review`). Được `spec`/`deliver`/`deliver-auto` gọi tự động; tự **no-op** nếu dự án không cấu hình tracker. Không bao giờ tự chuyển Done. |
 | `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
 ### Commands
@@ -53,6 +54,7 @@ Commands là lệnh `/plugin:tên` dùng để setup — thường chỉ chạy 
 | Command | Lệnh | Mô tả |
 |---|---|---|
 | `init` | `/msdlc:init` | Copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào `.claude/` của dự án, tự dò stack điền profile và auto-seed rule từ config sẵn có. |
+| `tracking-poll` | `/msdlc:tracking-poll` | Quét board ngoài **một lượt** và tự khởi động pipeline cho ticket đang chờ: ticket ở cột intake → tạo story + architect + đẩy sang Validate rồi **dừng**; ticket ở cột Approved (do người kéo) → tự build → Review. Dùng cùng `/loop` hoặc `schedule` để chạy định kỳ. Opt-in (cờ poll trong profile). |
 
 ### Hooks
 
@@ -128,6 +130,31 @@ Thêm vào `.gitignore` của dự án tiêu thụ:
 - `/deliver {id}` — chạy cả pipeline với một cổng duyệt sau ADR.
 - Hoặc gọi từng agent qua Agent tool theo nhu cầu.
 
+## Đồng bộ board ngoài (tùy chọn)
+
+Nếu dự án dùng board (Jira/Asana/Linear/Monday), msdlc có thể tự chuyển cột ticket theo tiến độ pipeline. **Tính năng opt-in**: không cấu hình mục `## Task tracker` trong `.claude/profile.md` → pipeline chạy thuần local **y như cũ** (skill `msdlc:tracking` tự no-op).
+
+Ánh xạ mốc pipeline → cột board (tên cột cấu hình được trong profile; ví dụ theo flow phổ biến):
+
+```
+Backlog → Todo → Planing → Validate → Approved → InProgess → Review → Done
+          └─(1)──────────┘  (user)    └─(2)────────────────┘   (user) (user)
+   idea    spec   architect   ADR gate   người      build+QC+review   người verify
+                              (duyệt = kéo Validate→Approved)          + đóng Done
+```
+
+- Đoạn **(1)** và **(2)** là hai khúc tự động của pipeline; giữa chúng là **cổng duyệt** — chính là thao tác **người kéo thẻ** từ `Validate` sang `Approved`. Máy không bao giờ tự vượt.
+- `Done` **không bao giờ** do máy chuyển — luôn để người verify và đóng thủ công.
+
+### Tự động kéo task từ board (loop)
+
+`/msdlc:tracking-poll` quét board **một lượt**: ticket ở cột intake → tạo story + thiết kế ADR + đẩy sang `Validate` rồi dừng; ticket ở cột `Approved` (người đã duyệt) → tự build → `Review`. Để chạy định kỳ, ghép với cơ chế lặp của harness (msdlc không tự chế scheduling):
+
+- **`/loop 10m /msdlc:tracking-poll`** — lặp theo interval trong phiên đang mở. Đơn giản; dừng khi đóng phiên/máy.
+- **`schedule`** (cloud cron) — tạo scheduled agent chạy nền kể cả khi tắt máy. Bền hơn cho vận hành liên tục.
+
+Bật poll là tự động mạnh → phải bật cờ `poll` trong profile (mặc định tắt). Dù bật, loop **vẫn giữ cổng duyệt**: chỉ tự build ticket đã được người kéo sang `Approved`.
+
 ## Hooks bảo mật
 
 Plugin đăng ký hai `PreToolUse` hook tự động — không cần cấu hình thêm:
@@ -163,7 +190,9 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **auto-fix** | Agent tự sửa lỗi trong ngân sách giới hạn (reviewer ≤1 vòng, qc-executor + security-auditor ≤2 vòng) trước khi dừng và báo cáo. |
 | **infraMissing** | Trạng thái `qc-executor` báo khi hạ tầng test chưa sẵn sàng (DB chưa up, service phụ thuộc chưa chạy…) — không tự fix được, báo trung thực. |
 | **consuming project** | Dự án *dùng* plugin này (khác với repo plugin). Phải có `.claude/profile.md` và `.claude/shared/agent-memory.md` để agents hoạt động. |
-| **GATE** | Điểm dừng duy nhất trong pipeline yêu cầu user xác nhận thủ công — hiện tại chỉ có 1 gate sau khi `architect` tạo xong ADR. |
+| **GATE** | Điểm dừng duy nhất trong pipeline yêu cầu user xác nhận thủ công — hiện tại chỉ có 1 gate sau khi `architect` tạo xong ADR. Khi dùng board, gate = thao tác người kéo thẻ `Validate`→`Approved`. |
+| **tracker sync** | Cơ chế đồng bộ trạng thái story ↔ cột board ngoài, gom trong skill `msdlc:tracking`. Opt-in qua mục `## Task tracker` của `profile.md`; tự no-op khi không cấu hình; không bao giờ tự chuyển Done. |
+| **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động pipeline cho ticket ở cột intake/Approved. Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
 
 ---
 

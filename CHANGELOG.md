@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0] — 2026-07-02
+
+### Added
+
+- Skill mới **`msdlc:tracking {id} {phase}`** — đồng bộ trạng thái story sang cột board ngoài (Jira/Asana/Linear/Monday) tại các mốc `todo/planning/validate/approved/in-progress/review`. Gom **toàn bộ** logic tracker vào một chỗ. **Opt-in**: không cấu hình `## Task tracker` trong `profile.md` hoặc story không gắn `Ticket:` → skill tự **no-op**, pipeline chạy thuần local như cũ. **Không bao giờ tự chuyển Done.**
+- Command mới **`/msdlc:tracking-poll`** — quét board **một lượt** (idempotent): ticket ở cột intake → tạo story + `architect` + đẩy sang `Validate` rồi **dừng**; ticket ở cột `Approved` (do người kéo) → tự `deliver-auto` build → `Review`. Lặp giao cho harness (`/loop` hoặc `schedule`); msdlc không tự chế scheduling. Bật qua cờ `poll` trong profile (mặc định tắt).
+- `profile.template.md` thêm mục `## Task tracker` (tool + connector MCP, project key, override tên cột từng mốc, cột intake/build-trigger, cờ poll).
+- `requirement.md` thêm trường header `Ticket:` để liên kết story ↔ ticket board.
+
+### Changed
+
+- **Giữ đúng một cổng duyệt** khi dùng board: cột board CHÍNH LÀ gate — poll dừng ở `Validate`, chỉ ticket người kéo sang `Approved` mới được tự build. Máy không bao giờ tự vượt gate; sync chỉ là side-effect, không phải gate mới.
+- `spec`/`deliver`/`deliver-auto` thêm lời gọi `msdlc:tracking` một dòng tại mỗi mốc (tự no-op khi không có tracker) — không rải logic tracker vào các skill này.
+- `/msdlc:init` thêm **Bước 2c — Dò tracker**: phát hiện connector MCP đang connect, hỏi user điền mục `## Task tracker` (opt-in, không bịa tên cột).
+- `.claude-plugin/marketplace.json` (source `.`) để repo cài trực tiếp qua `github:minhhv08/msdlc`.
+- docs: README thêm section "Đồng bộ board ngoài" + sơ đồ flow board + hướng dẫn loop; bảng thuật ngữ thêm `tracker sync`/`poll`.
+
 ## [0.2.0] — 2026-07-01
 
 ### Added

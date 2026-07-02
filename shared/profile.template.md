@@ -37,6 +37,26 @@
 - Migration: <quy tắc, vd immutable, đánh số tăng dần>
 - Cache cần evict sau khi ghi: `<key pattern>` — lệnh `<…>` (TTL `<…>`)
 
+## Task tracker (nếu có)
+<!--
+  Cấu hình đồng bộ story ↔ board ngoài (Jira/Asana/Linear/Monday). Skill `msdlc:tracking` đọc mục này.
+  ĐỂ TRỐNG TOÀN BỘ MỤC NÀY = tắt sync; pipeline chạy thuần local y như cũ.
+  KHÔNG hardcode trong plugin — mọi thứ đọc từ đây.
+-->
+- Tool: `<Jira | Asana | Linear | Monday>` — connector MCP: `<Atlassian | Asana | Linear | monday>`
+- Project/board key: `<vd PROJ | board id>`
+- Ánh xạ mốc pipeline → tên cột trên board (bỏ trống dòng nào → skill tự suy theo keyword):
+  - planning → `<vd Planing>`
+  - validate → `<vd Validate>`
+  - approved → `<vd Approved>`
+  - in-progress → `<vd InProgess>`
+  - review → `<vd Review>`
+  - <!-- Done KHÔNG cấu hình: msdlc không bao giờ tự chuyển Done. -->
+- Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`):
+  - Cột intake (nơi kéo task mới về để thiết kế): `<vd Todo>`
+  - Cột build-trigger (người kéo tay sang đây = duyệt ADR, cho phép tự build): `<vd Approved>`
+  - Bật poll: `<no>` <!-- mặc định no; đổi thành yes để cho phép /msdlc:tracking-poll xử lý. Opt-in vì đây là tự động mạnh. -->
+
 ## Quy tắc commit
 <!-- Commit rule KHÔNG còn ở profile. Xem `.claude/rules/global.md` nhóm `## Commit`. -->
 → Quy tắc commit sống ở `.claude/rules/global.md` (nhóm `## Commit`). Skill `msdlc:commit` đọc từ đó.

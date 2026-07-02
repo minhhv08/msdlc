@@ -1,0 +1,11 @@
+{
+  "name": "minhhv",
+  "owner": { "name": "minhhv" },
+  "plugins": [
+    {
+      "name": "msdlc",
+      "source": ".",
+      "description": "Stack-agnostic spec→architect→[ADR gate]→dev-leader→dev→qc→docs delivery pipeline, with optional external-board sync (Jira/Asana/Linear/Monday) via the tracking skill + tracking-poll loop. Project specifics live in .claude/profile.md."
+    }
+  ]
+}

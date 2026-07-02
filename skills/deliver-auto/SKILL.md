@@ -16,6 +16,8 @@ Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool**
 
 ## Phase 1 — Plan + QC enumerate (song song)
 
+Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (tự no-op nếu không có tracker) để đưa ticket sang cột InProgress.
+
 Phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
 
 - **Agent `dev-leader`** — vỡ task (mô tả ngay dưới).
@@ -203,6 +205,8 @@ Security reports: `.claude/stories/{id}/security/`
 
 > Khi liệt kê blocking findings / security findings còn lại trong report, ghi kèm `ruleId` nếu finding bám một rule trong `.claude/rules/` — để truy vết về rule cụ thể.
 
+Sau khi ghi `report.md`: gọi skill **`msdlc:tracking {id} review`** (tự no-op nếu không có tracker) để đưa ticket sang cột Review + comment tóm tắt. **KHÔNG tự chuyển Done** — Review chờ người verify rồi đóng thủ công.
+
 Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 
 ## Nguyên tắc
@@ -211,3 +215,4 @@ Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 - **Không sửa định nghĩa agent** — chỉ tái dùng qua Agent tool.
 - **Idempotent** — luôn check-before-write để chạy lại trên codebase đã có không phá đồ.
 - **Trung thực trạng thái** — test fail / thiếu hạ tầng phải báo đúng.
+- **Sync tracker chỉ chuyển cột, không tự chuyển Done.** Các lời gọi `msdlc:tracking` (in-progress/review) là side-effect tự no-op khi không có tracker; Review là điểm dừng cuối của máy, Done do người.

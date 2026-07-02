@@ -60,6 +60,16 @@ done
 
 Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, policy) → `MUST`; thứ chỉ khuyến nghị → `SHOULD`. Nếu không tìm thấy nguồn nào cho một file → để bảng trống (agent sẽ suy từ code lân cận như cũ). Không bịa rule.
 
+## Bước 2c — Dò tracker (nếu dùng board ngoài)
+
+Đây là bước **optional** — chỉ làm nếu dự án đồng bộ story với board (Jira/Asana/Linear/Monday):
+
+1. Kiểm tra các connector MCP đang connect (Atlassian/Asana/Linear/monday). Nếu có ít nhất một → **hỏi user** có muốn bật đồng bộ tracker không.
+2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`).
+3. Nếu không có connector nào hoặc user không dùng tracker → để trống mục này (pipeline chạy thuần local như cũ). KHÔNG hardcode, không bịa tên cột — hỏi user hoặc để skill `msdlc:tracking` tự suy theo keyword lúc chạy.
+
+Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh (tự kéo task về thiết kế/build) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo).
+
 ## Bước 3 — Hậu kiểm
 
 - Đề xuất thêm `.claude/agent-memory-local/` vào `.gitignore` (memory cục bộ, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
