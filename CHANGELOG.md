@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0] — 2026-07-09
+
+### Fixed
+
+- **Đóng lỗ gate ADR**: trạng thái duyệt giờ được persist bằng header `Status: Accepted` trong `adr.md` — `/deliver` ghi khi user duyệt (kể cả nhánh "build luôn từ ADR có sẵn", nay BẮT BUỘC xác nhận), `tracking-poll` ghi khi người kéo ticket sang Approved; `deliver-auto` từ chối chạy nếu ADR còn `Proposed` (ADR cũ không có `Status:` → hỏi xác nhận một lần, backward compat).
+- **`tracking-poll` idempotency**: story gắn ticket nhưng thiếu `adr.md` (architect fail lượt trước) → resume trên story cũ thay vì cấp id mới (hết tạo story trùng); thêm nhánh xử lý khi `deliver-auto` fail giữa chừng.
+- **`security-auditor` có JSON contract pipeline**: mục "Pipeline Output" mới — bắt buộc ghi report vào `security/` và trả `{ findings: [{severity,title,file,line,remediation,ruleId}] }` đúng schema orchestrator parse (trước đây thiếu hẳn).
+- `/msdlc:init` không còn ghi đè `agent-memory.md` vô điều kiện — thêm guard no-overwrite như profile/rules.
+- Mô tả skill `spec` sửa `spec.md` → `requirement.md` (tên artifact thật); typo `Planing`/`InProgess` trong README + profile template; hướng dẫn cài thủ công bỏ lệnh `claude plugin path` không tồn tại.
+
+### Changed
+
+- **Curate lại `tools` các agent**: dev-backend/dev-frontend/dev-leader/qc-designer thêm `Grep`/`Glob` (prompt yêu cầu dò codebase mà thiếu tool), bỏ NotebookEdit/Task*/MCP/Web thừa; qc-executor bỏ `Edit`/`NotebookEdit` (khớp boundary "không tự sửa code"); security-auditor bỏ Task*/MCP.
+- `architect` có memory footer (trước khai `memory: local` mà không có giao thức → memory chết); quy ước diagram đọc từ profile (mục mới `## Quy ước diagram`), fallback mặc định PlantUML + `docs/diagrams/` như cũ.
+- `deliver-auto`: nguyên tắc xử lý JSON contract hỏng (retry 1 lần → fallback đọc artifact → dừng có báo); phát hiện cycle `dependsOn` → liệt kê task kẹt + abort pipeline (không QC trên code dở); reviewer/security-auditor nhận scope theo `filesChanged` gom từ các wave (tránh nhiễu working tree); frontmatter mô tả đủ qc-leader map/reduce + reviewer.
+- `tracking`: lỗi transition/comment sau guard (MCP rớt giữa chừng) là non-fatal — log một dòng, không làm dừng pipeline.
+- `dev-leader`: quy tắc routing rõ cho task `docs`/`cross-cutting` (docs-only không sinh task — chronicler lo; cross-cutting gán theo domain sở hữu đa số `touchesFiles`).
+- Lời văn memory footer: "thư mục đã tồn tại" → "Write tự tạo thư mục nếu chưa có" (init không tạo sẵn thư mục memory); qc-executor gộp double memory section.
+- Profile template: thêm dòng `todo →` vào mapping cột (kèm ghi chú trùng cột intake); `/msdlc:init` nhận diện thêm C#/.NET (`*.csproj`/`*.sln`) và Ruby (`Gemfile`).
+- `plugin.json`: bump 0.4.0, thêm `"license": "MIT"`.
+
 ## [0.3.0] — 2026-07-02
 
 ### Added
@@ -26,7 +47,7 @@
 - Cơ chế **per-project rules** `.claude/rules/` (scope: `global`/`backend`/`frontend`/`security`/`testing`); mỗi rule có `id` + `severity` (`MUST`/`SHOULD`). Template trong `shared/rules/`.
 - `reviewer` enforce rule: vi phạm `MUST` → blocking, `SHOULD` → suggestion; finding mang `ruleId`.
 - `security-auditor` enforce `R-SEC-*`: vi phạm `MUST` được nâng severity tối thiểu `High`; finding mang `ruleId`.
-- `/msdlc:init` copy `shared/rules/` (no-overwrite) + auto-seed rule từ CLAUDE.md/CONTRIBUTING/.editorconfig/linter, đánh dấu `<!-- seeded, cần xác nhận -->`.
+- `/msdlc:init` copy `shared/rules/` (no-overwrite) + auto-seed rule từ CLAUDE.md/CONTRIBUTING/.editorconfig/linter, đánh dấu `<!-- seeded từ <nguồn>, cần xác nhận -->`.
 
 ### Changed
 

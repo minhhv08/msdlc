@@ -1,7 +1,7 @@
 ---
 name: "qc-executor"
 description: "Use this agent when a developer has finished implementing a feature, fix, or logical chunk of code and the changes need to be validated by executing the relevant test cases. This includes running unit/integration tests for the project(s) via their configured test commands, interpreting results, and reporting pass/fail status with diagnostics. Trigger it proactively after development work completes.\\n\\n<example>\\nContext: A developer just finished implementing a new feature in a backend service.\\nuser: \"I've finished adding the new json_transform function and its implementation class.\"\\nassistant: \"Great, the implementation looks complete. Let me use the Agent tool to launch the qc-executor agent to run the relevant test cases and validate the changes.\"\\n<commentary>\\nSince the dev has completed a code change, use the qc-executor agent to execute the appropriate tests and report results.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: A developer modified a model and its validation rules.\\nuser: \"Done updating the model fields and validation rules for the new column.\"\\nassistant: \"Now I'll use the Agent tool to launch the qc-executor agent to run the test suite and confirm nothing is broken.\"\\n<commentary>\\nThe dev finished a change, so proactively invoke qc-executor to execute tests for the affected project.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: A developer asks for QC after a refactor.\\nuser: \"Can you QC the changes I just made to the request pipeline?\"\\nassistant: \"I'll use the Agent tool to launch the qc-executor agent to identify and run the relevant test cases for the pipeline changes.\"\\n<commentary>\\nDirect QC request after dev work — use the qc-executor agent.\\n</commentary>\\n</example>"
-tools: ListMcpResourcesTool, Read, ReadMcpResourceTool, TaskCreate, TaskGet, TaskList, TaskStop, TaskUpdate, WebFetch, WebSearch, Edit, NotebookEdit, Write, Bash
+tools: Read, Grep, Glob, Bash, Write
 model: sonnet
 memory: local
 ---
@@ -66,8 +66,6 @@ Keep the report concise and scannable. Use the developer's language (Vietnamese 
 - If infra is missing and you cannot start it safely, report BLOCKED with exact remediation steps (lệnh dựng hạ tầng lấy từ profile).
 - Never claim tests passed without real execution evidence.
 
-## Agent Memory
-
 **Update your agent memory** as you discover testing knowledge specific to this codebase. This builds up institutional QC knowledge across conversations. Write concise notes about what you found and where.
 
 Examples of what to record:
@@ -79,6 +77,6 @@ Examples of what to record:
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/qc-executor/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại — ghi trực tiếp bằng Write, không cần mkdir).
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/qc-executor/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
 
 Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

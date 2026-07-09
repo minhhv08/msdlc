@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Phỏng vấn người dùng để biến một ý tưởng phần mềm còn mơ hồ thành một bản spec (PRD) có cấu trúc, xuất ra file spec.md. LUÔN dùng skill này khi người dùng muốn build một sản phẩm/tính năng từ đầu nhưng "chưa có PRD rõ ràng", nói các cụm như "muốn làm X nhưng chưa rõ scope", "giúp tao định nghĩa sản phẩm", "viết spec/PRD cho ý tưởng này", "làm rõ yêu cầu", "không biết bắt đầu từ đâu", hoặc khi đưa ra một ý tưởng còn chung chung và cần được làm rõ trước khi thiết kế kiến trúc hay vỡ task. Đây là mắt xích ĐẦU của pipeline idea → spec → architecture → tasks; output spec.md sẽ là input cho agent architect và dev-leader ở các bước sau.
+description: Phỏng vấn người dùng để biến một ý tưởng phần mềm còn mơ hồ thành một bản spec (PRD) có cấu trúc, xuất ra file .claude/stories/{id}/requirement.md. LUÔN dùng skill này khi người dùng muốn build một sản phẩm/tính năng từ đầu nhưng "chưa có PRD rõ ràng", nói các cụm như "muốn làm X nhưng chưa rõ scope", "giúp tao định nghĩa sản phẩm", "viết spec/PRD cho ý tưởng này", "làm rõ yêu cầu", "không biết bắt đầu từ đâu", hoặc khi đưa ra một ý tưởng còn chung chung và cần được làm rõ trước khi thiết kế kiến trúc hay vỡ task. Đây là mắt xích ĐẦU của pipeline idea → spec → architecture → tasks; output requirement.md sẽ là input cho agent architect và dev-leader ở các bước sau.
 ---
 
 # Spec Discovery

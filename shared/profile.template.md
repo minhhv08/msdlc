@@ -20,6 +20,11 @@
 - Tests (QC design): `.claude/stories/{id}/tests/`
 - Tài liệu chung: `docs/`
 
+## Quy ước diagram (nếu có)
+<!-- architect đọc mục này khi cần vẽ sơ đồ kiến trúc. ĐỂ TRỐNG = mặc định msdlc: PlantUML, source `docs/diagrams/{name}.puml`, ref file `.svg` render sẵn. -->
+- Công cụ: `<PlantUML | Mermaid | …>`
+- Đường dẫn source/render: `<vd docs/diagrams/>`
+
 ## Lệnh build / test / run
 <!-- Lệnh chính xác cho từng project; qc-executor và dev dùng các lệnh này. -->
 - `<dir>/` build: `<…>`
@@ -46,10 +51,11 @@
 - Tool: `<Jira | Asana | Linear | Monday>` — connector MCP: `<Atlassian | Asana | Linear | monday>`
 - Project/board key: `<vd PROJ | board id>`
 - Ánh xạ mốc pipeline → tên cột trên board (bỏ trống dòng nào → skill tự suy theo keyword):
-  - planning → `<vd Planing>`
+  - todo → `<vd Todo>` <!-- nên trùng "Cột intake" của poll bên dưới, để ticket /spec tạo nằm đúng cột poll quét -->
+  - planning → `<vd Planning>`
   - validate → `<vd Validate>`
   - approved → `<vd Approved>`
-  - in-progress → `<vd InProgess>`
+  - in-progress → `<vd InProgress>`
   - review → `<vd Review>`
   - <!-- Done KHÔNG cấu hình: msdlc không bao giờ tự chuyển Done. -->
 - Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`):

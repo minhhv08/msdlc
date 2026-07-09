@@ -33,7 +33,7 @@ Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main 
 7. **DỪNG hẳn tại đây** và hỏi user có duyệt để build tiếp không. Tuyệt đối **không** tự chạy bước B khi chưa có xác nhận rõ ràng của user. Đây là cổng duyệt duy nhất của pipeline.
 
 ### Bước B — Build tự động (skill deliver-auto)
-8. Chỉ khi user đã duyệt: gọi skill **`msdlc:tracking {id} approved`** (tự no-op nếu không có tracker), rồi gọi **skill `deliver-auto`** với story `{id}` (Skill tool). Main agent **tự điều phối** theo hướng dẫn của skill đó bằng Agent tool — KHÔNG dùng Workflow.
+8. Chỉ khi user đã duyệt: **ghi dấu duyệt vào ADR** — cập nhật dòng header của `.claude/stories/{id}/adr.md` từ `Status: Proposed` thành `Status: Accepted · Duyệt: <hôm nay>`. Đây là dấu duyệt bền mà `deliver-auto` kiểm tra làm tiền đề — không có nó thì deliver-auto từ chối chạy. Sau đó gọi skill **`msdlc:tracking {id} approved`** (tự no-op nếu không có tracker), rồi gọi **skill `deliver-auto`** với story `{id}` (Skill tool). Main agent **tự điều phối** theo hướng dẫn của skill đó bằng Agent tool — KHÔNG dùng Workflow.
    Trình tự: dev-leader vỡ task → dev agent implement theo wave topo, **song song mọi task có tập file rời nhau** (nhiều lệnh Agent trong một message), tuần tự khi đụng file chung; **song song** với dev, thiết kế test theo map/reduce (qc-leader enumerate → qc-designer ×N flesh-out → qc-leader merge) → reviewer → qc-executor chạy test + security-auditor audit (song song; test fail hoặc lỗ hổng Critical/High thì dev fix rồi chạy lại, tối đa 2 vòng) → chronicler.
 9. Main theo sát từng phase và tổng hợp kết quả khi xong.
 
@@ -52,4 +52,4 @@ Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main 
 - **Sync tracker là side-effect tự động, KHÔNG phải gate.** Các lời gọi `msdlc:tracking` chỉ chuyển cột ticket; chúng không dừng pipeline và tự no-op khi dự án không dùng tracker. Không bao giờ tự chuyển Done.
 - **Không sửa định nghĩa agent.** Workflow tái dùng agent hiện có qua `agentType`.
 - **Trung thực trạng thái.** Test fail/hạ tầng thiếu phải báo đúng, không tô hồng.
-- **Có thể bỏ qua Bước A** nếu user nói "build luôn từ ADR có sẵn" — khi đó nhảy thẳng vào Bước B (vẫn nên xác nhận 1 lần).
+- **Có thể bỏ qua Bước A** nếu user nói "build luôn từ ADR có sẵn" — nhưng KHÔNG được bỏ qua gate: vẫn **BẮT BUỘC** hỏi user xác nhận duyệt ADR một lần rõ ràng, và khi user xác nhận thì ghi `Status: Accepted` vào `adr.md` như ở bước 8, rồi mới vào Bước B. Không có xác nhận → không build.

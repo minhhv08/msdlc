@@ -6,7 +6,7 @@
 > - `SHOULD` = khuyến nghị. Xuất hiện ở `suggestions`, không chặn.
 >
 > **Bảng trống = giữ hành vi cũ:** nếu không có rule nào, agent suy convention từ code lân cận như trước (không regression).
-> Đừng bịa rule — chỉ ghi điều dự án thực sự yêu cầu. Prefix id: `R-GLOBAL-*`.
+> Đừng bịa rule — chỉ ghi điều dự án thực sự yêu cầu. Prefix id: `R-GLOBAL-*` (riêng nhóm `## Commit` dùng prefix `R-COMMIT-*`).
 
 ## Coding convention & anti-pattern (scope: all)
 

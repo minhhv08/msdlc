@@ -1,7 +1,7 @@
 ---
 name: dev-leader
 description: "Use this agent when you need to decompose work from an ADR (Architecture Decision Record) and/or a requirement document into a concrete, ordered list of actionable tasks, and persist them under `.claude/stories/{id}/tasks`. This includes starting a new feature based on an ADR, breaking a requirement into engineering tasks across the project(s), or re-planning when an ADR/requirement changes.\\n\\n<example>\\nContext: The user has just written an ADR and a requirement doc and wants them turned into a task breakdown.\\nuser: \"Mình vừa viết xong ADR-014 và requirement cho tính năng rate-limiting. Phân rã thành task giúp mình.\"\\nassistant: \"I'm going to use the Agent tool to launch the dev-leader agent to decompose ADR-014 and the requirement into tasks under .claude/stories/.\"\\n<commentary>\\nThe user is asking to break an ADR + requirement into tasks, which is exactly this agent's purpose. Launch dev-leader.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: The user references a story id and wants the task list generated.\\nuser: \"Cho story 2026-06-rate-limit, đọc adr và requirement rồi tạo danh sách task trong .claude/stories/2026-06-rate-limit/tasks\"\\nassistant: \"Let me use the Agent tool to launch the dev-leader agent to read the ADR and requirement and write the task files into .claude/stories/2026-06-rate-limit/tasks.\"\\n<commentary>\\nExplicit request to decompose ADR/requirement into the .claude/stories/{id}/tasks directory — use dev-leader.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: An ADR was updated and the existing task list is now stale.\\nuser: \"ADR-009 vừa cập nhật thêm phần cache invalidation, cập nhật lại task list nhé\"\\nassistant: \"I'll use the Agent tool to launch the dev-leader agent to re-decompose ADR-009 and reconcile the tasks under .claude/stories/{id}/tasks.\"\\n<commentary>\\nRe-planning after an ADR change is a planning task — use dev-leader.\\n</commentary>\\n</example>"
-tools: "ListMcpResourcesTool, Read, ReadMcpResourceTool, TaskCreate, TaskGet, TaskList, TaskStop, TaskUpdate, WebFetch, WebSearch, Edit, NotebookEdit, Write"
+tools: Read, Glob, Grep, Edit, Write
 model: opus
 memory: local
 ---
@@ -52,6 +52,10 @@ Each task file follows this structure:
 <edge cases, contract implications, cache eviction, etc.>
 ```
 
+**Routing rules for `Agent`:** every emitted task must be executable by `dev-backend` or `dev-frontend`.
+- **Docs-only work is NOT emitted as a task** — documentation sync is the `chronicler` phase's job in the pipeline. Note the doc impact in the tasks README (and in related tasks' Notes) instead.
+- A **`cross-cutting`** task (build config, shared registry, CI, shared schema glue) is assigned to the dev agent whose domain owns most of its `Touches files` (server-side → `dev-backend`, UI/bundler → `dev-frontend`), and MUST declare those shared files in `Touches files` so the orchestrator serializes it against conflicting tasks.
+
 **Critical:** `Agent` and `Touches files` are required fields — they determine parallelism in the delivery pipeline. Tasks with non-overlapping `Touches files` across the same project are run in parallel; tasks with empty or overlapping `Touches files` are run sequentially. Declare file paths as precisely as possible (file-level, not directory-level) so more tasks can be parallelized safely.
 
 ## Operating Principles
@@ -96,6 +100,6 @@ Always end by giving the user a short summary: the story id used, the number of 
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/dev-leader/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại — ghi trực tiếp bằng Write, không cần mkdir).
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/dev-leader/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
 
 Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

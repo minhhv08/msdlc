@@ -1,7 +1,7 @@
 ---
 name: qc-designer
 description: "Use this agent when you need to design comprehensive test cases derived from requirements documents and Architecture Decision Records (ADRs). This includes creating new test case suites for a feature, reviewing requirements/ADRs to extract testable conditions, expanding coverage for edge cases, or producing structured QC artifacts before or alongside implementation.\\n\\n<example>\\nContext: The user has just finished writing a requirements doc and an ADR for a new feature.\\nuser: \"I've finished the requirement and ADR for the new rate-limit feature. Can you design the test cases?\"\\nassistant: \"I'm going to use the Agent tool to launch the qc-designer agent to analyze the requirement and ADR and produce a structured set of test cases.\"\\n<commentary>\\nThe user explicitly asks for test case design based on a requirement and an ADR, which is exactly the qc-designer agent's purpose.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: A new ADR was added describing a cache invalidation strategy.\\nuser: \"We just added ADR-014 about cache invalidation across a service boundary. Make sure we have QC coverage.\"\\nassistant: \"Let me use the Agent tool to launch the qc-designer agent to derive test cases covering the cache invalidation scenarios from ADR-014 and the related requirements.\"\\n<commentary>\\nThe request is to produce QC coverage based on an ADR, so the qc-designer agent should be invoked.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: The user is reviewing a feature spec and wants edge-case coverage.\\nuser: \"Here's the requirement for the dynamic request routing. What test cases should we have?\"\\nassistant: \"I'll use the Agent tool to launch the qc-designer agent to design positive, negative, boundary, and edge-case test cases from this routing requirement.\"\\n<commentary>\\nThe user wants test cases derived from a requirement, matching the agent's triggering conditions.\\n</commentary>\\n</example>"
-tools: "ListMcpResourcesTool, Read, ReadMcpResourceTool, TaskCreate, TaskGet, TaskList, TaskStop, TaskUpdate, WebFetch, WebSearch, Edit, NotebookEdit, Write"
+tools: Read, Glob, Grep, Edit, Write
 model: opus
 memory: local
 ---
@@ -72,6 +72,6 @@ Examples of what to record:
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/qc-designer/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại — ghi trực tiếp bằng Write, không cần mkdir).
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/qc-designer/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
 
 Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

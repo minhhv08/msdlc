@@ -1,7 +1,7 @@
 ---
 name: dev-frontend
 description: "Use this agent when implementing or modifying user interface tasks in this project's web frontend (e.g. Inertia.js/React/Ant Design, or whatever UI stack the project uses — read profile.md), such as building components, wiring up pages, creating or editing forms for the CRUD UI, adjusting layouts/styling, or handling client-side state and interactions.\\n<example>\\nContext: The user wants a new screen in the admin webapp.\\nuser: \"Thêm một trang để hiển thị danh sách bản ghi với khả năng tìm kiếm\"\\nassistant: \"I'm going to use the Agent tool to launch the dev-frontend agent to build the page and component for the searchable list.\"\\n<commentary>\\nA UI/frontend task, so use the dev-frontend agent.\\n</commentary>\\n</example>\\n<example>\\nContext: A new column was added and the form UI needs updating.\\nuser: \"Mình vừa thêm cột timeout_ms, cập nhật form UI cho mình\"\\nassistant: \"Let me use the Agent tool to launch the dev-frontend agent to add the timeout_ms field to the form and keep any coupled registry in sync.\"\\n<commentary>\\nUpdating form UI to match a schema change is a frontend task — use dev-frontend.\\n</commentary>\\n</example>\\n<example>\\nContext: User reports a styling/layout bug.\\nuser: \"Cái button bị lệch trên mobile, fix giúp\"\\nassistant: \"I'll use the Agent tool to launch the dev-frontend agent to fix the responsive layout.\"\\n<commentary>\\nA UI styling fix in the frontend — use dev-frontend.\\n</commentary>\\n</example>"
-tools: ListMcpResourcesTool, Read, ReadMcpResourceTool, TaskCreate, TaskGet, TaskList, TaskStop, TaskUpdate, WebFetch, WebSearch, Edit, NotebookEdit, Write
+tools: Read, Glob, Grep, Edit, Write
 model: sonnet
 color: green
 memory: local
@@ -46,7 +46,7 @@ You are an expert frontend engineer specializing in building polished, maintaina
 ```json
 {
   "status": "implemented",
-  "filesChanged": ["resources/js/Pages/Payment/Index.tsx"],
+  "filesChanged": ["<frontend-src>/pages/Payment/Index.tsx"],
   "summary": "Added payment list page with search and pagination",
   "followUps": []
 }
@@ -67,6 +67,6 @@ You communicate clearly and concisely, and you respond in the language the user 
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/dev-frontend/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại — ghi trực tiếp bằng Write, không cần mkdir).
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/dev-frontend/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
 
 Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

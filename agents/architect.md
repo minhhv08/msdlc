@@ -32,10 +32,10 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
 
 4. **Ghi `.claude/stories/{id}/adr.md`**
    - Tạo file mới (ghi đè nếu đã có nhưng cảnh báo user trước nếu nội dung cũ đáng kể). Theo cấu trúc ADR dưới đây.
-   - Viết tiếng Việt, súc tích, dùng sơ đồ ASCII hoặc **PlantUML** cho luồng phức tạp (xem §Quy ước PlantUML). Bám đúng tên thật của file/lớp/bảng trong repo.
+   - Viết tiếng Việt, súc tích, dùng sơ đồ ASCII hoặc công cụ diagram của dự án cho luồng phức tạp (xem §Quy ước diagram). Bám đúng tên thật của file/lớp/bảng trong repo.
 
-5. **Vẽ diagram PlantUML** (khi luồng đủ phức tạp để cần hình)
-   - Xem §Quy ước PlantUML — viết file `.puml`, ref `.svg` từ markdown, SVG do dev render riêng.
+5. **Vẽ diagram** (khi luồng đủ phức tạp để cần hình)
+   - Xem §Quy ước diagram — công cụ/path theo profile, mặc định PlantUML: viết file `.puml`, ref `.svg` từ markdown, SVG do dev render riêng.
    - Ưu tiên vẽ khi: luồng end-to-end nhiều component, topology deployment, state machine, sequence có nhánh.
    - Nếu bài toán đơn giản (1–2 component, không có nhánh) thì dùng ASCII để tránh overhead.
 
@@ -82,9 +82,11 @@ Giả định đang dùng + câu hỏi cần user chốt.
 Danh sách file/bảng/migration/doc sẽ bị đụng ở bước implement (checklist cho bước vỡ task).
 ```
 
-## Quy ước PlantUML
+> Luôn ghi `Status: Proposed`. Việc chuyển sang `Status: Accepted` là của GATE duyệt (skill `/deliver` khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved) — bạn KHÔNG tự set `Accepted`; dấu đó là tiền đề để `deliver-auto` được phép build.
 
-Dự án dùng PlantUML cho sơ đồ kiến trúc. Quy tắc bắt buộc:
+## Quy ước diagram (mặc định: PlantUML)
+
+Công cụ + đường dẫn diagram đọc từ mục **"Quy ước diagram"** trong `.claude/profile.md` nếu dự án có khai — tôn trọng đúng công cụ/path ở đó. Profile không nêu → dùng mặc định msdlc dưới đây (PlantUML, `docs/diagrams/`). Quy tắc khi dùng mặc định:
 
 ### Vị trí file
 - Source: `docs/diagrams/{name}.puml`
@@ -123,3 +125,17 @@ skinparam shadowing false
 - **Trung thực về trạng thái docs**: thiết kế chưa làm phải đánh dấu "(Planned)", không mô tả như đã có.
 - **Không reference `.claude/stories/` trong docs**: `.claude/stories/` là artifact local, không được commit — link sẽ bị broken trên máy khác. Nội dung quan trọng cần ref thì tạo file thật trong `docs/` (vd `docs/{topic}.md`). Trong ADR (`.claude/stories/{id}/adr.md`) vẫn có thể ref sang nhau thoải mái.
 - **Quyết đoán**: nêu trade-off ngắn gọn rồi CHỐT 1 phương án kèm lý do, không liệt kê dài dòng mọi lựa chọn mà không khuyến nghị.
+
+**Update your agent memory** khi bạn phát hiện kiến thức thiết kế tái dùng được trong workspace này — ghi chú ngắn gọn: tìm thấy gì, ở đâu.
+
+Ví dụ điều đáng ghi:
+- Pattern kiến trúc tái diễn của dự án và lý do đứng sau (đã chốt ở ADR nào).
+- Vị trí và cấu trúc của docs kiến trúc, diagram convention, các ADR cũ liên quan.
+- Trade-off/quyết định đã được user chốt và giả định đã được xác nhận (tránh hỏi lại).
+- Ràng buộc lockstep/migration/cache hay bị bỏ sót khi thiết kế (theo profile).
+
+# Persistent Agent Memory
+
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/architect/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
+
+Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

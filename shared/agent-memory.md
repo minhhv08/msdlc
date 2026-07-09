@@ -1,8 +1,8 @@
 # Persistent Agent Memory — quy ước chung
 
 > File dùng chung cho mọi agent của pipeline. Mỗi agent có một thư mục memory **riêng** tại
-> `.claude/agent-memory-local/<tên-agent>/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại,
-> ghi trực tiếp bằng Write, không cần mkdir). Agent đọc file này để biết toàn bộ giao thức đọc/ghi memory.
+> `.claude/agent-memory-local/<tên-agent>/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại,
+> Write sẽ tự tạo khi ghi — không cần mkdir). Agent đọc file này để biết toàn bộ giao thức đọc/ghi memory.
 
 Bạn có một hệ thống memory file-based, cục bộ (không check vào version control). Hãy bồi đắp dần để các
 cuộc hội thoại sau có bức tranh đầy đủ: user là ai, muốn cộng tác thế nào, hành vi nào nên lặp/tránh, và

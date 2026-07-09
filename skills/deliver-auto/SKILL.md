@@ -1,14 +1,17 @@
 ---
 name: deliver-auto
 description: >-
-  Từ ADR đã duyệt của một story id: vỡ task (dev-leader) **song song** thiết kế test (qc-designer) → implement song song theo file-disjoint (dev-backend/dev-frontend) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
+  Từ ADR đã duyệt của một story id: vỡ task (dev-leader) **song song** thiết kế test map/reduce (qc-leader enumerate → qc-designer ×N design-subset → qc-leader merge) → implement song song theo file-disjoint (dev-backend/dev-frontend) → review (reviewer, auto-fix ≤1) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt (header `Status: Accepted`) và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
 ---
 
 # deliver-auto — Build tự động một story (main điều phối)
 
 Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool** — không dùng Workflow. Mục tiêu: nhanh và minh bạch, main giữ quyền kiểm soát, chạy song song tối đa những việc không đụng nhau, và báo cáo trung thực.
 
-**Tiền đề:** `.claude/stories/{id}/adr.md` đã tồn tại **và đã được user duyệt** (thường do `/deliver` lo cổng duyệt). Nếu chưa có ADR → dừng, báo user chạy bước architect/`/deliver` trước. KHÔNG tự bịa.
+**Tiền đề:** `.claude/stories/{id}/adr.md` đã tồn tại **và header ghi `Status: Accepted`** — dấu duyệt do gate ghi lại (`/deliver` Bước B khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved). Kiểm tra thật sự, không tin lời gọi:
+- Chưa có `adr.md` → dừng, báo user chạy bước architect/`/deliver` trước. KHÔNG tự bịa.
+- `adr.md` còn `Status: Proposed` → dừng, báo user ADR chưa được duyệt — đi qua gate `/deliver` (hoặc kéo ticket sang Approved nếu dùng board).
+- `adr.md` cũ không có dòng `Status:` (tạo trước khi có cơ chế dấu duyệt) → hỏi user xác nhận duyệt một lần; user đồng ý thì ghi `Status: Accepted` rồi tiếp tục (backward compat).
 
 **Input:** một story id (vd `002`). Nếu không có → liệt kê `.claude/stories/` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.
 
@@ -27,7 +30,7 @@ Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` 
 
 - `id` (vd `"01"`), `file` (tên file task đã ghi), `title`
 - `project`: một trong các project tên trong `.claude/profile.md` | `docs` | `cross-cutting`
-- `agent`: `dev-backend` (mọi code server-side — bất kỳ ngôn ngữ/framework backend nào theo profile) | `dev-frontend` (UI web)
+- `agent`: `dev-backend` (mọi code server-side — bất kỳ ngôn ngữ/framework backend nào theo profile) | `dev-frontend` (UI web). Task docs-only không được sinh (docs do `chronicler` lo ở Phase 4); task `cross-cutting` gán theo domain sở hữu đa số `touchesFiles`.
 - `dependsOn`: danh sách task id phụ thuộc (rỗng nếu không)
 - `touchesFiles`: đường dẫn (từ gốc workspace) các file/thư mục task sẽ TẠO/SỬA — **kể cả file dùng chung** (file build/deps, file cấu hình, lớp đăng ký route/bean/filter, registry/đối tượng dùng chung của lockstep…). Khai báo càng đầy đủ càng song song được nhiều; để rỗng nếu không chắc (sẽ bị xếp tuần tự cho an toàn).
 
@@ -65,7 +68,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - **Follow-ups:** <lockstep, cache eviction, hoặc để trống>
    ```
 
-   Ghi kể cả khi agent fail/skip (status = `skipped`, summary = lý do). Sau đó gom `filesChanged` + `followUps` toàn wave, đánh dấu task là done, sang wave kế. Nếu hết task ready mà chưa xong (cycle/lỗi) → log cảnh báo và dừng phase.
+   Ghi kể cả khi agent fail/skip (status = `skipped`, summary = lý do). Sau đó gom `filesChanged` + `followUps` toàn wave, đánh dấu task là done, sang wave kế. **Nếu hết task ready mà còn task chưa xong** (nghi cycle trong `dependsOn`, hoặc dep của chúng đã fail): liệt kê rõ các task còn kẹt + chuỗi phụ thuộc của chúng, ghi `## Result` status `skipped` (lý do: blocked/cycle) cho từng task kẹt, rồi **dừng cả pipeline** — KHÔNG chạy tiếp review/QC trên code dở dang; báo user và ghi tình trạng vào report (Phase 5 dạng rút gọn).
 
 **An toàn:** không bao giờ chạy song song hai agent đụng cùng file → tránh ghi đè. KHÔNG dùng git worktree (thay đổi ở worktree riêng không gộp lại thành cây build được); luôn làm trên cùng working tree với tập file rời nhau.
 
@@ -91,7 +94,7 @@ Khâu thiết kế test được cắt thành **map/reduce** để không thành
 
 ## Phase 2.5 — Code Review (reviewer, auto-fix ≤ 1 vòng)
 
-Gọi **Agent `reviewer`** với story id: đọc `git diff` + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md` + `.claude/rules/` (mọi file rule), review implementation theo các dimensions (correctness vs spec, lockstep, logic, convention & project rules, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`. Mỗi finding bám một rule mang thêm field `ruleId` (vd `"R-BE-1"`); vi phạm rule `MUST` → `blockingFindings`, vi phạm rule `SHOULD` → `suggestions`.
+Gọi **Agent `reviewer`** với story id, **truyền kèm tập `filesChanged` gom từ các wave của Phase 2** để giới hạn scope — reviewer review đúng phần code story này đổi, không dính nhiễu khi working tree có thay đổi khác (quan trọng khi `tracking-poll` build nhiều story tuần tự trên cùng cây). Reviewer đọc `git diff` (lọc theo tập file đó) + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md` + `.claude/rules/` (mọi file rule), review implementation theo các dimensions (correctness vs spec, lockstep, logic, convention & project rules, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`. Mỗi finding bám một rule mang thêm field `ruleId` (vd `"R-BE-1"`); vi phạm rule `MUST` → `blockingFindings`, vi phạm rule `SHOULD` → `suggestions`.
 
 **Xử lý kết quả:**
 - `approved: true` → tiếp Phase 3.
@@ -112,7 +115,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 > Ví dụ: story đụng 2 project backend + 1 project frontend → phát 3 `qc-executor` song song trong 1 message.
 
-1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này tìm lỗ hổng (theo lockstep/secrets/cache của profile **và rule `R-SEC-*` trong `.claude/rules/security.md`**). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` trong `security.md` được nâng severity tối thiểu `High` (kèm `ruleId`) nên sẽ lọt vòng auto-fix Critical/High dưới đây.
+1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này (truyền kèm tập `filesChanged` gom từ Phase 2 để giới hạn scope, như với reviewer) tìm lỗ hổng (theo lockstep/secrets/cache của profile **và rule `R-SEC-*` trong `.claude/rules/security.md`**). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` trong `security.md` được nâng severity tối thiểu `High` (kèm `ruleId`) nên sẽ lọt vòng auto-fix Critical/High dưới đây.
 
 2. **Ghi execution report & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
 
@@ -212,6 +215,7 @@ Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 ## Nguyên tắc
 
 - **Main tự điều phối bằng Agent tool** — chạy song song tối đa các task file-disjoint; không dùng Workflow.
+- **JSON contract hỏng → không im lặng bỏ qua.** Mọi phase đều parse JSON từ agent (tasks, stubs/buckets, status, approved, allPassed, findings). Nếu agent trả JSON thiếu field/không parse được: yêu cầu lại agent đó đúng 1 lần ("chỉ trả JSON đúng schema"); vẫn hỏng → fallback đọc artifact trên đĩa để tái dựng (`tasks/*.md`, `tests/testcases-part-*.md`, file report tương ứng), hoặc nếu không tái dựng được thì dừng phase và báo user rõ agent nào trả output hỏng.
 - **Không sửa định nghĩa agent** — chỉ tái dùng qua Agent tool.
 - **Idempotent** — luôn check-before-write để chạy lại trên codebase đã có không phá đồ.
 - **Trung thực trạng thái** — test fail / thiếu hạ tầng phải báo đúng.

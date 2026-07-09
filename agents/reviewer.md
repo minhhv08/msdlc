@@ -136,6 +136,6 @@ Nếu không có story id (chạy standalone), ghi vào `review-{timestamp}.md` 
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/reviewer/` (đường dẫn tương đối từ gốc workspace; thư mục đã tồn tại — ghi trực tiếp bằng Write, không cần mkdir).
+Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/reviewer/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
 
 Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.

@@ -11,7 +11,12 @@ Chạy đúng lệnh sau (dùng biến `$CLAUDE_PLUGIN_ROOT` trỏ tới gốc p
 
 ```bash
 mkdir -p .claude/shared .claude/rules
-cp "$CLAUDE_PLUGIN_ROOT/shared/agent-memory.md" .claude/shared/agent-memory.md
+if [ -f .claude/shared/agent-memory.md ]; then
+  echo "ĐÃ CÓ .claude/shared/agent-memory.md — KHÔNG ghi đè (xoá file rồi chạy lại init nếu muốn lấy bản mới của plugin)"
+else
+  cp "$CLAUDE_PLUGIN_ROOT/shared/agent-memory.md" .claude/shared/agent-memory.md
+  echo "Đã tạo .claude/shared/agent-memory.md"
+fi
 if [ -f .claude/profile.md ]; then
   echo "ĐÃ CÓ .claude/profile.md — KHÔNG ghi đè"
 else
@@ -36,7 +41,7 @@ done
 
 Đừng để template rỗng. Tự dò codebase rồi điền `.claude/profile.md`:
 
-1. Tìm dấu hiệu stack: `pom.xml`/`build.gradle` (Java), `composer.json`/`artisan` (PHP/Laravel), `package.json` (Node/JS, đọc `scripts`), `pyproject.toml`/`requirements.txt` (Python), `go.mod` (Go), `Cargo.toml` (Rust)… Dùng Glob/Grep/Read.
+1. Tìm dấu hiệu stack: `pom.xml`/`build.gradle` (Java), `composer.json`/`artisan` (PHP/Laravel), `package.json` (Node/JS, đọc `scripts`), `pyproject.toml`/`requirements.txt` (Python), `go.mod` (Go), `Cargo.toml` (Rust), `*.csproj`/`*.sln` (C#/.NET), `Gemfile` (Ruby)… Dùng Glob/Grep/Read.
 2. Từ đó suy ra cho từng mục của profile:
    - **Projects & stack** — mỗi thư mục project + ngôn ngữ/framework/version + port (nếu thấy).
    - **Đường dẫn quy ước** — giữ mặc định `.claude/stories/{id}/...`, `docs/`; chỉnh nếu repo dùng khác.

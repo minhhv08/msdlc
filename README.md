@@ -106,10 +106,13 @@ Lệnh này copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào 
 <summary>Làm thủ công nếu không dùng lệnh init</summary>
 
 ```bash
+# <msdlc> = đường dẫn tới plugin: repo đã clone (github.com/minhhv08/msdlc),
+# hoặc bản đã cài (tìm dưới ~/.claude/plugins/). Trong phiên Claude Code, biến
+# $CLAUDE_PLUGIN_ROOT trỏ sẵn tới đây khi chạy command của plugin.
 mkdir -p .claude/shared .claude/rules
-cp "$(claude plugin path msdlc)/shared/agent-memory.md" .claude/shared/agent-memory.md
-cp "$(claude plugin path msdlc)/shared/profile.template.md" .claude/profile.md
-cp "$(claude plugin path msdlc)"/shared/rules/*.md .claude/rules/
+cp "<msdlc>/shared/agent-memory.md" .claude/shared/agent-memory.md
+cp "<msdlc>/shared/profile.template.md" .claude/profile.md
+cp "<msdlc>"/shared/rules/*.md .claude/rules/
 ```
 
 Rồi **điền `.claude/profile.md`** (stack, đường dẫn, lệnh build/test, hạ tầng, hợp đồng lockstep) và **`.claude/rules/`** (convention, kiến trúc, bảo mật, DoD, commit).
@@ -140,7 +143,7 @@ Nếu dự án dùng board (Jira/Asana/Linear/Monday), msdlc có thể tự chuy
 Ánh xạ mốc pipeline → cột board (tên cột cấu hình được trong profile; ví dụ theo flow phổ biến):
 
 ```
-Backlog → Todo → Planing → Validate → Approved → InProgess → Review → Done
+Backlog → Todo → Planning → Validate → Approved → InProgress → Review → Done
           └─(1)──────────┘  (user)    └─(2)────────────────┘   (user) (user)
    idea    spec   architect   ADR gate   người      build+QC+review   người verify
                               (duyệt = kéo Validate→Approved)          + đóng Done

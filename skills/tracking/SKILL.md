@@ -17,6 +17,7 @@ Ví dụ: `msdlc:tracking 001 review`. Nếu thiếu tham số → hỏi user st
 2. **KHÔNG BAO GIỜ tự chuyển sang Done/Closed/Completed** — kể cả khi được gọi với phase lạ. Done là quyền của người (giống lý do của gate ADR: output cần người verify).
 3. **Detect từ chính tool, đừng đoán.** Ưu tiên override tên cột trong profile; nếu không có thì suy từ danh sách transitions thực tế của ticket.
 4. **Không sửa định nghĩa agent, không đụng code sản phẩm.** Skill chỉ đọc artifact story + gọi MCP tool của tracker.
+5. **Lỗi giữa chừng cũng là non-fatal.** Qua guard rồi mà transition/comment vẫn fail (MCP rớt kết nối, transition không hợp lệ, thiếu quyền) → bắt lỗi, log một dòng mô tả rồi kết thúc bình thường — KHÔNG throw, KHÔNG làm dừng skill/pipeline đang gọi tới. Sync là side-effect, không phải gate; board lệch một nhịp thì lượt sync sau (hoặc người) chỉnh lại.
 
 ## Bước 1 — Guard: có nên sync không?
 
