@@ -1,16 +1,18 @@
 # msdlc
 
-Một plugin Claude Code đóng gói pipeline giao hàng **độc lập stack**:
+Một plugin Claude Code đóng gói pipeline giao hàng **độc lập stack** — với **đúng một cổng duyệt** do con người giữ:
 
+```mermaid
+flowchart LR
+    idea(["💡 Ý tưởng mơ hồ"]) --> spec["📝 /spec<br/>phỏng vấn có cấu trúc<br/>→ requirement.md"]
+    spec --> arch["🏛 architect<br/>thiết kế phương án<br/>→ adr.md"]
+    arch --> gate{"🚧 GATE<br/>người duyệt ADR"}
+    gate -->|"duyệt<br/>(Status: Accepted)"| auto["🤖 deliver-auto<br/>build ∥ test ∥ review ∥ docs"]
+    gate -.->|"chưa duyệt"| stop(["⛔ dừng"])
+    auto --> rep["📊 report.md"] --> commit["✅ /commit"]
 ```
-idea → /spec → architect → [GATE duyệt ADR]
-     → dev-leader  ∥  qc-leader (enumerate)          (song song ở Phase 1)
-     → dev-backend / dev-frontend (song song theo file-disjoint)
-       ∥ qc-designer ×N (design-subset, fan-out từ Wave 1) → qc-leader (merge)
-     → reviewer (auto-fix ≤1)
-     → qc-executor + security-auditor (song song, auto-fix ≤2)
-     → chronicler
-```
+
+> Chi tiết từng phase bên trong `deliver-auto` và các cách áp dụng: xem [Các workflow áp dụng](#các-workflow-áp-dụng).
 
 Mọi đặc thù dự án **không nhúng cứng** trong agent — chúng đọc lúc chạy từ hai nguồn của dự án tiêu thụ:
 - `.claude/profile.md` — **facts**: stack, đường dẫn, lệnh test, hợp đồng lockstep.
@@ -130,31 +132,140 @@ Thêm vào `.gitignore` của dự án tiêu thụ:
 
 > `.claude/profile.md` và `.claude/rules/` thì **nên commit** — đây là cấu hình dùng chung cho cả team.
 
-## Dùng
+## Các workflow áp dụng
 
-- `/spec` — phỏng vấn biến ý tưởng thành requirement.
-- `/deliver {id}` — chạy cả pipeline với một cổng duyệt sau ADR.
-- Hoặc gọi từng agent qua Agent tool theo nhu cầu.
+Chọn workflow theo **thứ bạn đang có trong tay**:
+
+```mermaid
+flowchart TD
+    S{"Bạn đang có gì trong tay?"}
+    S -->|"chỉ ý tưởng mơ hồ"| W1["1️⃣ /spec → /deliver {id}<br/>pipeline trọn gói"]
+    S -->|"đã có requirement.md"| W2["2️⃣ /deliver {id}<br/>architect → gate → build"]
+    S -->|"đã có ADR"| W3["3️⃣ /deliver {id} — build từ ADR có sẵn<br/>vẫn bắt buộc xác nhận duyệt"]
+    S -->|"chỉ cần một bước lẻ"| W4["4️⃣ Gọi thẳng agent<br/>architect / dev-leader / qc-designer / reviewer / security-auditor…"]
+    S -->|"team vận hành trên board"| W5["5️⃣ /msdlc:init điền Task tracker<br/>+ bật poll → board tự chạy pipeline"]
+```
+
+### 1️⃣ Trọn gói — từ ý tưởng mơ hồ
+
+```
+/spec          → phỏng vấn → .claude/stories/{id}/requirement.md
+/deliver {id}  → architect → [GATE duyệt ADR] → build + test + docs → report.md
+```
+
+Dùng khi mới chỉ có ý tưởng, chưa có PRD. `/spec` ép làm rõ scope, non-goals, acceptance criteria trước khi đụng tới thiết kế.
+
+### 2️⃣ Từ requirement có sẵn
+
+Đã có `requirement.md` (tự viết theo template, hoặc do `tracking-poll` suy từ ticket)? Chạy thẳng `/deliver {id}` — pipeline bắt đầu từ bước architect.
+
+### 3️⃣ Build từ ADR có sẵn
+
+Nói với `/deliver {id}`: *"build luôn từ ADR có sẵn"* — bỏ qua bước thiết kế nhưng **không bỏ qua gate**: vẫn phải xác nhận duyệt một lần (skill ghi `Status: Accepted` vào `adr.md` rồi mới build).
+
+### 4️⃣ Chạy lẻ từng bước
+
+Mỗi agent dùng độc lập được qua Agent tool khi chỉ cần một mắt xích:
+
+| Bạn nói | Agent chạy |
+|---|---|
+| "Thiết kế kiến trúc cho story 002" | `architect` |
+| "Vỡ task từ ADR của story 002" | `dev-leader` |
+| "Thiết kế test case cho requirement này" | `qc-designer` (chế độ full) |
+| "Review diff hiện tại" | `reviewer` |
+| "Quét bảo mật diff này trước khi merge" | `security-auditor` |
+| "Chạy test cho project X" | `qc-executor` |
+| "Sync docs với code vừa đổi" | `chronicler` |
+
+### 5️⃣ Vận hành theo board — tự động hoá cao nhất
+
+Điền mục `## Task tracker` trong profile + bật cờ poll → board Jira/Asana/Linear/Monday trở thành giao diện vận hành pipeline: kéo thẻ là duyệt, máy lo phần còn lại. Xem [Đồng bộ board ngoài](#đồng-bộ-board-ngoài-tùy-chọn).
+
+### Bên trong deliver-auto (Phase 1 → 5)
+
+Sau khi ADR được duyệt, `deliver-auto` tự điều phối các agent — song song tối đa những việc không đụng file nhau:
+
+```mermaid
+flowchart TB
+    A["▶ Tiền đề: adr.md có Status: Accepted"] --> P1
+    subgraph P1["Phase 1 — Plan (song song)"]
+        direction LR
+        DL["dev-leader<br/>vỡ task + dependsOn + touchesFiles"]
+        QL1["qc-leader — enumerate<br/>test stubs + buckets"]
+    end
+    subgraph P2["Phase 2 — Implement ∥ thiết kế test"]
+        W["dev-backend ∥ dev-frontend<br/>Wave 1..n theo file-disjoint"]
+        QD["qc-designer × N — design-subset<br/>mỗi bucket một agent, fan-out từ Wave 1"]
+        QL2["qc-leader — merge<br/>tests/README.md (Traceability Matrix)"]
+        QD --> QL2
+    end
+    DL --> W
+    QL1 --> QD
+    W --> R["Phase 2.5 — reviewer<br/>vi phạm MUST → dev fix, ≤ 1 vòng"]
+    subgraph P3["Phase 3 — QC + Security (song song, auto-fix ≤ 2 vòng)"]
+        direction LR
+        QE["qc-executor × project<br/>chạy test thật theo profile"]
+        SA["security-auditor<br/>Critical/High chặn + trigger fix"]
+    end
+    R --> P3
+    QL2 --> P3
+    P3 --> C["Phase 4 — chronicler<br/>đồng bộ README/docs/CHANGELOG"]
+    C --> REP["Phase 5 — report.md<br/>tracking → cột Review (KHÔNG tự Done)"]
+```
+
+Ba trục song song hoá chính:
+
+- **Wave file-disjoint** — các dev task có `touchesFiles` rời nhau chạy cùng lúc; đụng file chung thì xếp wave sau.
+- **Map/reduce thiết kế test** — `qc-leader` liệt kê stub + chia bucket ngay ở Phase 1, N `qc-designer` flesh-out song song với dev từ Wave 1, `qc-leader` merge lại; đến Phase 3 test suite đã sẵn.
+- **QC ∥ Security** — mỗi project một `qc-executor`, chạy cùng lúc với `security-auditor`; lỗi test hoặc finding Critical/High → dev fix rồi chạy lại, ngân sách chung ≤ 2 vòng.
 
 ## Đồng bộ board ngoài (tùy chọn)
 
 Nếu dự án dùng board (Jira/Asana/Linear/Monday), msdlc có thể tự chuyển cột ticket theo tiến độ pipeline. **Tính năng opt-in**: không cấu hình mục `## Task tracker` trong `.claude/profile.md` → pipeline chạy thuần local **y như cũ** (skill `msdlc:tracking` tự no-op).
 
-Ánh xạ mốc pipeline → cột board (tên cột cấu hình được trong profile; ví dụ theo flow phổ biến):
+Ánh xạ mốc pipeline → cột board (tên cột cấu hình được trong profile; ví dụ theo flow phổ biến) — 🤖 là máy tự chuyển, 👤 là thao tác của người:
 
-```
-Backlog → Todo → Planning → Validate → Approved → InProgress → Review → Done
-          └─(1)──────────┘  (user)    └─(2)────────────────┘   (user) (user)
-   idea    spec   architect   ADR gate   người      build+QC+review   người verify
-                              (duyệt = kéo Validate→Approved)          + đóng Done
+```mermaid
+flowchart LR
+    B["Backlog"] --> T["Todo (intake)"]
+    T -->|"🤖 poll: story + ADR"| V["Validate"]
+    V -->|"👤 kéo thẻ = duyệt ADR"| A["Approved"]
+    A -->|"🤖 poll: build"| I["InProgress"]
+    I -->|"🤖 xong pipeline"| R["Review"]
+    R -->|"👤 verify + đóng"| D["Done"]
+    style V fill:#fff3cd,stroke:#b8860b
+    style A fill:#fff3cd,stroke:#b8860b
+    style D fill:#d4edda,stroke:#2e7d32
 ```
 
-- Đoạn **(1)** và **(2)** là hai khúc tự động của pipeline; giữa chúng là **cổng duyệt** — chính là thao tác **người kéo thẻ** từ `Validate` sang `Approved`. Máy không bao giờ tự vượt.
+- Giữa hai khúc tự động là **cổng duyệt** — chính là thao tác **người kéo thẻ** từ `Validate` sang `Approved` (poll ghi lại thành `Status: Accepted` trong `adr.md`). Máy không bao giờ tự vượt.
 - `Done` **không bao giờ** do máy chuyển — luôn để người verify và đóng thủ công.
 
 ### Tự động kéo task từ board (loop)
 
-`/msdlc:tracking-poll` quét board **một lượt**: ticket ở cột intake → tạo story + thiết kế ADR + đẩy sang `Validate` rồi dừng; ticket ở cột `Approved` (người đã duyệt) → tự build → `Review`. Để chạy định kỳ, ghép với cơ chế lặp của harness (msdlc không tự chế scheduling):
+`/msdlc:tracking-poll` quét board **một lượt**: ticket ở cột intake → tạo story + thiết kế ADR + đẩy sang `Validate` rồi dừng; ticket ở cột `Approved` (người đã duyệt) → tự build → `Review`. Một chu trình đầy đủ của một ticket:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor H as 👤 Người duyệt
+    participant B as Board
+    participant P as tracking-poll
+
+    Note over P: lặp bằng /loop hoặc schedule
+    P->>B: quét cột intake (Todo)
+    B-->>P: ticket mới
+    P->>P: tạo story + architect → adr.md
+    P->>B: chuyển → Validate, comment link ADR
+    Note over H,P: ⛔ DỪNG — máy không tự vượt gate
+    H->>B: kéo thẻ Validate → Approved (= duyệt ADR)
+    P->>B: quét cột Approved (lượt sau)
+    P->>P: ghi Status: Accepted + deliver-auto build
+    P->>B: chuyển → Review, comment kết quả
+    H->>B: verify, đóng Done (luôn do người)
+```
+
+Để chạy định kỳ, ghép với cơ chế lặp của harness (msdlc không tự chế scheduling):
 
 - **`/loop 10m /msdlc:tracking-poll`** — lặp theo interval trong phiên đang mở. Đơn giản; dừng khi đóng phiên/máy.
 - **`schedule`** (cloud cron) — tạo scheduled agent chạy nền kể cả khi tắt máy. Bền hơn cho vận hành liên tục.

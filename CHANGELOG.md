@@ -20,6 +20,7 @@
 - Lời văn memory footer: "thư mục đã tồn tại" → "Write tự tạo thư mục nếu chưa có" (init không tạo sẵn thư mục memory); qc-executor gộp double memory section.
 - Profile template: thêm dòng `todo →` vào mapping cột (kèm ghi chú trùng cột intake); `/msdlc:init` nhận diện thêm C#/.NET (`*.csproj`/`*.sln`) và Ruby (`Gemfile`).
 - `plugin.json`: bump 0.4.0, thêm `"license": "MIT"`.
+- docs: README chuyển sơ đồ ASCII sang **Mermaid** (GitHub render trực tiếp) — pipeline end-to-end, bên trong deliver-auto (Phase 1→5), cột board 🤖/👤, sequence vòng poll; thêm section **"Các workflow áp dụng"** với sơ đồ chọn workflow theo thứ đang có + 5 công thức dùng (trọn gói / từ requirement / từ ADR / gọi lẻ agent / vận hành theo board).
 
 ## [0.3.0] — 2026-07-02
 
