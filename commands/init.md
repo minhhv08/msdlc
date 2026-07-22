@@ -75,6 +75,18 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 
 Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy **luồng nhẹ** (claim ticket ở Todo → `task-planner` phân tích → comment plan → build gọn bằng `deliver-light`, dùng `.claude/tasks/{taskid}/`) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo). Nên chạy **một poller cho mỗi board**.
 
+## Bước 2d — Git flow cho poll (optional, chỉ khi dùng poll + là git repo)
+
+Chỉ làm nếu dự án là git repo và user muốn poll tự tách nhánh + tạo MR cho mỗi task:
+
+1. Kiểm tra `git rev-parse` là repo. Không phải → bỏ qua mục này.
+2. Nếu có → hỏi và điền mục `## Git` trong `.claude/profile.md`:
+   - **Base branch**: gợi ý theo default branch detect (`git symbolic-ref refs/remotes/origin/HEAD`) — xác nhận với user (có thể là `main`/`master`/`production`).
+   - **MR tool**: gợi ý theo remote (`git remote get-url origin`): github → `gh`, gitlab → `glab`, bitbucket → `bitbucket`; hoặc để trống cho auto-detect. Nếu chọn `gh`/`glab` → nhắc cần cài + auth CLI đó (không có cũng chạy được: skill fallback push + link tạo MR tay).
+   - **Branch pattern / MR target**: để trống dùng mặc định (`<type>/<taskid>-<slug>`, target = base).
+   - **Cờ bật git flow**: mặc định `no` (opt-in).
+3. Nhắc user: bật git flow → máy tạo nhánh + MR cho mỗi task và comment link vào ticket, **một build/lượt**, nhưng **KHÔNG tự merge** — người review MR rồi merge + đóng ticket.
+
 ## Bước 3 — Hậu kiểm
 
 - Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/` và `.claude/tasks/` vào `.gitignore` (memory + artifact story/task cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.

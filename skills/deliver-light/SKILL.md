@@ -76,6 +76,8 @@ Ghi **`.claude/tasks/{taskid}/report.md`**:
 # Delivery Report (light) — {taskid}
 
 > Generated: {date} · Plan: [plan.md](plan.md)
+<!-- git-flow finish sẽ chèn dòng `> MR: <url>` ngay dưới đây khi git flow bật; deliver-light để trống. -->
+{mr-line-nếu-có}
 
 ## Subtasks
 | # | Title | Agent | Status | Files changed |

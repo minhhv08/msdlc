@@ -65,6 +65,18 @@
   - Cột build-trigger (người kéo tay sang đây = duyệt plan, cho phép tự build): `<vd Approved>`
   - Bật poll: `<no>` <!-- mặc định no; đổi thành yes để cho phép /msdlc:tracking-poll xử lý. Opt-in vì đây là tự động mạnh. -->
 
+## Git (nếu dùng git flow cho poll)
+<!--
+  Cấu hình git flow cho luồng board nhẹ (`/msdlc:tracking-poll` → skill `msdlc:git-flow`):
+  mỗi task board làm trên một nhánh riêng tách từ base, build xong tự commit + push + tạo MR + comment link vào ticket.
+  ĐỂ CỜ TẮT (mặc định) = poll build thẳng trên branch hiện tại như cũ (không nhánh/MR). Máy KHÔNG BAO GIỜ tự merge.
+-->
+- Bật git flow: `<no>` <!-- opt-in; đổi thành yes để bật tách nhánh + MR cho poll. -->
+- Base branch: `<để trống → auto-detect default branch của remote; vd main | master | production>`
+- Branch pattern: `<để trống → <type>/<taskid>-<slug>; type theo msdlc:commit (feat/fix/…), slug từ title ticket>`
+- MR tool: `<để trống → auto-detect từ remote URL | gh | glab | bitbucket>`
+- MR target branch: `<để trống → = Base branch>`
+
 ## Quy tắc commit
 <!-- Commit rule KHÔNG còn ở profile. Xem `.claude/rules/global.md` nhóm `## Commit`. -->
 → Quy tắc commit sống ở `.claude/rules/global.md` (nhóm `## Commit`). Skill `msdlc:commit` đọc từ đó.

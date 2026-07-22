@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0] — 2026-07-22
+
+### Added
+
+- **Git flow cho luồng board (opt-in)**: `/msdlc:tracking-poll` giờ có thể tách một nhánh riêng cho mỗi task từ base branch, build xong tự commit → push → tạo merge/pull request → comment link MR vào ticket.
+  - **Skill mới `msdlc:git-flow`** (`{taskid} start|finish`): nơi duy nhất chứa logic git. `start` tạo/switch nhánh `<type>/<taskid>-<slug>` off base (type theo `msdlc:commit`, slug từ title ticket); `finish` một commit qua `msdlc:commit` + push + tạo MR (auto qua `gh`/`glab` nếu có + auth, không thì fallback dựng link "create MR" điền sẵn từ remote URL) + ghi `> MR:` vào report. Tự **no-op** khi cờ tắt / không phải git repo. **Máy không bao giờ tự merge** — merge là quyền người (đối xứng never-auto-Done).
+  - **Mục `## Git` trong `profile.md`**: cờ bật (mặc định `no`), base branch (trống→auto-detect default branch), branch pattern, MR tool (trống→suy từ remote), MR target.
+- `init.md`: thêm Bước 2d hỏi & điền mục `## Git` khi dự án là git repo + dùng poll.
+
+### Changed
+
+- **`tracking-poll`**: khi git flow bật → Bước 2 chèn `git-flow start` TRƯỚC build và `git-flow finish` SAU build; chỉ **một build/lượt** (không juggle nhiều nhánh trên working tree chung); Bước R resume thêm nhánh finish dở (report có nhưng thiếu `> MR:`). Không bao giờ build trên base (start fail → skip ticket, không clobber). Tắt cờ → hành vi 0.5.0 y nguyên.
+- **`tracking`**: comment mốc `review` nếu report có dòng `> MR:`/`> PR:` → đính kèm link MR + nhắc review-rồi-merge (không đổi contract).
+- `deliver-light`: report template chừa chỗ cho dòng `> MR:` (do `git-flow finish` điền); deliver-light vẫn KHÔNG tự commit (commit do git-flow qua `msdlc:commit`).
+- README: thêm skill `git-flow`, cập nhật sequence poll + section board (git flow, một build/lượt, không tự merge), glossary.
+
 ## [0.5.0] — 2026-07-22
 
 ### Changed

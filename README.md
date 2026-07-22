@@ -49,6 +49,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 | `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
 | `deliver-light` | (nội bộ) | **Build GỌN** cho task board nhỏ đã có `plan.md` duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer → qc-executor + security-auditor → chronicler → `report.md`. Không vỡ task bằng dev-leader, không QC map/reduce. Gọi bởi `tracking-poll`. |
 | `tracking` | `/msdlc:tracking {id} {phase} [kind]` | Đồng bộ trạng thái sang cột board ngoài (Jira/Asana/Linear/Monday) tại một mốc (`todo`/`planning`/`validate`/`approved`/`in-progress`/`review`). `kind` ∈ `story` (mặc định, luồng thủ công — artifact `.claude/stories/`, comment ADR) \| `task` (luồng board nhẹ — artifact `.claude/tasks/`, comment plan). Được `spec`/`deliver`/`deliver-auto`/`tracking-poll` gọi tự động; tự **no-op** nếu dự án không cấu hình tracker. Không bao giờ tự chuyển Done. |
+| `git-flow` | `/msdlc:git-flow {taskid} {start\|finish}` | (luồng board, opt-in) Tách nhánh riêng cho mỗi task từ base branch (`start`), build xong thì một commit (qua `msdlc:commit`) + push + tạo MR/PR + trả link để comment vào ticket (`finish`). Auto-create MR qua `gh`/`glab` nếu có, không thì fallback link tạo MR tay. Tự **no-op** nếu tắt cờ / không phải git repo. **Máy không bao giờ tự merge.** |
 | `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
 ### Commands
@@ -271,10 +272,18 @@ sequenceDiagram
     H->>B: kéo thẻ Validate → Approved (= duyệt plan)
     P->>B: quét cột Approved (lượt sau)
     P->>B: chuyển → InProgress (TRƯỚC khi build)
+    opt Git flow bật
+        P->>P: git-flow start — tách nhánh feat/{taskid} off base
+    end
     P->>P: deliver-light build gọn → report.md
-    P->>B: chuyển → Review, comment kết quả
-    H->>B: verify, đóng Done (luôn do người)
+    opt Git flow bật
+        P->>P: git-flow finish — commit + push + tạo MR
+    end
+    P->>B: chuyển → Review, comment kết quả (kèm link MR)
+    H->>B: review MR + merge, đóng Done (luôn do người)
 ```
+
+**Git flow (tùy chọn — mục `## Git` trong profile, mặc định tắt):** khi bật, mỗi task board làm trên **một nhánh riêng** tách từ base branch (main/master/production — cấu hình được), build xong tự **commit → push → tạo MR/PR → comment link MR vào ticket**. Chỉ **một build/lượt** để không juggle nhiều nhánh trên working tree chung. Máy tạo MR nhưng **không bao giờ tự merge** — người review MR rồi merge + đóng ticket (đối xứng "Done do người"). Tắt cờ → poll build thẳng trên branch hiện tại như cũ. Chi tiết: skill `msdlc:git-flow`.
 
 Để chạy định kỳ, ghép với cơ chế lặp của harness (msdlc không tự chế scheduling):
 
@@ -322,6 +331,7 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **GATE** | Điểm dừng duy nhất yêu cầu user xác nhận thủ công. Luồng thủ công: sau khi `architect` tạo xong ADR. Luồng board: sau khi `task-planner` comment plan (ticket ở `Validate`) — gate = thao tác người kéo thẻ `Validate`→`Approved`. |
 | **tracker sync** | Cơ chế đồng bộ trạng thái story/task ↔ cột board ngoài, gom trong skill `msdlc:tracking` (tham số `kind` = `story`\|`task`). Opt-in qua mục `## Task tracker` của `profile.md`; tự no-op khi không cấu hình; không bao giờ tự chuyển Done. |
 | **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động **luồng nhẹ** cho ticket ở cột intake/Approved (claim Todo→planning → `task-planner` → plan → build gọn bằng `deliver-light`). Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
+| **git flow** | (opt-in, mục `## Git` profile) Luồng poll tách một nhánh/task từ base branch, build xong commit + push + tạo MR/PR + comment link vào ticket. Gom trong skill `msdlc:git-flow`; auto-create MR qua `gh`/`glab` hoặc fallback link tạo tay. Một build/lượt; **máy không tự merge** (người merge + đóng ticket). Tắt = build thẳng branch hiện tại như cũ. |
 
 ---
 

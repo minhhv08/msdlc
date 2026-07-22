@@ -58,7 +58,7 @@ Nếu nhiều cột cùng match và profile không override → chọn cột ưu
    - `validate`:
      - `kind=story`: comment link tới `.claude/stories/{id}/adr.md` (hoặc tóm tắt ADR + open questions), báo "ADR sẵn sàng, chờ người duyệt".
      - `kind=task`: comment **plan chi tiết** đọc từ `.claude/tasks/{id}/plan.md` (Vấn đề / Phương án / Files sẽ đụng / Acceptance / Open questions) để user đọc và duyệt. Nếu tracker giới hạn độ dài comment → cắt gọn có chủ đích các mục chính, giữ full ở `plan.md`.
-   - `review`: comment tóm tắt từ report (số task/subtask, trạng thái test, số finding security theo severity) + nhắc "cần người review rồi chuyển Done thủ công". Nguồn: `kind=story` → `.claude/stories/{id}/report.md`; `kind=task` → `.claude/tasks/{id}/report.md`.
+   - `review`: comment tóm tắt từ report (số task/subtask, trạng thái test, số finding security theo severity) + nhắc "cần người review rồi chuyển Done thủ công". Nguồn: `kind=story` → `.claude/stories/{id}/report.md`; `kind=task` → `.claude/tasks/{id}/report.md`. **Nếu report có dòng `> MR:`/`> PR:`** (do `git-flow` ghi) → **đính kèm link MR vào comment** và nhắc "review MR rồi merge (máy không tự merge)".
    - Các phase khác (`todo`/`planning`/`approved`/`in-progress`): chỉ transition, **không** comment (tránh nhiễu ticket).
 3. **Format comment**: prefix `[Claude]`, **ngôn ngữ theo ticket** (title/description tiếng Việt → comment tiếng Việt, tiếng Anh → tiếng Anh). Mặc định ngắn gọn (2–5 bullet), tập trung WHAT chứ không HOW. **Ngoại lệ:** comment plan ở `validate` với `kind=task` cần **chi tiết** (để user duyệt được trên board) — giữ đủ các mục chính của `plan.md`.
 
