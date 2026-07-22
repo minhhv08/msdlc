@@ -13,11 +13,13 @@
 
 ## Đường dẫn quy ước
 <!-- Nơi pipeline đọc/ghi artifact. -->
-- Story root: `.claude/stories/{id}/`
+- Story root (luồng thủ công `/spec`+`/deliver`): `.claude/stories/{id}/`
 - Requirement: `.claude/stories/{id}/requirement.md`
 - ADR: `.claude/stories/{id}/adr.md`
 - Tasks: `.claude/stories/{id}/tasks/` (index `README.md`)
 - Tests (QC design): `.claude/stories/{id}/tests/`
+- Task root (luồng board nhẹ `tracking-poll`+`deliver-light`, `{taskid}` = ID ticket): `.claude/tasks/{taskid}/`
+- Plan (board nhẹ): `.claude/tasks/{taskid}/plan.md`
 - Tài liệu chung: `docs/`
 
 ## Quy ước diagram (nếu có)
@@ -52,15 +54,15 @@
 - Project/board key: `<vd PROJ | board id>`
 - Ánh xạ mốc pipeline → tên cột trên board (bỏ trống dòng nào → skill tự suy theo keyword):
   - todo → `<vd Todo>` <!-- nên trùng "Cột intake" của poll bên dưới, để ticket /spec tạo nằm đúng cột poll quét -->
-  - planning → `<vd Planning>`
+  - planning → `<vd Planning>` <!-- LUỒNG BOARD NHẸ: cột này là bước CLAIM/LOCK (poll chuyển Todo→planning để nhận ticket). NÊN điền rõ tên cột, đừng để trống — nếu detect-keyword đoán trượt, cơ chế "chỉ 1 session nhận" sẽ hỏng. -->
   - validate → `<vd Validate>`
   - approved → `<vd Approved>`
   - in-progress → `<vd InProgress>`
   - review → `<vd Review>`
   - <!-- Done KHÔNG cấu hình: msdlc không bao giờ tự chuyển Done. -->
-- Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`):
-  - Cột intake (nơi kéo task mới về để thiết kế): `<vd Todo>`
-  - Cột build-trigger (người kéo tay sang đây = duyệt ADR, cho phép tự build): `<vd Approved>`
+- Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`, chạy LUỒNG NHẸ: `.claude/tasks/{taskid}/` + `task-planner` → `plan.md` → `deliver-light`, KHÔNG dùng architect/ADR/deliver-auto):
+  - Cột intake (nơi kéo task mới về để phân tích): `<vd Todo>`
+  - Cột build-trigger (người kéo tay sang đây = duyệt plan, cho phép tự build): `<vd Approved>`
   - Bật poll: `<no>` <!-- mặc định no; đổi thành yes để cho phép /msdlc:tracking-poll xử lý. Opt-in vì đây là tự động mạnh. -->
 
 ## Quy tắc commit

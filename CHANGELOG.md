@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0] — 2026-07-22
+
+### Changed
+
+- **Thiết kế lại luồng đồng bộ board ngoài sang LUỒNG NHẸ** (task board chỉ là feat/fixbug nhỏ, không hợp nghi thức spec+ADR+QC map/reduce). `/msdlc:tracking-poll` giờ:
+  - **Nhận ticket bằng claim/lock**: chuyển `Todo → planning` TRƯỚC khi phân tích (ticket rời cột intake nên session khác không nhận trùng; ghi `claim.md` local chống overlap cùng máy).
+  - Chạy agent nhẹ `task-planner` (thay `architect`) dò codebase → ghi `.claude/tasks/{taskid}/plan.md` + comment **plan chi tiết** vào ticket cho user duyệt → đẩy `Validate` rồi dừng.
+  - Ticket đã `Approved` (người kéo = duyệt plan) → chuyển `in-progress` TRƯỚC → build gọn bằng `deliver-light` → `Review`.
+  - Thêm **bước resume** đầu mỗi lượt: nhặt lại task kẹt ở `planning`/`in-progress` do lượt trước fail (dựa trên cột board + tồn tại `plan.md`/`report.md`).
+  - Luồng thủ công `/spec`+`/deliver`+`deliver-auto` (dùng `.claude/stories/` + ADR) **giữ nguyên**, không đụng.
+
+### Added
+
+- **Agent `task-planner`**: phân tích task nhỏ từ board dựa trên codebase, ghi `plan.md` (phương án + subtask file-disjoint có `touchesFiles`/`dependsOn` + files đụng + acceptance). Không tạo ADR/docs, không viết code — bản nhẹ của `architect`.
+- **Skill `deliver-light`**: build gọn từ `plan.md` — implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer (≤1 vòng) → qc-executor + security-auditor song song (≤2 vòng) → chronicler → `report.md`. Không vỡ task bằng `dev-leader`, không QC map/reduce. KHÔNG tự gọi `tracking` (poll lo transition).
+- **Convention `.claude/tasks/{taskid}/`** cho luồng board (`taskid` = ID ticket), tách khỏi `.claude/stories/{id}/` của luồng thủ công.
+
+### Changed (tiếp)
+
+- **`tracking` thêm tham số thứ ba `kind`** ∈ `story` (mặc định) \| `task`. Lời gọi 2 tham số cũ hành xử y hệt (backward-compat). `kind=task`: `{id}` chính là ID ticket (không đọc `requirement.md`); comment ở `validate` là plan chi tiết từ `tasks/{id}/plan.md`, ở `review` từ `tasks/{id}/report.md`. Cột `planning` giờ là bước claim/lock → khuyến nghị override tên cột trong profile.
+- `profile.template.md`: thêm đường dẫn `.claude/tasks/{taskid}/` + `plan.md`; ghi chú poll dùng luồng nhẹ và cột `planning` là claim/lock.
+- `README.md`: cập nhật bảng Agents/Skills, sơ đồ + sequence "Đồng bộ board ngoài" theo luồng nhẹ; thêm `.claude/stories/`+`.claude/tasks/` vào gợi ý `.gitignore`; phân biệt thuật ngữ `story` (thủ công) vs `task (board)`.
+
 ## [0.4.0] — 2026-07-09
 
 ### Fixed

@@ -70,13 +70,13 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 Đây là bước **optional** — chỉ làm nếu dự án đồng bộ story với board (Jira/Asana/Linear/Monday):
 
 1. Kiểm tra các connector MCP đang connect (Atlassian/Asana/Linear/monday). Nếu có ít nhất một → **hỏi user** có muốn bật đồng bộ tracker không.
-2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`).
+2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`). **Nhấn mạnh cột `planning`**: trong luồng board nhẹ đây là bước **claim/lock** (poll chuyển Todo→planning để nhận ticket) — nên điền rõ tên cột thật, đừng để trống, nếu không cơ chế "chỉ 1 session nhận" dễ hỏng vì detect-keyword đoán trượt.
 3. Nếu không có connector nào hoặc user không dùng tracker → để trống mục này (pipeline chạy thuần local như cũ). KHÔNG hardcode, không bịa tên cột — hỏi user hoặc để skill `msdlc:tracking` tự suy theo keyword lúc chạy.
 
-Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh (tự kéo task về thiết kế/build) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo).
+Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy **luồng nhẹ** (claim ticket ở Todo → `task-planner` phân tích → comment plan → build gọn bằng `deliver-light`, dùng `.claude/tasks/{taskid}/`) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo). Nên chạy **một poller cho mỗi board**.
 
 ## Bước 3 — Hậu kiểm
 
-- Đề xuất thêm `.claude/agent-memory-local/` vào `.gitignore` (memory cục bộ, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
+- Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/` và `.claude/tasks/` vào `.gitignore` (memory + artifact story/task cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
 - Tóm tắt cho user: đã copy file gì, đã điền mục nào của profile, rule nào được seed (kèm nguồn), mục/rule nào còn cần user xác nhận.
 - Nhắc: chạy thử một mắt xích (`/spec`, hoặc gọi `architect`/`dev-leader`) để xác nhận agent đọc được profile + rules.
