@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.1] — 2026-07-23
+
+### Fixed
+
+- **Poll bỏ qua yêu cầu sửa plan khi kéo ticket về Todo**: ticket đã có `.claude/tasks/{taskid}/` bị kéo ngược về Todo (kèm comment góp ý) trước đây bị skip → plan không bao giờ được cập nhật. Nay Bước 1 tách nhánh **1b (revision)**: re-claim → đọc comment người → `task-planner` **chế độ cập nhật** sửa `plan.md` → comment bản mới → Validate chờ duyệt lại (vòng revision không giới hạn).
+- **Poll bỏ qua câu trả lời Open questions khi duyệt**: Bước 2 trước đây build thẳng từ `plan.md`, không đọc comment ticket → câu trả lời cho Open questions bị mất. Nay Bước 2 fetch comment ticket, có comment người mới sau plan → `task-planner` fold câu trả lời vào `plan.md` (resolve Open questions) rồi mới build (không quay lại Validate — kéo sang Approved đã là duyệt). Còn Open question chặn chưa trả lời → ghi rõ + build phần đã rõ, không bịa.
+
+### Changed
+
+- **`task-planner`**: thêm **chế độ cập nhật (revision)** — nhận `plan.md` cũ + comment feedback/câu trả lời do caller truyền (agent không tự đọc ticket), giữ phần còn đúng, fold feedback, resolve Open questions đã trả lời, đánh dấu header `> Cập nhật: … · revision N`.
+- **`tracking`**: comment `validate` (kind=task) thêm dòng hướng dẫn workflow (sửa plan = kéo về Todo; duyệt = trả lời Open question rồi kéo Approved).
+- README: mô tả vòng sửa plan + trả lời qua comment.
+
 ## [0.6.0] — 2026-07-22
 
 ### Added

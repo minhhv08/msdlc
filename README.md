@@ -247,6 +247,7 @@ flowchart LR
 ```
 
 - **Poll chạy luồng NHẸ** (task board là feat/fixbug nhỏ): dùng `.claude/tasks/{taskid}/` + agent `task-planner` (không phải `architect`) + `plan.md` (không phải ADR) + `deliver-light` (không phải `deliver-auto`). Luồng thủ công `/spec`+`/deliver` (dùng `.claude/stories/` + ADR + `deliver-auto`) vẫn giữ nguyên cho việc lớn.
+- **Vòng sửa plan + trả lời qua comment** (poll đọc comment ticket): muốn sửa plan → comment yêu cầu rồi **kéo thẻ về Todo** → poll cập nhật `plan.md` (revision) và đưa lại Validate chờ duyệt. Muốn duyệt kèm làm rõ → **trả lời các Open question trong comment** rồi kéo sang Approved → poll fold câu trả lời vào plan trước khi build (không quay lại Validate).
 - `planning` là bước **claim/lock**: poll chuyển `Todo → planning` để nhận ticket TRƯỚC khi phân tích — ticket rời cột intake nên session khác không nhận trùng (khóa nhẹ; nên chạy một poller cho mỗi board).
 - Giữa hai khúc tự động là **cổng duyệt** — thao tác **người kéo thẻ** từ `Validate` sang `Approved` (= duyệt bản plan đã comment). Máy không bao giờ tự vượt.
 - `Done` **không bao giờ** do máy chuyển — luôn để người verify và đóng thủ công.

@@ -32,14 +32,27 @@ Luồng nhẹ chỉ quét hai cột intake+Approved, nên ticket kẹt ở cột
 
 ## Bước 1 — Nhận ticket ở cột intake → Validate (giữ gate, KHÔNG build)
 
-Fetch các ticket ở **cột intake** (theo profile). Với **mỗi** ticket (xử lý tuần tự):
+Fetch các ticket ở **cột intake** (theo profile). Với **mỗi** ticket (xử lý tuần tự), rẽ nhánh theo `.claude/tasks/{taskid}/` đã tồn tại chưa:
 
-1. **Idempotent/claim check** — nếu `.claude/tasks/{taskid}/` đã tồn tại → task này đã được nhận (Bước R lo phần dở dang) → bỏ qua ở đây.
-2. **Claim (chuyển trạng thái TRƯỚC):** gọi skill **`msdlc:tracking {taskid} planning task`** để chuyển ticket `Todo → planning`. Đây là hành động nhận ticket — sau khi rời cột intake, lượt poll khác sẽ không thấy ticket này nữa (khóa nhẹ, đảm bảo chỉ một session xử lý).
-3. **Ghi dấu claim NGAY** trước khi phân tích dài: tạo `.claude/tasks/{taskid}/claim.md` (ghi ngày + nguồn `msdlc:tracking-poll`). Đây là guard local chống hai tick loop chồng nhau trên cùng máy. *(Tùy chọn tăng an toàn cross-máy: comment mềm `[Claude] claiming {taskid} <ngày>` lên ticket rồi re-fetch; nếu thấy claim sớm hơn của session khác → back off, bỏ ticket.)*
-4. **Phân tích:** gọi **Agent `task-planner`** cho `{taskid}`, truyền **title + description + link ticket** → agent dò codebase và ghi `.claude/tasks/{taskid}/plan.md`.
-5. **Comment plan + đẩy chờ duyệt:** gọi skill **`msdlc:tracking {taskid} validate task`** → chuyển ticket sang `Validate` + comment **plan chi tiết** (từ `plan.md`) với prefix `[Claude]` để user đọc/duyệt.
-6. **DỪNG** với ticket này. **Tuyệt đối không build.** Ticket ở `Validate`, chờ người kéo sang `Approved`.
+### 1a. Ticket MỚI (chưa có `.claude/tasks/{taskid}/`) — claim + plan lần đầu
+
+1. **Claim (chuyển trạng thái TRƯỚC):** gọi skill **`msdlc:tracking {taskid} planning task`** để chuyển ticket `Todo → planning`. Đây là hành động nhận ticket — sau khi rời cột intake, lượt poll khác sẽ không thấy ticket này nữa (khóa nhẹ, đảm bảo chỉ một session xử lý).
+2. **Ghi dấu claim NGAY** trước khi phân tích dài: tạo `.claude/tasks/{taskid}/claim.md` (ghi ngày + nguồn `msdlc:tracking-poll`). Guard local chống hai tick loop chồng nhau trên cùng máy. *(Tùy chọn tăng an toàn cross-máy: comment mềm `[Claude] claiming {taskid} <ngày>` rồi re-fetch; thấy claim sớm hơn của session khác → back off, bỏ ticket.)*
+3. **Phân tích:** gọi **Agent `task-planner`** cho `{taskid}`, truyền **title + description + link ticket** → agent dò codebase và ghi `.claude/tasks/{taskid}/plan.md`.
+4. **Comment plan + đẩy chờ duyệt:** gọi skill **`msdlc:tracking {taskid} validate task`** → chuyển ticket sang `Validate` + comment **plan chi tiết** (từ `plan.md`) với prefix `[Claude]` để user đọc/duyệt.
+5. **DỪNG** với ticket này. **Tuyệt đối không build.** Ticket ở `Validate`, chờ người kéo sang `Approved`.
+
+### 1b. Ticket bị KÉO NGƯỢC về Todo (đã có `.claude/tasks/{taskid}/`) — REVISION: cập nhật lại plan
+
+Người xem plan chưa ưng, comment thêm yêu cầu/góp ý rồi kéo thẻ về `Todo` = **yêu cầu sửa plan**. Xử lý:
+
+1. **Re-claim:** gọi `msdlc:tracking {taskid} planning task` (Todo → planning).
+2. **Đọc comment ticket:** fetch **toàn bộ comment** của ticket qua connector MCP của tracker (như khi fetch cột). Gom các comment **của người** (không phải `[Claude]`) đăng **sau** comment plan gần nhất — đây là feedback/yêu cầu bổ sung.
+3. **Cập nhật plan:** gọi **Agent `task-planner`** cho `{taskid}` ở **chế độ cập nhật** — truyền title + description + link ticket + **plan.md hiện có** + **các comment feedback** → agent sửa `.claude/tasks/{taskid}/plan.md` cho khớp (giữ phần còn đúng, sửa/thêm theo feedback, cập nhật Open questions).
+4. **Comment plan mới + đẩy chờ duyệt:** `msdlc:tracking {taskid} validate task` (comment bản plan đã cập nhật + → `Validate`).
+5. **DỪNG.** Chờ người duyệt lại.
+
+> Nếu ticket đã có dir nhưng KHÔNG ở Todo (ví dụ vẫn ở planning do lượt trước dở) → không xử ở đây, để **Bước R** lo.
 
 ## Bước 2 — Ticket Approved → build gọn → Review
 
@@ -50,12 +63,16 @@ Fetch các ticket ở **cột build-trigger** (`Approved`). Bỏ qua ngay ticket
 Với ticket được chọn:
 
 1. **Chuyển trạng thái TRƯỚC khi làm:** gọi skill **`msdlc:tracking {taskid} in-progress task`** để chuyển `Approved → in-progress`.
-2. **(Git flow bật) Tạo nhánh TRƯỚC khi build:** gọi skill **`git-flow {taskid} start`** → tạo/switch nhánh task tách từ base. Nếu trả `abort`/`dirty` (không tạo được nhánh, hoặc tree bẩn do task khác chưa `finish`) → **log + bỏ qua ticket, KHÔNG build trên base** (để Bước R lượt sau xử lý phần dở của task đang giữ tree).
-3. Gọi skill **`deliver-light {taskid}`** (build gọn: implement song song theo subtask file-disjoint → reviewer → qc-executor+security → chronicler). Skill tự ghi `.claude/tasks/{taskid}/report.md`. **Không hỏi gate** — gate đã được người vượt bằng thao tác kéo thẻ sang Approved.
-4. **(Git flow bật) Hoàn tất git:** gọi skill **`git-flow {taskid} finish`** → một commit (qua `msdlc:commit`) + push nhánh + tạo MR (auto qua `gh`/`glab` nếu có, không thì link tạo tay) + ghi dòng `> MR:` vào `report.md`.
-5. Gọi skill **`msdlc:tracking {taskid} review task`** để chuyển sang `Review` + comment tóm tắt kết quả **kèm link MR** (tracking đọc `> MR:` trong report). **Máy KHÔNG tự merge** — người review MR rồi merge + đóng Done.
-6. **(Git flow bật) Về base:** checkout lại base branch cho lượt sau.
-7. Nếu `deliver-light` fail giữa chừng → log rõ task/ticket bị kẹt + lý do, **để nguyên ticket** cho người xử lý; **không** gọi `git-flow finish` (không tạo MR cho code dở); không retry cùng lượt (Bước R lượt sau nhặt lại). Nếu `git-flow finish` fail sau khi đã push → non-fatal, ticket vẫn sang Review với ghi chú cần tạo MR tay.
+2. **Đọc comment duyệt + cập nhật plan (BẮT BUỘC, trước khi build):** fetch **toàn bộ comment** của ticket qua connector MCP. Gom các comment **của người** (không phải `[Claude]`) đăng **sau** comment plan gần nhất — đây thường là **câu trả lời cho Open questions** và điều kiện duyệt.
+   - **Có comment người mới** → gọi **Agent `task-planner`** ở **chế độ cập nhật** (truyền plan.md hiện có + các comment) để fold câu trả lời vào `.claude/tasks/{taskid}/plan.md` (resolve Open questions, chốt scope theo câu trả lời). **Không** đưa về Validate lại — người đã duyệt bằng cách kéo sang Approved kèm câu trả lời; build theo plan đã cập nhật.
+   - **Không có comment người mới** → dùng plan.md như hiện có.
+   - Nếu sau khi fold vẫn còn **Open question chặn** (chưa được trả lời, ảnh hưởng scope) → không đoán bừa: ghi rõ vào report + comment ở mốc review, build phần đã rõ (hoặc bỏ qua ticket nếu không thể build an toàn), KHÔNG tự bịa.
+3. **(Git flow bật) Tạo nhánh TRƯỚC khi build:** gọi skill **`git-flow {taskid} start`** → tạo/switch nhánh task tách từ base. Nếu trả `abort`/`dirty` (không tạo được nhánh, hoặc tree bẩn do task khác chưa `finish`) → **log + bỏ qua ticket, KHÔNG build trên base** (để Bước R lượt sau xử lý phần dở của task đang giữ tree).
+4. Gọi skill **`deliver-light {taskid}`** (build gọn: implement song song theo subtask file-disjoint → reviewer → qc-executor+security → chronicler). Skill tự ghi `.claude/tasks/{taskid}/report.md`. **Không hỏi gate** — gate đã được người vượt bằng thao tác kéo thẻ sang Approved.
+5. **(Git flow bật) Hoàn tất git:** gọi skill **`git-flow {taskid} finish`** → một commit (qua `msdlc:commit`) + push nhánh + tạo MR (auto qua `gh`/`glab` nếu có, không thì link tạo tay) + ghi dòng `> MR:` vào `report.md`.
+6. Gọi skill **`msdlc:tracking {taskid} review task`** để chuyển sang `Review` + comment tóm tắt kết quả **kèm link MR** (tracking đọc `> MR:` trong report). **Máy KHÔNG tự merge** — người review MR rồi merge + đóng Done.
+7. **(Git flow bật) Về base:** checkout lại base branch cho lượt sau.
+8. Nếu `deliver-light` fail giữa chừng → log rõ task/ticket bị kẹt + lý do, **để nguyên ticket** cho người xử lý; **không** gọi `git-flow finish` (không tạo MR cho code dở); không retry cùng lượt (Bước R lượt sau nhặt lại). Nếu `git-flow finish` fail sau khi đã push → non-fatal, ticket vẫn sang Review với ghi chú cần tạo MR tay.
 
 **An toàn:** xử lý **tuần tự** từng ticket (không dùng git worktree → mọi thay đổi trên một working tree chung; build song song nhiều task sẽ đè nhau). Git flow bật → **một build/lượt** + luôn `finish` trước khi rời nhánh → không có hai nhánh dở chồng nhau. Chạy **một poller cho mỗi board** — nhiều máy cùng poll một board không được phối hợp bằng khóa mạnh (tracker thiếu compare-and-swap).
 
