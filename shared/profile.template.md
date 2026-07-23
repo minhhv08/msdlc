@@ -46,12 +46,13 @@
 
 ## Task tracker (nếu có)
 <!--
-  Cấu hình đồng bộ story ↔ board ngoài (Jira/Asana/Linear/Monday). Skill `msdlc:tracking` đọc mục này.
+  Cấu hình đồng bộ story ↔ board ngoài (Jira/Asana/Linear/Monday/Notion). Skill `msdlc:tracking` đọc mục này.
   ĐỂ TRỐNG TOÀN BỘ MỤC NÀY = tắt sync; pipeline chạy thuần local y như cũ.
   KHÔNG hardcode trong plugin — mọi thứ đọc từ đây.
 -->
-- Tool: `<Jira | Asana | Linear | Monday>` — connector MCP: `<Atlassian | Asana | Linear | monday>`
-- Project/board key: `<vd PROJ | board id>`
+- Tool: `<Jira | Asana | Linear | Monday | Notion>` — connector MCP: `<Atlassian | Asana | Linear | monday | Notion>`
+- Project/board key: `<vd PROJ | board id | Notion database ID>` <!-- Notion: dùng database ID; "cột" = option của property Status; ticket id = page ID -->
+- Cột (status) cấu hình bên dưới: với **Notion** là tên các **option của property Status/Select** (không phải cột kanban Jira).
 - Ánh xạ mốc pipeline → tên cột trên board (bỏ trống dòng nào → skill tự suy theo keyword):
   - todo → `<vd Todo>` <!-- nên trùng "Cột intake" của poll bên dưới, để ticket /spec tạo nằm đúng cột poll quét -->
   - planning → `<vd Planning>` <!-- LUỒNG BOARD NHẸ: cột này là bước CLAIM/LOCK (poll chuyển Todo→planning để nhận ticket). NÊN điền rõ tên cột, đừng để trống — nếu detect-keyword đoán trượt, cơ chế "chỉ 1 session nhận" sẽ hỏng. -->

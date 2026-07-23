@@ -1,7 +1,7 @@
 ---
 name: tracking
 description: >-
-  Đồng bộ trạng thái ticket trên board ngoài (Jira/Asana/Linear/Monday) với tiến độ pipeline msdlc — chuyển cột ticket tại các mốc (todo/planning/validate/approved/in-progress/review) và comment kết quả với prefix `[Claude]`. Được các skill pipeline (`spec`/`deliver`/`deliver-auto`) gọi TỰ ĐỘNG tại mỗi mốc; cũng dùng TAY khi cần re-sync một story. LUÔN dùng skill này khi cần "đồng bộ status ticket", "chuyển cột board", "cập nhật Jira/Asana theo story", hoặc khi một bước pipeline vừa xong và ticket cần đổi cột. KHÔNG tự chuyển Done — Done luôn do người.
+  Đồng bộ trạng thái ticket trên board ngoài (Jira/Asana/Linear/Monday/Notion) với tiến độ pipeline msdlc — chuyển cột ticket tại các mốc (todo/planning/validate/approved/in-progress/review) và comment kết quả với prefix `[Claude]`. Được các skill pipeline (`spec`/`deliver`/`deliver-auto`) gọi TỰ ĐỘNG tại mỗi mốc; cũng dùng TAY khi cần re-sync một story. LUÔN dùng skill này khi cần "đồng bộ status ticket", "chuyển cột board", "cập nhật Jira/Asana theo story", hoặc khi một bước pipeline vừa xong và ticket cần đổi cột. KHÔNG tự chuyển Done — Done luôn do người.
 ---
 
 # msdlc:tracking — Đồng bộ trạng thái story ↔ board ngoài
@@ -32,7 +32,9 @@ Thực hiện tuần tự, gặp điều kiện fail nào thì **log một dòng
 2. **Xác định ticket theo `kind`:**
    - `kind=story` (mặc định): đọc `.claude/stories/{id}/requirement.md`, lấy trường `Ticket:` ở dòng header (`> Status: … · Ticket: <ID|URL>`). Không có ticket hoặc giá trị là `—`/trống → *"[tracking] Story {id} chưa gắn ticket — bỏ qua sync."* → dừng.
    - `kind=task`: **`{id}` CHÍNH LÀ ID ticket board** — ticket luôn tồn tại (đến từ board), KHÔNG đọc `requirement.md` và KHÔNG áp guard "chưa gắn ticket". Chỉ cần `{id}` không rỗng.
-3. Xác định MCP connector theo profile (vd Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`). Nếu connector chưa connect → *"[tracking] Connector <tên> chưa kết nối — bỏ qua sync (chạy được sau khi connect)."* → dừng. Không hỏi token/OAuth.
+3. Xác định MCP connector theo profile (vd Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`, Notion→`Notion`). Nếu connector chưa connect → *"[tracking] Connector <tên> chưa kết nối — bỏ qua sync (chạy được sau khi connect)."* → dừng. Không hỏi token/OAuth.
+
+> **Notion khác Jira:** Notion không có "transition" — "cột" là **giá trị property Status/Select** của page. Do đó ở Bước 2/3: resolve "tên cột" = tên option của property Status; "transition" = `notion-update-page` đặt Status = option tương ứng; comment = `notion-create-comment`/đọc bằng `notion-get-comments`; `{id}` (kind=task) = **page ID** của ticket, board key = **database ID**.
 
 Qua hết Bước 1 nghĩa là: có tracker + có ticket + MCP sẵn sàng → tiếp tục.
 

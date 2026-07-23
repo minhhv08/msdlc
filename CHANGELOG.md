@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.2] — 2026-07-23
+
+### Fixed
+
+- **Ticket đã build kéo về Todo bị "idempotent skip", không đọc comment** (0.6.1 chưa đủ): Bước R skip theo sự tồn tại `report.md` mà KHÔNG xét cột hiện tại → ticket đang ở Todo (người mở lại) bị bỏ qua trước khi tới bước đọc comment; và nhánh revision coi "không thấy comment mới = skip". Nay áp dụng nguyên tắc **cột board là nguồn sự thật**:
+  - **Bước R rẽ nhánh theo CỘT trước**: ticket đang ở intake (Todo) → KHÔNG xử ở Bước R, để Bước 1b lo (kể cả đã có `plan.md`/`report.md`). Nhánh "report.md → done → skip" chỉ áp dụng khi ticket ở `Review`/`Done`.
+  - **Bước 1b = REOPEN**: ticket có dir mà lại ở Todo → **luôn** xử lý (không skip dù có `plan.md`/`report.md`, **không cần** comment mới — kéo về Todo đã là tín hiệu). **Đọc comment BẮT BUỘC**; nếu đã có `report.md` (làm lại) → archive `report.md` → `report.prev-<ngày>.md` để build lại sau khi duyệt.
+  - **Đọc comment là bắt buộc** ở nhánh reopen (1b) và duyệt (Bước 2); ghi rõ lý do khi skip bất kỳ ticket nào.
+- **`tracking-poll` `allowed-tools` thiếu MCP** → không fetch được cột/comment: thêm wildcard MCP của các connector (Atlassian/Asana/Linear/monday/Notion) + `Bash` (cho git-flow). Dự án dùng MCP server tên khác → thêm vào allowed-tools.
+
+### Added
+
+- **Hỗ trợ Notion làm tracker**: thêm connector `Notion` vào `tracking` + `allowed-tools` của poll (`mcp__claude_ai_Notion__*`). Notion là database chứ không phải kanban Jira → tài liệu hoá ánh xạ: "cột" = option property Status/Select; "chuyển cột" = `notion-update-page`; đọc/ghi comment = `notion-get-comments`/`notion-create-comment`; board key = database ID, ticket id = page ID. Cập nhật `profile.template` + `init` (Bước 2c).
+
 ## [0.6.1] — 2026-07-23
 
 ### Fixed

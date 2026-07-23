@@ -67,9 +67,9 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 
 ## Bước 2c — Dò tracker (nếu dùng board ngoài)
 
-Đây là bước **optional** — chỉ làm nếu dự án đồng bộ story với board (Jira/Asana/Linear/Monday):
+Đây là bước **optional** — chỉ làm nếu dự án đồng bộ story với board (Jira/Asana/Linear/Monday/Notion):
 
-1. Kiểm tra các connector MCP đang connect (Atlassian/Asana/Linear/monday). Nếu có ít nhất một → **hỏi user** có muốn bật đồng bộ tracker không.
+1. Kiểm tra các connector MCP đang connect (Atlassian/Asana/Linear/monday/Notion). Nếu có ít nhất một → **hỏi user** có muốn bật đồng bộ tracker không. (Notion: "board" = một database; "cột" = option của property Status; ticket = page.)
 2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`). **Nhấn mạnh cột `planning`**: trong luồng board nhẹ đây là bước **claim/lock** (poll chuyển Todo→planning để nhận ticket) — nên điền rõ tên cột thật, đừng để trống, nếu không cơ chế "chỉ 1 session nhận" dễ hỏng vì detect-keyword đoán trượt.
 3. Nếu không có connector nào hoặc user không dùng tracker → để trống mục này (pipeline chạy thuần local như cũ). KHÔNG hardcode, không bịa tên cột — hỏi user hoặc để skill `msdlc:tracking` tự suy theo keyword lúc chạy.
 
