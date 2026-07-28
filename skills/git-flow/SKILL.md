@@ -1,14 +1,16 @@
 ---
 name: git-flow
 description: >-
-  Quản lý git flow cho luồng board nhẹ của msdlc — mỗi task board làm trên một nhánh riêng tách từ base branch, build xong thì commit (một commit qua msdlc:commit) → push → tạo merge/pull request → trả URL để comment vào ticket. Nơi DUY NHẤT chứa logic git của msdlc; tự no-op khi tắt cờ hoặc không phải git repo. Máy KHÔNG tự merge — merge là quyền người. Được `tracking-poll` gọi (op `start` trước build, `finish` sau build); cũng dùng tay khi cần re-sync một task. LUÔN dùng skill này khi cần "tạo nhánh cho task board", "tạo MR sau khi build", hoặc khi một bước poll cần thao tác git.
+  Quản lý git flow cho luồng board nhẹ của msdlc — trước khi phân tích thì đồng bộ đúng nhánh (op `sync`), mỗi task board làm trên một nhánh riêng tách từ base branch, build xong thì commit (một commit qua msdlc:commit) → push → tạo merge/pull request → trả URL để comment vào ticket. Nơi DUY NHẤT chứa logic git của msdlc; tự no-op khi tắt cờ hoặc không phải git repo. Máy KHÔNG tự merge — merge là quyền người. Được `tracking-poll` gọi (op `sync` trước mỗi lần task-planner phân tích, `start` trước build, `finish` sau build); cũng dùng tay khi cần re-sync một task. LUÔN dùng skill này khi cần "pull đúng nhánh trước khi phân tích", "tạo nhánh cho task board", "tạo MR sau khi build", hoặc khi một bước poll cần thao tác git.
 ---
 
 # msdlc:git-flow — Nhánh/task + MR cho luồng board
 
 Skill này là **nơi duy nhất** chứa logic git của msdlc: tạo nhánh theo task, commit, push, tạo MR. Gom một chỗ để: **không bật git flow = poll build thẳng trên branch hiện tại như cũ** (không regression), đảm bảo tại một điểm.
 
-**Input:** `{taskid} {op}`. `op` ∈ `start | finish`. Ví dụ: `msdlc:git-flow PROJ-123 start`. Thiếu tham số → hỏi user.
+**Input:** `{taskid} {op}`. `op` ∈ `sync | start | finish`. Ví dụ: `msdlc:git-flow PROJ-123 sync`. Thiếu tham số → hỏi user.
+
+> **Thứ tự trong luồng board:** `sync` (đồng bộ đúng nhánh TRƯỚC khi task-planner phân tích) → `start` (tạo/switch nhánh task sau khi duyệt, TRƯỚC build) → `finish` (commit + push + MR sau build).
 
 ## Nguyên tắc bất biến
 
@@ -36,6 +38,18 @@ Qua Bước 0 nghĩa là: git flow bật + đang trong git repo → tiếp tục
   - Ví dụ: `feat/PROJ-123-them-health-check`.
 - **MR tool**: profile → nếu trống, suy từ `git remote get-url origin`: chứa `github.com` → `gh`; `gitlab` → `glab`; `bitbucket` → `bitbucket`. Không nhận ra → chế độ **link điền sẵn** (chỉ push, không auto-create).
 - **MR target**: profile "MR target branch" → mặc định = base branch.
+
+## Bước S — op `sync` (pull đúng nhánh, TRƯỚC khi phân tích)
+
+Mục tiêu: đảm bảo `task-planner` phân tích trên **đúng nhánh + code mới nhất**, KHÔNG tạo nhánh task. Mô hình 2 cấp `base → nhánh task`: task đã có nhánh riêng (từng build, thường đang reopen/revision) → pull chính nhánh đó; chưa có → pull nhánh **base** (theo profile, không hardcode `master`).
+
+1. **Clean-tree gate:** `git status --porcelain`. Có thay đổi chưa commit → **KHÔNG switch** (tránh clobber): *"[git-flow] Working tree bẩn — không switch, phân tích trên nhánh hiện tại."* → trả `{ status: "skip-dirty", branch: <nhánh hiện tại> }` và dừng (non-fatal, phân tích vẫn tiếp tục).
+2. **Non-fatal trên mọi lỗi git (chống pull chồng chéo giữa các lượt poll):** mọi lệnh git ở op này (`fetch`/`checkout`/`pull`) đều best-effort. Gặp **git đang bận** (`index.lock` / *"another git process is running"*) hoặc lỗi bất kỳ → **log một dòng, KHÔNG throw**, bỏ switch → phân tích trên nhánh hiện tại. `index.lock` của git đã đảm bảo hai lượt poll chồng nhau không ghi tree đồng thời (lệnh thua fail ngay) → git op tự **"lần lượt từng task"**, không cần lockfile riêng.
+3. `git fetch origin` (best-effort; fail mạng → log, tiếp tục offline).
+4. **Xác định task đã có nhánh riêng chưa:** dựng `<branch>` theo branch pattern (Bước 1), kiểm tra tồn tại bằng `git rev-parse --verify --quiet <branch>` (local) hoặc `git ls-remote --heads origin <branch>` (remote).
+   - **Đã có** → `git checkout <branch>` → `git pull --ff-only origin <branch>` (best-effort). Log: *"[git-flow] Task đã có nhánh riêng — pull `<branch>` trước khi phân tích."* → trả `{ status: "ok", mode: "task-branch", branch }`.
+   - **Chưa có** → `git checkout <base>` → `git pull --ff-only origin <base>` (best-effort). Log: *"[git-flow] Task chưa có nhánh riêng — pull nhánh base `<base>` trước khi phân tích."* → trả `{ status: "ok", mode: "base", branch: <base> }`.
+5. **TUYỆT ĐỐI KHÔNG `git checkout -b`** ở op này — nhánh task chỉ được tạo sau khi duyệt (op `start`). Đây là điểm phân biệt cốt lõi giữa `sync` và `start`.
 
 ## Bước 2 — op `start` (tạo/switch nhánh task, TRƯỚC khi build)
 
@@ -74,5 +88,6 @@ Log một dòng cho user: op đã làm gì (nhánh nào, commit/không, push ok?
 ## Ghi chú
 
 - Skill này **tự chứa**: chỉ dùng `git` + CLI MR của host (nếu có) + skill `msdlc:commit`. Không phụ thuộc file ngoài plugin.
+- **`sync` KHÔNG tạo nhánh** (chỉ pull đúng nhánh trước phân tích); nhánh task chỉ tạo ở `start` sau khi duyệt. Thứ tự: `sync` → `start` → `finish`.
 - Chi tiết cách tạo MR khác nhau theo host — suy từ remote + CLI có sẵn; không hardcode host.
 - **Không tự merge, không tự đóng ticket/Done** — chỉ tạo MR + trả URL. Người review MR, merge, rồi đóng ticket thủ công.

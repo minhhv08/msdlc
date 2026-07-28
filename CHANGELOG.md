@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.3] — 2026-07-28
+
+### Added
+
+- **Pull đúng nhánh TRƯỚC khi phân tích (luồng board)**: thêm op **`sync`** cho skill `msdlc:git-flow` (`{taskid} sync`) và gọi nó trong `/msdlc:tracking-poll` ngay trước mỗi lần `task-planner` chạy (Bước 1 phân tích lần đầu, Bước 1b revision/reopen, Bước R resume phân tích). Trước đây git chỉ `checkout base + pull` ở lúc build (op `start`, Bước 2) → `task-planner` phân tích trên nhánh đang checkout bất kỳ (cũ/sai). Nay:
+  - Task **chưa có nhánh riêng** → pull **nhánh base** (theo profile `## Git → Base branch`, không hardcode `master`; trống → auto-detect default branch).
+  - Task **đã có nhánh riêng** (từng build, thường đang reopen/revision — "task bị sai cần thảo luận lại") → pull **chính nhánh task đó**.
+  - `sync` **KHÔNG tạo nhánh** (nhánh task vẫn chỉ tạo sau khi duyệt ở op `start`); thứ tự luồng board: `sync` → `start` → `finish`.
+- **Làm lần lượt từng task (chống pull chồng chéo)**: `sync`/`start`/`finish` best-effort — git đang bận (`index.lock`) hoặc working tree bẩn → bỏ switch, phân tích trên nhánh hiện tại, **không crash lượt**. Dựa vào `index.lock` của git để serialize các lượt poll gối đầu; **không thêm lockfile riêng, không stale-lock**. No-op khi tắt git flow (không regression).
+
 ## [0.6.2] — 2026-07-23
 
 ### Fixed
