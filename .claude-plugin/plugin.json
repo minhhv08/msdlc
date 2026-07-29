@@ -1,10 +1,10 @@
 {
   "name": "msdlc",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "license": "MIT",
-  "description": "Stack-agnostic delivery pipeline for Claude Code: spec → architect → [ADR gate] → dev-leader → dev + qc-leader/qc-designer (parallel map/reduce test design) → reviewer → qc-executor + security-auditor → chronicler. Project specifics (stack, commands, lockstep contracts) come from .claude/profile.md at runtime, never hardcoded.",
+  "description": "Stack-agnostic delivery pipeline for Claude Code: spec → architect → [ADR gate] → dev-leader → dev + qc-leader/qc-designer (parallel map/reduce test design) → reviewer → qc-executor + security-auditor → chronicler. Plus fixbug intake: /msdlc:log-triage turns production logs into deduplicated Bug tickets in the board's intake column, fed to the lightweight board flow. Project specifics (stack, commands, lockstep contracts) come from .claude/profile.md at runtime, never hardcoded.",
   "author": { "name": "minhhv" },
-  "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "dev-leader", "tracking", "jira", "board-sync"],
+  "keywords": ["pipeline", "agents", "orchestration", "qc", "architecture", "dev-leader", "tracking", "jira", "board-sync", "fixbug", "log-triage"],
   "hooks": {
     "PreToolUse": [
       {

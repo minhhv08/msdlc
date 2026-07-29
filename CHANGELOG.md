@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0] — 2026-07-29
+
+### Added
+
+- **Fixbug intake từ log production** — bước triage đứng TRƯỚC luồng board nhẹ, biến log lỗi thành task fixbug tự động:
+  - **Command mới `/msdlc:log-triage`** (`commands/log-triage.md`): nhận log dán trực tiếp hoặc đường dẫn file → gọi agent phân loại → **tạo ticket Bug ở cột intake (Todo)** trên board để `/msdlc:tracking-poll` nhặt và fix. **Bỏ qua noise** (không phải bug) và **bỏ qua bug đã có ticket** (khử trùng idempotent). One-shot, lặp được qua `/loop`/`schedule` nếu trỏ vào file log cố định.
+  - **Agent mới `bug-triage`** (`agents/bug-triage.md`, `opus`, `memory: local`): gom log rời rạc thành các **loại bug riêng biệt** (một lỗi lặp N lần = một bug), **đối chiếu codebase** để lọc bug thật vs noise (timeout third-party, config sai môi trường, health-check, 4xx mong đợi…), và sinh **`signatureBasis` ổn định** làm khóa khử trùng. Không viết code, không đụng MCP — chỉ trả JSON `{ bugs[], discarded[] }`. Học pattern noise tái diễn qua memory.
+  - **Khử trùng 2 lớp, board là nguồn sự thật**: ledger cục bộ `.claude/bug-triage/ledger.md` (cache) + marker `[bug-sig:<hash>]` nhúng trong description ticket (quyết định). Ticket đã Done → cho phép tạo lại nếu lỗi tái diễn.
+  - **Giữ nguyên gate**: log-triage CHỈ đổ ticket vào cột intake — không tự build, không tự Validate/Approved/Done. Cổng duyệt vẫn ở `tracking-poll` (comment plan → Validate → người kéo Approved mới build).
+  - **Không hardcode, no-op khi thiếu tracker**: đọc connector + project + cột intake từ `## Task tracker` trong `.claude/profile.md` (không thêm section profile mới); chưa cấu hình tracker → báo chạy `/msdlc:init` rồi dừng. Issue type mặc định `Bug`, label `from-log`.
+  - `init` gợi ý thêm `.claude/bug-triage/` vào `.gitignore` (ledger là cache cục bộ per-máy).
+
 ## [0.6.3] — 2026-07-28
 
 ### Added

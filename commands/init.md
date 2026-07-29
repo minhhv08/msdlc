@@ -89,6 +89,6 @@ Chỉ làm nếu dự án là git repo và user muốn poll tự tách nhánh + 
 
 ## Bước 3 — Hậu kiểm
 
-- Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/` và `.claude/tasks/` vào `.gitignore` (memory + artifact story/task cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
+- Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/`, `.claude/tasks/` và `.claude/bug-triage/` vào `.gitignore` (memory + artifact story/task + ledger khử-trùng của `/msdlc:log-triage`, đều cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
 - Tóm tắt cho user: đã copy file gì, đã điền mục nào của profile, rule nào được seed (kèm nguồn), mục/rule nào còn cần user xác nhận.
 - Nhắc: chạy thử một mắt xích (`/spec`, hoặc gọi `architect`/`dev-leader`) để xác nhận agent đọc được profile + rules.

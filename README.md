@@ -28,6 +28,7 @@ Mỗi agent là một vai trò AI chuyên biệt — được gọi qua `Agent t
 |---|---|
 | `architect` | Đọc `requirement.md`, thiết kế phương án kỹ thuật, ghi `adr.md` và cập nhật `docs/architecture.md`. |
 | `task-planner` | (luồng board nhẹ) Phân tích một task nhỏ từ board dựa trên codebase hiện tại, ghi `plan.md` (phương án + subtask file-disjoint + files đụng + acceptance) ra `.claude/tasks/{taskid}/`. Bản nhẹ của `architect`; không tạo ADR/docs, không viết code. |
+| `bug-triage` | (luồng fixbug-intake) Đọc log lỗi production, đối chiếu codebase, gom thành các **loại bug riêng biệt** (một lỗi lặp N lần = 1 bug) và **lọc bỏ noise** (timeout third-party, config sai môi trường, health-check…); sinh `signatureBasis` ổn định làm khóa khử trùng. Trả JSON `{ bugs[], discarded[] }` cho `/msdlc:log-triage`. Không viết code, không tạo ticket, không đụng MCP. |
 | `dev-leader` | Đọc `adr.md` + `requirement.md`, vỡ thành danh sách task atomic có dependency graph, ghi ra `tasks/`. |
 | `dev-backend` | Implement code server-side (bất kỳ ngôn ngữ/framework theo profile): service, controller, repository, migration, API endpoint… |
 | `dev-frontend` | Implement UI web theo task spec — đọc profile để biết framework/component convention của dự án. |
@@ -60,6 +61,7 @@ Commands là lệnh `/plugin:tên` dùng để setup — thường chỉ chạy 
 |---|---|---|
 | `init` | `/msdlc:init` | Copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào `.claude/` của dự án, tự dò stack điền profile và auto-seed rule từ config sẵn có. |
 | `tracking-poll` | `/msdlc:tracking-poll` | Quét board ngoài **một lượt** và tự khởi động **luồng nhẹ** cho ticket đang chờ: ticket ở cột intake → claim (Todo→planning) + `task-planner` phân tích + comment plan chi tiết → đẩy sang Validate rồi **dừng**; ticket ở cột Approved (do người kéo) → chuyển in-progress rồi build gọn (`deliver-light`) → Review. Dùng cùng `/loop` hoặc `schedule` để chạy định kỳ. Opt-in (cờ poll trong profile). |
+| `log-triage` | `/msdlc:log-triage [log\|đường-dẫn-file]` | (fixbug-intake) Đọc log lỗi production (dán trực tiếp hoặc đường dẫn file) → agent `bug-triage` gom thành các loại bug + lọc noise → **tạo ticket Bug ở cột intake (Todo)** trên board để `tracking-poll` xử lý. **Bỏ qua noise** và **bỏ qua bug đã có ticket** (khử trùng qua marker `[bug-sig:…]` trên board + ledger `.claude/bug-triage/ledger.md`). CHỈ đổ ticket vào Todo — không tự build/duyệt/Done. One-shot; lặp qua `/loop` nếu trỏ file log cố định. Cần cấu hình `## Task tracker`. |
 
 ### Hooks
 
@@ -187,6 +189,21 @@ Mỗi agent dùng độc lập được qua Agent tool khi chỉ cần một m�
 ### 5️⃣ Vận hành theo board — tự động hoá cao nhất
 
 Điền mục `## Task tracker` trong profile + bật cờ poll → board Jira/Asana/Linear/Monday/Notion trở thành giao diện vận hành pipeline: kéo thẻ là duyệt, máy lo phần còn lại. Xem [Đồng bộ board ngoài](#đồng-bộ-board-ngoài-tùy-chọn).
+
+### 6️⃣ Fixbug từ log production
+
+Có log lỗi production và muốn biến thành task fix tự động? Chạy:
+
+```text
+/msdlc:log-triage
+<dán stack trace / log lỗi>
+```
+
+hoặc trỏ file: `/msdlc:log-triage /var/log/app/error.log`.
+
+Công cụ gom log thành các **loại bug** (đối chiếu codebase để loại noise), rồi **tạo ticket Bug ở cột Todo** cho từng bug thật — **bỏ qua** cái không phải bug và cái **đã có ticket** (khử trùng). Từ cột Todo, luồng board (`/msdlc:tracking-poll`) nhặt tiếp: comment plan → Validate → chờ bạn kéo Approved mới build. Tức là `log-triage` **chỉ làm phần intake**, không tự sửa/duyệt.
+
+Chạy định kỳ luôn cả bước triage nếu log ở file cố định: `/loop 30m /msdlc:log-triage /var/log/app/error.log` — idempotent, bug đã tạo ticket không tạo lại. Cần cấu hình `## Task tracker` (chung với board flow); chưa có → báo chạy `/msdlc:init`.
 
 ### Bên trong deliver-auto (Phase 1 → 5)
 
@@ -334,6 +351,8 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **tracker sync** | Cơ chế đồng bộ trạng thái story/task ↔ cột board ngoài, gom trong skill `msdlc:tracking` (tham số `kind` = `story`\|`task`). Opt-in qua mục `## Task tracker` của `profile.md`; tự no-op khi không cấu hình; không bao giờ tự chuyển Done. |
 | **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động **luồng nhẹ** cho ticket ở cột intake/Approved (claim Todo→planning → `task-planner` → plan → build gọn bằng `deliver-light`). Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
 | **git flow** | (opt-in, mục `## Git` profile) Luồng poll `sync` pull đúng nhánh trước khi phân tích (chưa có nhánh task → nhánh base; đã có → nhánh task), tách một nhánh/task từ base branch, build xong commit + push + tạo MR/PR + comment link vào ticket. Gom trong skill `msdlc:git-flow`; auto-create MR qua `gh`/`glab` hoặc fallback link tạo tay. Một build/lượt, làm lần lượt từng task; **máy không tự merge** (người merge + đóng ticket). Tắt = phân tích/build thẳng branch hiện tại như cũ. |
+| **fixbug intake / log-triage** | Lệnh `/msdlc:log-triage` biến log lỗi production thành ticket Bug ở cột Todo để luồng board xử lý. Agent `bug-triage` gom log thành các loại bug + lọc noise; main agent khử trùng rồi tạo ticket. Bước **intake** đứng trước `tracking-poll` — chỉ đổ ticket vào Todo, không tự build/duyệt/Done. |
+| **bug-sig** | Chữ ký ổn định của một loại bug (hash của `signatureBasis`: exception type + message chuẩn hóa + top app-frame). Nhúng dạng `[bug-sig:<hash>]` trong description ticket làm **khóa khử trùng** — board là nguồn sự thật, ledger `.claude/bug-triage/ledger.md` chỉ là cache. |
 
 ---
 
