@@ -35,6 +35,10 @@ Lệnh chạy **một lượt rồi dừng**. Muốn chạy định kỳ thì đ
 2. Lấy từ profile: connector MCP (Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`, Notion→`Notion`), project/board key, và **tên cột Todo** (ánh xạ `todo` trong `## Task tracker` — ticket mới phải nằm đúng cột này thì `tracking-poll` mới nhặt được; cách suy tên cột giống skill `msdlc:tracking`).
    - Connector chưa kết nối → báo và **dừng** (không hỏi token/OAuth).
 3. **Mặc định, không cần cấu hình thêm:** issue type = `Bug`, label = `from-log`. Nếu board không có issue type `Bug` → dùng type mặc định của project hoặc hỏi người dùng một lần, không tự bịa.
+4. **Dò field BẮT BUỘC của tracker** cho issue type sẽ tạo (đúng tinh thần "hỏi chính tool, không đoán schema"):
+   - Jira: gọi `getJiraProjectIssueTypesMetadata` / `getJiraIssueTypeMetaWithFields` để lấy danh sách field và cờ `required`.
+   - Notion: đọc schema các property của database (property nào bắt buộc).
+   - Ghi nhớ danh sách field required + field-cho-phép để Bước 4 điền đủ, tránh tạo ticket bị fail vì thiếu field.
 
 ### Bước 1 — Lấy log
 
@@ -80,6 +84,11 @@ Với mỗi bug **còn lại sau khi lọc trùng**, tạo một ticket qua MCP:
   - **Gợi ý nguyên nhân:** `rootCauseHint`.
   - **Dòng cuối (khoá chống trùng, giữ đúng định dạng):** `[bug-sig:<sig>] [from-log]`.
 - **Nhãn:** gắn `from-log` nếu board hỗ trợ.
+- **Field bắt buộc của tracker (đã dò ở Bước 0):** điền **đầy đủ** mọi field mà tracker đánh dấu `required` cho issue type Bug — nếu không, API tạo ticket sẽ fail hoặc ticket thiếu thông tin. Cách lấy giá trị:
+  - Map được từ dữ liệu bug thì dùng luôn: `summary/title ← title`, `description ← mô tả ở trên`, `issue type ← Bug`.
+  - Field required còn lại (vd Reporter mặc định, hoặc field custom của project) → dùng **giá trị mặc định hợp lý** của project (giá trị đầu tiên hợp lệ mà tracker cho phép); nếu không có mặc định an toàn → **hỏi người dùng một lần** rồi **áp cho mọi bug còn lại trong lượt** (đừng hỏi lặp lại từng bug).
+  - Chạy không có người (loop/schedule) mà một field required không suy được → **bỏ qua bug đó + ghi log rõ field nào thiếu** (để lần sau xử), KHÔNG tạo ticket lỗi, KHÔNG làm crash lượt.
+- **Assignee:** để trống (Unassigned) — team tự nhận trên board.
 - Tạo xong → ghi một dòng vào `.claude/bug-triage/ledger.md`: `<sig> | <ticketId> | <ngày> | <title>`.
 
 Tạo một ticket bị lỗi → **không dừng lượt**: ghi log rồi làm tiếp bug kế. Không sửa code, không đụng ticket ở cột khác cột Todo.
