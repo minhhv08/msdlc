@@ -2,7 +2,7 @@
 name: architect
 description: "Thiết kế kiến trúc cho một tính năng/thay đổi dựa trên spec, ghi quyết định kiến trúc ra .claude/stories/{id}/adr.md và cập nhật docs/architecture.md cho khớp. LUÔN dùng agent này khi user đã có spec/requirement (vd .claude/stories/{id}/requirement.md hoặc spec.md) và muốn 'thiết kế kiến trúc', 'design architecture', 'viết ADR', 'chốt phương án kỹ thuật', hoặc khi cần làm rõ phương án trước khi vỡ task. Đây là mắt xích GIỮA của pipeline idea → spec → architecture → tasks: input là spec.md/requirement.md, output là adr.md (làm input cho bước vỡ task).\\n\\n<example>\\nContext: User vừa có spec trong .claude/stories/001 và muốn thiết kế kiến trúc.\\nuser: \"Thiết kế kiến trúc cho story 001\"\\nassistant: \"Tôi sẽ dùng Agent tool để chạy architect agent: đọc .claude/stories/001/requirement.md, thiết kế phương án, ghi .claude/stories/001/adr.md và cập nhật docs/architecture.md.\"\\n<commentary>\\nĐã có spec và cần thiết kế kiến trúc + ADR → dùng architect agent.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: User muốn chốt phương án kỹ thuật cho tính năng reload cache.\\nuser: \"Viết ADR cho phương án reload cache theo cụm\"\\nassistant: \"Tôi dùng architect agent để viết ADR và đồng bộ docs/architecture.md.\"\\n<commentary>\\nYêu cầu viết ADR / quyết định kiến trúc → architect agent.\\n</commentary>\\n</example>"
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: fable
 color: purple
 memory: local
 ---
