@@ -51,7 +51,6 @@ Khi build từ đầu, nút thắt luôn là "tôi chưa biết chính xác mìn
 
 **Phase 5 — Constraints**
 - Ràng buộc kỹ thuật: stack, ngôn ngữ, hạ tầng, có phải tích hợp hệ thống sẵn có không?
-- Timeline & nguồn lực: bao nhiêu người, deadline mềm/cứng?
 - Compliance/bảo mật/dữ liệu nhạy cảm?
 
 **Phase 6 — Success criteria**
@@ -100,7 +99,6 @@ Rõ ràng KHÔNG làm ở phiên bản này:
 
 ## 5. Constraints
 - **Kỹ thuật:** stack / tích hợp / hạ tầng ...
-- **Timeline & nguồn lực:** ...
 - **Compliance/bảo mật:** ...
 
 ## 6. Success criteria
