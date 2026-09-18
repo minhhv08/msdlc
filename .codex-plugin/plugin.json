@@ -1,0 +1,48 @@
+{
+  "name": "msdlc",
+  "version": "0.7.0",
+  "description": "Stack-agnostic software delivery pipeline for Codex and Claude Code: spec, architecture, human ADR gate, implementation, QC, security review, documentation sync, optional board tracking, and production-log bug intake.",
+  "author": {
+    "name": "minhhv"
+  },
+  "homepage": "https://github.com/minhhv08/msdlc",
+  "repository": "https://github.com/minhhv08/msdlc",
+  "license": "MIT",
+  "keywords": [
+    "pipeline",
+    "agents",
+    "orchestration",
+    "qc",
+    "architecture",
+    "tracking",
+    "jira",
+    "board-sync",
+    "fixbug",
+    "log-triage",
+    "codex",
+    "claude-code"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "msdlc",
+    "shortDescription": "Stack-agnostic delivery pipeline",
+    "longDescription": "msdlc packages a stack-agnostic software delivery workflow: discover specs, design architecture, stop for human approval, implement, design and run tests, review, audit security, sync docs, optionally update an external board, and triage production logs into deduplicated bug tickets. Project facts and rules live in the consuming project's .claude/ directory.",
+    "developerName": "minhhv",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/minhhv08/msdlc",
+    "privacyPolicyURL": "https://github.com/minhhv08/msdlc",
+    "termsOfServiceURL": "https://github.com/minhhv08/msdlc",
+    "defaultPrompt": [
+      "Initialize msdlc in this project",
+      "Create a spec for this feature idea using msdlc",
+      "Run the msdlc delivery pipeline for story 001"
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

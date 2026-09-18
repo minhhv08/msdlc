@@ -84,6 +84,23 @@ File dùng chung — copy vào `.claude/` của dự án tiêu thụ khi init.
 
 ## Cài đặt
 
+### Dùng với Codex
+
+Repo này có thêm manifest Codex tại `.codex-plugin/plugin.json`, trỏ tới cùng thư mục `skills/` để Codex có thể nhận diện plugin và kích hoạt các skill msdlc.
+
+Các lệnh Claude dạng `/msdlc:init`, `/msdlc:tracking-poll`, `/msdlc:log-triage` được expose cho Codex bằng các skill wrapper:
+
+| Claude command | Codex skill |
+|---|---|
+| `/msdlc:init` | `msdlc-init` |
+| `/msdlc:tracking-poll` | `msdlc-tracking-poll` |
+| `/msdlc:log-triage` | `msdlc-log-triage` |
+
+Lưu ý tương thích:
+- Agent prompt vẫn nằm ở `agents/*.md`; khi Codex không có "Agent tool" kiểu Claude, skill wrapper sẽ đọc prompt agent tương ứng và main agent tự thực hiện vai trò đó, hoặc dùng công cụ subagent nếu phiên Codex có.
+- Hooks trong `.claude-plugin/plugin.json` là cơ chế riêng của Claude Code; Codex không đăng ký các hook đó qua manifest `.codex-plugin`.
+- Runtime artifact vẫn dùng convention `.claude/` trong dự án tiêu thụ (`profile.md`, `rules/`, `shared/agent-memory.md`, `stories/`, `tasks/`) để giữ một nguồn sự thật cho cả Claude và Codex.
+
 ### Bước 1 — Cài plugin
 
 **Từ GitHub (khuyên dùng):** add marketplace trước, rồi install theo `plugin@marketplace`:
