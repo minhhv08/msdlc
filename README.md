@@ -98,6 +98,7 @@ Các lệnh Claude dạng `/msdlc:init`, `/msdlc:tracking-poll`, `/msdlc:log-tri
 
 Lưu ý tương thích:
 - Agent prompt vẫn nằm ở `agents/*.md`; khi Codex không có "Agent tool" kiểu Claude, skill wrapper sẽ đọc prompt agent tương ứng và main agent tự thực hiện vai trò đó, hoặc dùng công cụ subagent nếu phiên Codex có.
+- Model routing mặc định cho Codex nằm tại `.codex-plugin/agent-models.toml`: tác vụ lặp lại dùng `gpt-5.6-sol`, implement/review dùng `gpt-5.3-codex`, `gpt-6-sol` cho kiến trúc và security, còn `gpt-6-astra` chỉ để escalation. Điều chỉnh file này theo model picker/API của account; không sửa `model:` trong `agents/*.md` vì đó là metadata Claude.
 - Hooks trong `.claude-plugin/plugin.json` là cơ chế riêng của Claude Code; Codex không đăng ký các hook đó qua manifest `.codex-plugin`.
 - Runtime artifact vẫn dùng convention `.claude/` trong dự án tiêu thụ (`profile.md`, `rules/`, `shared/agent-memory.md`, `stories/`, `tasks/`) để giữ một nguồn sự thật cho cả Claude và Codex.
 
@@ -139,7 +140,7 @@ cp "<msdlc>/shared/profile.template.md" .claude/profile.md
 cp "<msdlc>"/shared/rules/*.md .claude/rules/
 ```
 
-Rồi **điền `.claude/profile.md`** (stack, đường dẫn, lệnh build/test, hạ tầng, hợp đồng lockstep) và **`.claude/rules/`** (convention, kiến trúc, bảo mật, DoD, commit).
+Rồi **điền `.claude/profile.md`** (stack, đường dẫn, lệnh build/test, hạ tầng, hợp đồng lockstep) và **`.claude/rules/`** (convention, kiến trúc, bảo mật, DoD, commit). Khi cần đổi routing model Codex, chỉnh `.codex-plugin/agent-models.toml` của plugin.
 
 </details>
 

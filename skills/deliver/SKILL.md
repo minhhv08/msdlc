@@ -10,6 +10,8 @@ description: >-
 
 Pipeline: `architect` → **[GATE duyệt ADR]** → skill `deliver-auto` (main tự điều phối: `dev-leader` → `dev-*` song song theo file-disjoint, **song song** thiết kế test map/reduce `qc-leader` → `qc-designer` ×N → `qc-leader` merge → `reviewer` (auto-fix ≤1) → `qc-executor`+`security-auditor` song song (auto-fix ≤2) → `chronicler`).
 
+Khi chạy trong Codex, đọc `.codex-plugin/agent-models.toml` của plugin trước mỗi lần dispatch agent. File này là nguồn sự thật cho model tier và reasoning effort; không tự nâng lên `gpt-6-astra` ngoài điều kiện escalation đã cấu hình.
+
 ## Input
 
 - Tham số là **story id**, ví dụ `/deliver 001`. Nếu user không đưa id → liệt kê `.claude/stories/` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.

@@ -8,6 +8,8 @@ description: >-
 
 Bản **nhẹ** của `deliver-auto` cho task nhỏ trên board: bỏ bước vỡ task (`dev-leader`) và bỏ thiết kế test map/reduce (`qc-leader`/`qc-designer`). Việc vỡ subtask đã do `task-planner` làm sẵn trong `plan.md`. Main agent **tự điều phối** chuỗi agent bằng **Agent tool** — không dùng Workflow — chạy song song tối đa các subtask không đụng file, và báo cáo trung thực.
 
+Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
+
 **Tiền đề:** `.claude/tasks/{taskid}/plan.md` đã tồn tại (do `task-planner` ghi, đã được người duyệt qua board). Kiểm tra thật, không tin lời gọi:
 - Chưa có `plan.md` → dừng, báo cần chạy `task-planner`/`tracking-poll` trước. KHÔNG tự bịa plan.
 - Đã có `.claude/tasks/{taskid}/report.md` → task đã build xong (idempotent) → báo và dừng, không build lại.

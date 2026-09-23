@@ -1,0 +1,74 @@
+# Default model routing for msdlc when running in Codex.
+# `gpt-6-astra` is deliberately escalation-only; no agent defaults to it.
+
+[agents.task-planner]
+model = "gpt-5.6-sol"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-sol"
+escalate_when = "Task is ambiguous or has many dependencies."
+
+[agents.bug-triage]
+model = "gpt-5.6-sol"
+reasoning_effort = "medium"
+escalate_to = "gpt-5.3-codex"
+escalate_when = "Logs are hard to cluster or require deep codebase tracing."
+
+[agents.qc-executor]
+model = "gpt-5.6-sol"
+reasoning_effort = "low"
+escalate_to = "gpt-5.3-codex"
+escalate_when = "A test failure has no clear cause."
+
+[agents.chronicler]
+model = "gpt-5.6-sol"
+reasoning_effort = "low"
+escalate_to = "gpt-6-sol"
+escalate_when = "Documentation changes span a major architectural change."
+
+[agents.qc-designer]
+model = "gpt-5.6-sol"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-sol"
+escalate_when = "The workflow has high business or operational risk."
+
+[agents.qc-leader]
+model = "gpt-6-sol"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-astra"
+escalate_when = "The test strategy is complex across multiple systems."
+
+[agents.dev-backend]
+model = "gpt-5.3-codex"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-sol"
+escalate_when = "The change includes a migration, concurrency, or core domain logic."
+
+[agents.dev-frontend]
+model = "gpt-5.3-codex"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-sol"
+escalate_when = "The change needs a large refactor or complex stateful UX."
+
+[agents.dev-leader]
+model = "gpt-6-sol"
+reasoning_effort = "high"
+escalate_to = "gpt-6-astra"
+escalate_when = "Task decomposition crosses modules with difficult architectural trade-offs."
+
+[agents.architect]
+model = "gpt-6-sol"
+reasoning_effort = "high"
+escalate_to = "gpt-6-astra"
+escalate_when = "The decision spans services, a large migration, or difficult trade-offs."
+
+[agents.reviewer]
+model = "gpt-5.3-codex"
+reasoning_effort = "medium"
+escalate_to = "gpt-6-sol"
+escalate_when = "The diff is cross-module or has elevated risk."
+
+[agents.security-auditor]
+model = "gpt-6-sol"
+reasoning_effort = "high"
+escalate_to = "gpt-6-astra"
+escalate_when = "The scope includes auth, crypto, payments, RCE, or High/Critical findings."

@@ -8,6 +8,8 @@ description: >-
 
 Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool** — không dùng Workflow. Mục tiêu: nhanh và minh bạch, main giữ quyền kiểm soát, chạy song song tối đa những việc không đụng nhau, và báo cáo trung thực.
 
+Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
+
 **Tiền đề:** `.claude/stories/{id}/adr.md` đã tồn tại **và header ghi `Status: Accepted`** — dấu duyệt do gate ghi lại (`/deliver` Bước B khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved). Kiểm tra thật sự, không tin lời gọi:
 - Chưa có `adr.md` → dừng, báo user chạy bước architect/`/deliver` trước. KHÔNG tự bịa.
 - `adr.md` còn `Status: Proposed` → dừng, báo user ADR chưa được duyệt — đi qua gate `/deliver` (hoặc kéo ticket sang Approved nếu dùng board).
