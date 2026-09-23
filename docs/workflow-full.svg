@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="2180" viewBox="0 0 1100 2180" role="img" aria-labelledby="title description">
+  <title id="title">Workflow tu y tuong den ket qua</title>
+  <desc id="description">Luồng dọc từ ý tưởng đến review, với Human gate duyệt hoặc yêu cầu chỉnh ADR.</desc>
+  <style>
+    .card { stroke-width: 2; }
+    .title { font: 700 20px Arial, sans-serif; }
+    .body { font: 16px Arial, sans-serif; }
+    .edge { fill: none; stroke: #475569; stroke-width: 2.5; }
+    .return { fill: none; stroke: #B45309; stroke-width: 2.5; stroke-dasharray: 8 6; }
+    .label { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 1; }
+    .edge-text { font: 600 14px Arial, sans-serif; fill: #334155; text-anchor: middle; }
+    .return-text { font: 600 13px Arial, sans-serif; fill: #92400E; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="return-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B45309"/>
+    </marker>
+  </defs>
+
+  <!-- Main transitions -->
+  <path class="edge" d="M430 210 V300" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 450 V540" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 700 V790" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1000 V1090" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1220 V1310" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1465 V1555" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1720 V1810" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1950 V2040" marker-end="url(#arrow)"/>
+
+  <!-- Human revision loop -->
+  <path class="return" d="M80 895 H24 V620 H80" marker-end="url(#return-arrow)"/>
+
+  <!-- Edge labels -->
+  <rect class="label" x="296" y="242" width="268" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="261">🤖 AI Agent làm rõ yêu cầu</text>
+  <rect class="label" x="288" y="482" width="284" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="501">🤖 AI Agent thiết kế kiến trúc</text>
+  <rect class="label" x="338" y="732" width="184" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="751">👤 Human review ADR</text>
+  <rect class="label" x="352" y="1032" width="156" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1051">👤 Human duyệt</text>
+  <rect class="label" x="315" y="1252" width="230" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1271">🤖 AI Agent bắt đầu build</text>
+  <rect class="label" x="306" y="1497" width="248" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1516">🤖 deliver-auto triển khai</text>
+  <rect class="label" x="334" y="1752" width="192" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1771">🤖 AI Agent bàn giao</text>
+  <rect class="label" x="348" y="1982" width="164" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="2001">👤 Human review</text>
+  <rect class="label" x="8" y="735" width="124" height="54" rx="5"/>
+  <text class="return-text" x="70" y="756">👤 Human</text>
+  <text class="return-text" x="70" y="775">yêu cầu sửa ADR</text>
+
+  <!-- Fixed-width cards: x=80, width=700 -->
+  <rect class="card" x="80" y="80" width="700" height="130" rx="8" fill="#F1F5F9" stroke="#94A3B8"/>
+  <text class="title" x="112" y="120" fill="#0F172A">Ý TƯỞNG</text>
+  <text class="body" x="112" y="164" fill="#0F172A">Ý tưởng chưa rõ scope cần được làm rõ</text>
+
+  <rect class="card" x="80" y="300" width="700" height="150" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
+  <text class="title" x="112" y="340" fill="#172554">/SPEC</text>
+  <text class="body" x="112" y="384" fill="#172554">🤖 AI Agent phỏng vấn có cấu trúc để xác định scope, non-goals và AC</text>
+  <text class="body" x="112" y="414" fill="#172554">→ requirement.md</text>
+
+  <rect class="card" x="80" y="540" width="700" height="160" rx="8" fill="#F5F3FF" stroke="#A78BFA"/>
+  <text class="title" x="112" y="580" fill="#2E1065">ARCHITECT</text>
+  <text class="body" x="112" y="624" fill="#2E1065">🤖 AI Agent thiết kế phương án kỹ thuật</text>
+  <text class="body" x="112" y="654" fill="#2E1065">→ adr.md — Status: Proposed</text>
+
+  <rect class="card" x="80" y="790" width="700" height="210" rx="8" fill="#FFFBEB" stroke="#F59E0B"/>
+  <text class="title" x="112" y="830" fill="#451A03">HUMAN GATE</text>
+  <text class="body" x="112" y="874" fill="#451A03">👤 Human:</text>
+  <text class="body" x="112" y="906" fill="#451A03">- Duyệt ADR: chuyển sang Accepted</text>
+  <text class="body" x="112" y="938" fill="#451A03">- Yêu cầu sửa: comment và trả về Architect</text>
+
+  <rect class="card" x="80" y="1090" width="700" height="130" rx="8" fill="#ECFDF5" stroke="#34D399"/>
+  <text class="title" x="112" y="1130" fill="#14532D">ADR ACCEPTED</text>
+  <text class="body" x="112" y="1174" fill="#14532D">ADR đã duyệt, sẵn sàng triển khai</text>
+
+  <rect class="card" x="80" y="1310" width="700" height="155" rx="8" fill="#E0F2FE" stroke="#38BDF8"/>
+  <text class="title" x="112" y="1350" fill="#0C4A6E">DELIVER-AUTO</text>
+  <text class="body" x="112" y="1394" fill="#0C4A6E">🤖 Tự động điều phối task, code, QC, review, audit và docs</text>
+  <text class="body" x="112" y="1424" fill="#0C4A6E">→ report.md</text>
+
+  <rect class="card" x="80" y="1555" width="700" height="165" rx="8" fill="#F0FDF4" stroke="#4ADE80"/>
+  <text class="title" x="112" y="1595" fill="#14532D">BÀN GIAO</text>
+  <text class="body" x="112" y="1639" fill="#14532D">🤖 Kết quả build, test, security audit và docs đã được đồng bộ</text>
+  <text class="body" x="112" y="1669" fill="#14532D">→ report.md</text>
+
+  <rect class="card" x="80" y="1810" width="700" height="140" rx="8" fill="#FFF7ED" stroke="#FB923C"/>
+  <text class="title" x="112" y="1850" fill="#431407">REVIEW</text>
+  <text class="body" x="112" y="1894" fill="#431407">👤 Human review kết quả bàn giao</text>
+
+  <rect class="card" x="80" y="2040" width="700" height="100" rx="8" fill="#F0FDF4" stroke="#4ADE80"/>
+  <text class="title" x="112" y="2080" fill="#14532D">KẾT QUẢ</text>
+  <text class="body" x="112" y="2119" fill="#14532D">Kết quả sẵn sàng để team sử dụng hoặc phát hành</text>
+</svg>

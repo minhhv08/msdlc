@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1760" viewBox="0 0 1100 1760" role="img" aria-labelledby="title description">
+  <title id="title">Workflow van hanh theo Kanban Board</title>
+  <desc id="description">Luồng dọc từ TODO tới DONE, với các nhánh Human điều chỉnh quay về TODO.</desc>
+  <style>
+    .card { stroke-width: 2; }
+    .title { font: 700 20px Arial, sans-serif; }
+    .body { font: 16px Arial, sans-serif; }
+    .edge { fill: none; stroke: #475569; stroke-width: 2.5; }
+    .return { fill: none; stroke: #B45309; stroke-width: 2.5; stroke-dasharray: 8 6; }
+    .label { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 1; }
+    .edge-text { font: 600 14px Arial, sans-serif; fill: #334155; text-anchor: middle; }
+    .return-text { font: 600 13px Arial, sans-serif; fill: #92400E; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="return-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B45309"/>
+    </marker>
+  </defs>
+
+  <!-- Main transitions -->
+  <path class="edge" d="M430 210 V300" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 440 V530" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 740 V830" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 960 V1050" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1195 V1285" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1495 V1585" marker-end="url(#arrow)"/>
+
+  <!-- Return transitions -->
+  <path class="return" d="M80 635 H24 V145 H80" marker-end="url(#return-arrow)"/>
+  <path class="return" d="M780 1390 H1055 V145 H780" marker-end="url(#return-arrow)"/>
+
+  <!-- Edge labels -->
+  <rect class="label" x="318" y="242" width="224" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="261">🤖 AI Agent Claim</text>
+  <rect class="label" x="278" y="472" width="304" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="491">🤖 AI Agent chuyển Validate</text>
+  <rect class="label" x="348" y="772" width="164" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="791">👤 Human duyệt</text>
+  <rect class="label" x="318" y="1002" width="224" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1021">🤖 AI Agent Claim</text>
+  <rect class="label" x="305" y="1237" width="250" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1256">🤖 AI Agent bàn giao</text>
+  <rect class="label" x="377" y="1527" width="106" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1546">👤 Đóng</text>
+  <rect class="label" x="8" y="430" width="120" height="54" rx="5"/>
+  <text class="return-text" x="68" y="451">👤 Human</text>
+  <text class="return-text" x="68" y="470">điều chỉnh plan</text>
+  <rect class="label" x="815" y="976" width="218" height="54" rx="5"/>
+  <text class="return-text" x="924" y="997">👤 Human</text>
+  <text class="return-text" x="924" y="1016">điều chỉnh</text>
+
+  <!-- Status cards: fixed x=80 and width=700 -->
+  <rect class="card" x="80" y="80" width="700" height="130" rx="8" fill="#F1F5F9" stroke="#94A3B8"/>
+  <text class="title" x="112" y="120" fill="#0F172A">TODO</text>
+  <text class="body" x="112" y="164" fill="#0F172A">Task đã được tạo và đang chờ thực hiện</text>
+
+  <rect class="card" x="80" y="300" width="700" height="140" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
+  <text class="title" x="112" y="340" fill="#172554">PLANNING</text>
+  <text class="body" x="112" y="384" fill="#172554">🤖 AI Agents phân tích, lập plan và comment vào task</text>
+
+  <rect class="card" x="80" y="530" width="700" height="210" rx="8" fill="#FAF5FF" stroke="#C084FC"/>
+  <text class="title" x="112" y="570" fill="#3B0764">VALIDATE</text>
+  <text class="body" x="112" y="614" fill="#3B0764">👤 Human:</text>
+  <text class="body" x="112" y="646" fill="#3B0764">- Duyệt: chuyển status sang Approved</text>
+  <text class="body" x="112" y="678" fill="#3B0764">- Điều chỉnh plan: comment vào task và chuyển về TODO để 🤖 AI Agent cập nhật lại plan</text>
+
+  <rect class="card" x="80" y="830" width="700" height="130" rx="8" fill="#FFFBEB" stroke="#F59E0B"/>
+  <text class="title" x="112" y="870" fill="#451A03">APPROVED</text>
+  <text class="body" x="112" y="914" fill="#451A03">Task đã sẵn sàng triển khai</text>
+
+  <rect class="card" x="80" y="1050" width="700" height="145" rx="8" fill="#ECFDF5" stroke="#34D399"/>
+  <text class="title" x="112" y="1090" fill="#14532D">IN PROGRESS</text>
+  <text class="body" x="112" y="1134" fill="#14532D">Build task: code, test, audit, docs</text>
+  <text class="body" x="112" y="1162" fill="#14532D">→ report.md</text>
+
+  <rect class="card" x="80" y="1285" width="700" height="210" rx="8" fill="#FFF7ED" stroke="#FB923C"/>
+  <text class="title" x="112" y="1325" fill="#431407">REVIEW</text>
+  <text class="body" x="112" y="1369" fill="#431407">👤 Người verify kết quả:</text>
+  <text class="body" x="112" y="1401" fill="#431407">- Đóng: nếu đã đúng như mong muốn</text>
+  <text class="body" x="112" y="1433" fill="#431407">- Comment và chuyển về TODO nếu cần điều chỉnh</text>
+
+  <rect class="card" x="80" y="1585" width="700" height="100" rx="8" fill="#F0FDF4" stroke="#4ADE80"/>
+  <text class="title" x="112" y="1625" fill="#14532D">DONE</text>
+  <text class="body" x="112" y="1664" fill="#14532D">Hoàn thành task</text>
+</svg>

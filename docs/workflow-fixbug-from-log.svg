@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1740" viewBox="0 0 1200 1740" role="img" aria-labelledby="title description">
+  <title id="title">Workflow fixbug tu log</title>
+  <desc id="description">Luồng từ production log qua triage, lọc bug thật, dedup, tạo Bug task và chuyển sang Kanban.</desc>
+  <style>
+    .card { stroke-width: 2; }
+    .title { font: 700 20px Arial, sans-serif; }
+    .body { font: 16px Arial, sans-serif; }
+    .side-title { font: 700 17px Arial, sans-serif; }
+    .side-body { font: 14px Arial, sans-serif; }
+    .edge { fill: none; stroke: #475569; stroke-width: 2.5; }
+    .branch { fill: none; stroke: #B45309; stroke-width: 2.5; }
+    .label { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 1; }
+    .edge-text { font: 600 14px Arial, sans-serif; fill: #334155; text-anchor: middle; }
+    .branch-text { font: 600 13px Arial, sans-serif; fill: #92400E; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="branch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B45309"/>
+    </marker>
+  </defs>
+
+  <!-- Main transitions -->
+  <path class="edge" d="M430 210 V300" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 450 V540" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 710 V800" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 950 V1040" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1200 V1290" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1425 V1515" marker-end="url(#arrow)"/>
+
+  <!-- Exit branches -->
+  <path class="branch" d="M780 625 H840" marker-end="url(#branch-arrow)"/>
+  <path class="branch" d="M780 1120 H840" marker-end="url(#branch-arrow)"/>
+
+  <!-- Edge labels -->
+  <rect class="label" x="312" y="242" width="236" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="261">🤖 AI Agent triage log</text>
+  <rect class="label" x="336" y="482" width="188" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="501">🤖 Gom cụm lỗi</text>
+  <rect class="label" x="366" y="742" width="128" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="761">Có</text>
+  <rect class="label" x="322" y="982" width="216" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1001">🤖 Tạo bug-sig</text>
+  <rect class="label" x="308" y="1232" width="244" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1251">🤖 Tạo Bug task</text>
+  <rect class="label" x="298" y="1457" width="264" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1476">🤖 AI Agent chuyển TODO</text>
+  <rect class="label" x="784" y="584" width="52" height="26" rx="5"/>
+  <text class="branch-text" x="810" y="603">Không</text>
+  <rect class="label" x="791" y="1079" width="38" height="26" rx="5"/>
+  <text class="branch-text" x="810" y="1098">Có</text>
+
+  <!-- Fixed-width main cards: x=80, width=700 -->
+  <rect class="card" x="80" y="80" width="700" height="130" rx="8" fill="#F1F5F9" stroke="#94A3B8"/>
+  <text class="title" x="112" y="120" fill="#0F172A">PRODUCTION LOG</text>
+  <text class="body" x="112" y="164" fill="#0F172A">Log lỗi production được paste hoặc đưa vào file</text>
+
+  <rect class="card" x="80" y="300" width="700" height="150" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
+  <text class="title" x="112" y="340" fill="#172554">LOG TRIAGE</text>
+  <text class="body" x="112" y="384" fill="#172554">🤖 /msdlc:log-triage chuẩn hóa log và nhận diện stack trace</text>
+  <text class="body" x="112" y="414" fill="#172554">→ Các lỗi được gom theo cụm</text>
+
+  <rect class="card" x="80" y="540" width="700" height="170" rx="8" fill="#F5F3FF" stroke="#A78BFA"/>
+  <text class="title" x="112" y="580" fill="#2E1065">BUG THẬT?</text>
+  <text class="body" x="112" y="624" fill="#2E1065">🤖 AI Agent phân loại bug thực với noise, infra và third-party</text>
+  <text class="body" x="112" y="654" fill="#2E1065">→ Bug thực tiếp tục tạo signature</text>
+
+  <rect class="card" x="80" y="800" width="700" height="150" rx="8" fill="#E0F2FE" stroke="#38BDF8"/>
+  <text class="title" x="112" y="840" fill="#0C4A6E">BUG-SIG</text>
+  <text class="body" x="112" y="884" fill="#0C4A6E">🤖 Tạo signature ổn định cho lỗi</text>
+  <text class="body" x="112" y="914" fill="#0C4A6E">→ marker [bug-sig:&lt;hash&gt;] và ledger</text>
+
+  <rect class="card" x="80" y="1040" width="700" height="160" rx="8" fill="#FAF5FF" stroke="#C084FC"/>
+  <text class="title" x="112" y="1080" fill="#3B0764">TRÙNG TICKET?</text>
+  <text class="body" x="112" y="1124" fill="#3B0764">🤖 Đối chiếu marker trên board và bug-triage ledger</text>
+  <text class="body" x="112" y="1154" fill="#3B0764">→ Không trùng thì tạo Bug task mới</text>
+
+  <rect class="card" x="80" y="1290" width="700" height="135" rx="8" fill="#ECFDF5" stroke="#34D399"/>
+  <text class="title" x="112" y="1330" fill="#14532D">BUG TASK (TODO)</text>
+  <text class="body" x="112" y="1374" fill="#14532D">Task Bug đã tạo và đang chờ thực hiện</text>
+
+  <rect class="card" x="80" y="1515" width="700" height="135" rx="8" fill="#FFF7ED" stroke="#FB923C"/>
+  <text class="title" x="112" y="1555" fill="#431407">KANBAN</text>
+  <text class="body" x="112" y="1599" fill="#431407">Task Bug tiếp tục đi qua workflow Kanban</text>
+
+  <!-- Exit cards -->
+  <rect class="card" x="840" y="555" width="280" height="140" rx="8" fill="#F3F4F6" stroke="#9CA3AF"/>
+  <text class="side-title" x="864" y="592" fill="#111827">DISCARDED</text>
+  <text class="side-body" x="864" y="630" fill="#111827">Noise, infra hoặc</text>
+  <text class="side-body" x="864" y="654" fill="#111827">third-party error</text>
+
+  <rect class="card" x="840" y="1050" width="280" height="140" rx="8" fill="#F3F4F6" stroke="#9CA3AF"/>
+  <text class="side-title" x="864" y="1087" fill="#111827">TICKET TỒN TẠI</text>
+  <text class="side-body" x="864" y="1125" fill="#111827">Không tạo task mới;</text>
+  <text class="side-body" x="864" y="1149" fill="#111827">cập nhật ledger nếu cần</text>
+</svg>

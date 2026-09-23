@@ -160,67 +160,11 @@ Thêm vào `.gitignore` của dự án tiêu thụ:
 
 ## Các workflow áp dụng
 
-Chọn workflow theo **thứ bạn đang có trong tay**:
+Xem sơ đồ chi tiết cho từng luồng:
 
-```mermaid
-flowchart TD
-    S{"Bạn đang có gì trong tay?"}
-    S -->|"chỉ ý tưởng mơ hồ"| W1["1️⃣ /spec → /deliver {id}<br/>pipeline trọn gói"]
-    S -->|"đã có requirement.md"| W2["2️⃣ /deliver {id}<br/>architect → gate → build"]
-    S -->|"đã có ADR"| W3["3️⃣ /deliver {id} — build từ ADR có sẵn<br/>vẫn bắt buộc xác nhận duyệt"]
-    S -->|"chỉ cần một bước lẻ"| W4["4️⃣ Gọi thẳng agent<br/>architect / dev-leader / qc-designer / reviewer / security-auditor…"]
-    S -->|"team vận hành trên board"| W5["5️⃣ /msdlc:init điền Task tracker<br/>+ bật poll → board tự chạy pipeline"]
-```
-
-### 1️⃣ Trọn gói — từ ý tưởng mơ hồ
-
-```
-/spec          → phỏng vấn → .claude/stories/{id}/requirement.md
-/deliver {id}  → architect → [GATE duyệt ADR] → build + test + docs → report.md
-```
-
-Dùng khi mới chỉ có ý tưởng, chưa có PRD. `/spec` ép làm rõ scope, non-goals, acceptance criteria trước khi đụng tới thiết kế.
-
-### 2️⃣ Từ requirement có sẵn
-
-Đã có `requirement.md` (tự viết theo template, hoặc do `tracking-poll` suy từ ticket)? Chạy thẳng `/deliver {id}` — pipeline bắt đầu từ bước architect.
-
-### 3️⃣ Build từ ADR có sẵn
-
-Nói với `/deliver {id}`: *"build luôn từ ADR có sẵn"* — bỏ qua bước thiết kế nhưng **không bỏ qua gate**: vẫn phải xác nhận duyệt một lần (skill ghi `Status: Accepted` vào `adr.md` rồi mới build).
-
-### 4️⃣ Chạy lẻ từng bước
-
-Mỗi agent dùng độc lập được qua Agent tool khi chỉ cần một mắt xích:
-
-| Bạn nói | Agent chạy |
-|---|---|
-| "Thiết kế kiến trúc cho story 002" | `architect` |
-| "Vỡ task từ ADR của story 002" | `dev-leader` |
-| "Thiết kế test case cho requirement này" | `qc-designer` (chế độ full) |
-| "Review diff hiện tại" | `reviewer` |
-| "Quét bảo mật diff này trước khi merge" | `security-auditor` |
-| "Chạy test cho project X" | `qc-executor` |
-| "Sync docs với code vừa đổi" | `chronicler` |
-
-### 5️⃣ Vận hành theo board — tự động hoá cao nhất
-
-Điền mục `## Task tracker` trong profile + bật cờ poll → board Jira/Asana/Linear/Monday/Notion trở thành giao diện vận hành pipeline: kéo thẻ là duyệt, máy lo phần còn lại. Xem [Đồng bộ board ngoài](#đồng-bộ-board-ngoài-tùy-chọn).
-
-### 6️⃣ Fixbug từ log production
-
-Có log lỗi production và muốn biến thành task fix tự động? Chạy:
-
-```text
-/msdlc:log-triage
-<dán stack trace / log lỗi>
-```
-
-hoặc trỏ file: `/msdlc:log-triage /var/log/app/error.log`.
-
-Công cụ gom log thành các **loại bug** (đối chiếu codebase để loại noise), rồi **tạo ticket Bug ở cột Todo** cho từng bug thật — **bỏ qua** cái không phải bug và cái **đã có ticket** (khử trùng). Từ cột Todo, luồng board (`/msdlc:tracking-poll`) nhặt tiếp: comment plan → Validate → chờ bạn kéo Approved mới build. Tức là `log-triage` **chỉ làm phần intake**, không tự sửa/duyệt.
-
-Chạy định kỳ luôn cả bước triage nếu log ở file cố định: `/loop 30m /msdlc:log-triage /var/log/app/error.log` — idempotent, bug đã tạo ticket không tạo lại. Cần cấu hình `## Task tracker` (chung với board flow); chưa có → báo chạy `/msdlc:init`.
+- [Từ ý tưởng đến kết quả](docs/workflow-full.md)
+- [Vận hành theo Kanban Board](docs/workflow-kanban-board.md)
+- [Fixbug từ log](docs/workflow-fixbug-from-log.md)
 
 ### Bên trong deliver-auto (Phase 1 → 5)
 
@@ -259,74 +203,6 @@ Ba trục song song hoá chính:
 - **Wave file-disjoint** — các dev task có `touchesFiles` rời nhau chạy cùng lúc; đụng file chung thì xếp wave sau.
 - **Map/reduce thiết kế test** — `qc-leader` liệt kê stub + chia bucket ngay ở Phase 1, N `qc-designer` flesh-out song song với dev từ Wave 1, `qc-leader` merge lại; đến Phase 3 test suite đã sẵn.
 - **QC ∥ Security** — mỗi project một `qc-executor`, chạy cùng lúc với `security-auditor`; lỗi test hoặc finding Critical/High → dev fix rồi chạy lại, ngân sách chung ≤ 2 vòng.
-
-## Đồng bộ board ngoài (tùy chọn)
-
-Nếu dự án dùng board (Jira/Asana/Linear/Monday/Notion), msdlc có thể tự chuyển cột ticket theo tiến độ pipeline. **Tính năng opt-in**: không cấu hình mục `## Task tracker` trong `.claude/profile.md` → pipeline chạy thuần local **y như cũ** (skill `msdlc:tracking` tự no-op).
-
-Ánh xạ mốc pipeline → cột board (tên cột cấu hình được trong profile; ví dụ theo flow phổ biến) — 🤖 là máy tự chuyển, 👤 là thao tác của người:
-
-```mermaid
-flowchart LR
-    B["Backlog"] --> T["Todo (intake)"]
-    T -->|"🤖 poll: claim → planning"| PL["Planning"]
-    PL -->|"🤖 task-planner → plan + comment"| V["Validate"]
-    V -->|"👤 kéo thẻ = duyệt plan"| A["Approved"]
-    A -->|"🤖 poll: in-progress → build gọn"| I["InProgress"]
-    I -->|"🤖 xong deliver-light"| R["Review"]
-    R -->|"👤 verify + đóng"| D["Done"]
-    style V fill:#fff3cd,stroke:#b8860b
-    style A fill:#fff3cd,stroke:#b8860b
-    style D fill:#d4edda,stroke:#2e7d32
-```
-
-- **Poll chạy luồng NHẸ** (task board là feat/fixbug nhỏ): dùng `.claude/tasks/{taskid}/` + agent `task-planner` (không phải `architect`) + `plan.md` (không phải ADR) + `deliver-light` (không phải `deliver-auto`). Luồng thủ công `/spec`+`/deliver` (dùng `.claude/stories/` + ADR + `deliver-auto`) vẫn giữ nguyên cho việc lớn.
-- **Vòng sửa plan + trả lời qua comment** (poll đọc comment ticket): muốn sửa plan → comment yêu cầu rồi **kéo thẻ về Todo** → poll cập nhật `plan.md` (revision) và đưa lại Validate chờ duyệt. Muốn duyệt kèm làm rõ → **trả lời các Open question trong comment** rồi kéo sang Approved → poll fold câu trả lời vào plan trước khi build (không quay lại Validate).
-- **Cột board là nguồn sự thật**: ticket kéo về **Todo** thì LUÔN được mở lại (reopen) — kể cả đã build xong (từng ở Review); poll archive report cũ, cập nhật plan, đưa lại Validate để duyệt và build lại. Không bị "đã có plan/report → skip". (Poll cần MCP tool của connector trong `allowed-tools` để đọc cột + comment.)
-- `planning` là bước **claim/lock**: poll chuyển `Todo → planning` để nhận ticket TRƯỚC khi phân tích — ticket rời cột intake nên session khác không nhận trùng (khóa nhẹ; nên chạy một poller cho mỗi board).
-- Giữa hai khúc tự động là **cổng duyệt** — thao tác **người kéo thẻ** từ `Validate` sang `Approved` (= duyệt bản plan đã comment). Máy không bao giờ tự vượt.
-- `Done` **không bao giờ** do máy chuyển — luôn để người verify và đóng thủ công.
-
-### Tự động kéo task từ board (loop)
-
-`/msdlc:tracking-poll` quét board **một lượt** theo luồng nhẹ: ticket ở cột intake → claim (Todo→planning) + `task-planner` phân tích + comment plan → đẩy sang `Validate` rồi dừng; ticket ở cột `Approved` (người đã duyệt) → chuyển in-progress rồi build gọn → `Review`. Mỗi lượt còn có **bước resume** nhặt lại task kẹt ở `planning`/`in-progress` do lượt trước fail. Một chu trình đầy đủ của một ticket:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor H as 👤 Người duyệt
-    participant B as Board
-    participant P as tracking-poll
-
-    Note over P: lặp bằng /loop hoặc schedule
-    P->>B: quét cột intake (Todo)
-    B-->>P: ticket mới
-    P->>B: claim — chuyển Todo → planning (khóa nhẹ)
-    P->>P: task-planner → .claude/tasks/{taskid}/plan.md
-    P->>B: chuyển → Validate, comment plan chi tiết
-    Note over H,P: ⛔ DỪNG — máy không tự vượt gate
-    H->>B: kéo thẻ Validate → Approved (= duyệt plan)
-    P->>B: quét cột Approved (lượt sau)
-    P->>B: chuyển → InProgress (TRƯỚC khi build)
-    opt Git flow bật
-        P->>P: git-flow start — tách nhánh feat/{taskid} off base
-    end
-    P->>P: deliver-light build gọn → report.md
-    opt Git flow bật
-        P->>P: git-flow finish — commit + push + tạo MR
-    end
-    P->>B: chuyển → Review, comment kết quả (kèm link MR)
-    H->>B: review MR + merge, đóng Done (luôn do người)
-```
-
-**Git flow (tùy chọn — mục `## Git` trong profile, mặc định tắt):** khi bật, **trước mỗi lần phân tích** poll gọi `git-flow sync` để **pull đúng nhánh** (task chưa có nhánh riêng → nhánh base cấu hình; đã có nhánh task — thường khi reopen/revision — → pull chính nhánh đó), để `task-planner` phân tích trên code mới nhất, đúng nhánh. Mỗi task board build trên **một nhánh riêng** tách từ base branch (main/master/production — cấu hình được), build xong tự **commit → push → tạo MR/PR → comment link MR vào ticket**. Chỉ **một build/lượt** để không juggle nhiều nhánh trên working tree chung; các git op **làm lần lượt từng task** (best-effort, git đang bận/tree bẩn → bỏ switch, không crash lượt — không cần lockfile riêng). Máy tạo MR nhưng **không bao giờ tự merge** — người review MR rồi merge + đóng ticket (đối xứng "Done do người"). Tắt cờ → poll phân tích/build thẳng trên branch hiện tại như cũ. Chi tiết: skill `msdlc:git-flow`.
-
-Để chạy định kỳ, ghép với cơ chế lặp của harness (msdlc không tự chế scheduling):
-
-- **`/loop 10m /msdlc:tracking-poll`** — lặp theo interval trong phiên đang mở. Đơn giản; dừng khi đóng phiên/máy.
-- **`schedule`** (cloud cron) — tạo scheduled agent chạy nền kể cả khi tắt máy. Bền hơn cho vận hành liên tục.
-
-Bật poll là tự động mạnh → phải bật cờ `poll` trong profile (mặc định tắt). Dù bật, loop **vẫn giữ cổng duyệt**: chỉ tự build ticket đã được người kéo sang `Approved`.
 
 ## Hooks bảo mật
 

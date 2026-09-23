@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1760" viewBox="0 0 1100 1760" role="img" aria-labelledby="title description">
+  <title id="title">Chi tiet deliver-auto sau khi ADR duoc duyet</title>
+  <desc id="description">Luồng tự động từ ADR Accepted qua lập task, build, review, kiểm thử và đồng bộ tài liệu đến report.</desc>
+  <style>
+    .card { stroke-width: 2; }
+    .title { font: 700 20px Arial, sans-serif; }
+    .body { font: 16px Arial, sans-serif; }
+    .edge { fill: none; stroke: #475569; stroke-width: 2.5; }
+    .label { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 1; }
+    .edge-text { font: 600 14px Arial, sans-serif; fill: #334155; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <path class="edge" d="M430 210 V300" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 465 V555" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 735 V825" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 970 V1060" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1215 V1305" marker-end="url(#arrow)"/>
+  <path class="edge" d="M430 1460 V1550" marker-end="url(#arrow)"/>
+
+  <rect class="label" x="324" y="242" width="212" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="261">🤖 Lập task + test map</text>
+  <rect class="label" x="306" y="497" width="248" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="516">🤖 Triển khai song song</text>
+  <rect class="label" x="356" y="767" width="148" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="786">🤖 Review code</text>
+  <rect class="label" x="302" y="1002" width="256" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1021">🤖 Test + security audit</text>
+  <rect class="label" x="328" y="1247" width="204" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1266">🤖 Đồng bộ tài liệu</text>
+  <rect class="label" x="345" y="1492" width="170" height="26" rx="5"/>
+  <text class="edge-text" x="430" y="1511">🤖 Tạo report</text>
+
+  <!-- Fixed-width cards: x=80, width=700 -->
+  <rect class="card" x="80" y="80" width="700" height="130" rx="8" fill="#ECFDF5" stroke="#34D399"/>
+  <text class="title" x="112" y="120" fill="#14532D">ADR ACCEPTED</text>
+  <text class="body" x="112" y="164" fill="#14532D">Điều kiện bắt buộc để chạy deliver-auto</text>
+
+  <rect class="card" x="80" y="300" width="700" height="165" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
+  <text class="title" x="112" y="340" fill="#172554">PLAN &amp; TEST MAP</text>
+  <text class="body" x="112" y="384" fill="#172554">🤖 dev-leader vỡ task; qc-leader chia test bucket</text>
+  <text class="body" x="112" y="414" fill="#172554">→ task plan và test map</text>
+
+  <rect class="card" x="80" y="555" width="700" height="180" rx="8" fill="#F5F3FF" stroke="#A78BFA"/>
+  <text class="title" x="112" y="595" fill="#2E1065">PARALLEL BUILD</text>
+  <text class="body" x="112" y="639" fill="#2E1065">🤖 dev-backend / dev-frontend implement theo file-disjoint</text>
+  <text class="body" x="112" y="669" fill="#2E1065">🤖 qc-designer x N thiết kế testcase theo bucket</text>
+
+  <rect class="card" x="80" y="825" width="700" height="145" rx="8" fill="#FFF7ED" stroke="#FB923C"/>
+  <text class="title" x="112" y="865" fill="#431407">CODE REVIEW</text>
+  <text class="body" x="112" y="909" fill="#431407">🤖 reviewer review và auto-fix tối đa 1 vòng</text>
+
+  <rect class="card" x="80" y="1060" width="700" height="155" rx="8" fill="#FEF2F2" stroke="#F87171"/>
+  <text class="title" x="112" y="1100" fill="#7F1D1D">VERIFY &amp; AUDIT</text>
+  <text class="body" x="112" y="1144" fill="#7F1D1D">🤖 qc-executor + security-auditor chạy test và audit</text>
+  <text class="body" x="112" y="1174" fill="#7F1D1D">Auto-fix tối đa 2 vòng</text>
+
+  <rect class="card" x="80" y="1305" width="700" height="155" rx="8" fill="#E0F2FE" stroke="#38BDF8"/>
+  <text class="title" x="112" y="1345" fill="#0C4A6E">SYNC DOCS</text>
+  <text class="body" x="112" y="1389" fill="#0C4A6E">🤖 chronicler đồng bộ tài liệu dự án</text>
+  <text class="body" x="112" y="1419" fill="#0C4A6E">→ docs và records cập nhật</text>
+
+  <rect class="card" x="80" y="1550" width="700" height="120" rx="8" fill="#F0FDF4" stroke="#4ADE80"/>
+  <text class="title" x="112" y="1590" fill="#14532D">REPORT</text>
+  <text class="body" x="112" y="1634" fill="#14532D">report.md sẵn sàng để Human review</text>
+</svg>
