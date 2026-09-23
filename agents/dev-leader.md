@@ -78,7 +78,7 @@ Always end by giving the user a short summary: the story id used, the number of 
 
 ## Pipeline Output
 
-**When called by the deliver-auto pipeline** (i.e. the caller asks for a structured task list), also output a machine-readable JSON block after the summary so the orchestrator can drive parallelism without re-parsing the task files:
+**When called by the deliver-story pipeline** (i.e. the caller asks for a structured task list), also output a machine-readable JSON block after the summary so the orchestrator can drive parallelism without re-parsing the task files:
 
 ```json
 {

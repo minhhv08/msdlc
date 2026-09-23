@@ -1,22 +1,22 @@
 ---
-name: deliver-light
+name: deliver-task
 description: >-
   Build GỌN một task nhỏ (feat/fixbug) từ board ngoài đã có plan duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer (auto-fix ≤1) → qc-executor + security-auditor song song (auto-fix ≤2) → chronicler → ghi report. Main agent TỰ điều phối bằng Agent tool (không dùng Workflow), KHÔNG vỡ task bằng dev-leader, KHÔNG QC map/reduce. Dùng khi .claude/tasks/{taskid}/plan.md đã tồn tại (đã được người duyệt qua board — kéo ticket sang Approved). Gọi bởi msdlc:tracking-poll (Bước 2) hoặc trực tiếp với một taskid. KHÔNG tự chạy nếu chưa có plan.md.
 ---
 
-# deliver-light — Build gọn một task board (main điều phối)
+# deliver-task — Build gọn một task board (main điều phối)
 
-Bản **nhẹ** của `deliver-auto` cho task nhỏ trên board: bỏ bước vỡ task (`dev-leader`) và bỏ thiết kế test map/reduce (`qc-leader`/`qc-designer`). Việc vỡ subtask đã do `task-planner` làm sẵn trong `plan.md`. Main agent **tự điều phối** chuỗi agent bằng **Agent tool** — không dùng Workflow — chạy song song tối đa các subtask không đụng file, và báo cáo trung thực.
+Bản **nhẹ** của `deliver-story` cho task nhỏ trên board: bỏ bước vỡ task (`dev-leader`) và bỏ thiết kế test map/reduce (`qc-leader`/`qc-designer`). Việc vỡ subtask đã do `task-planner` làm sẵn trong `plan.md`. Main agent **tự điều phối** chuỗi agent bằng **Agent tool** — không dùng Workflow — chạy song song tối đa các subtask không đụng file, và báo cáo trung thực.
 
 Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
 
-**Tiền đề:** `.claude/tasks/{taskid}/plan.md` đã tồn tại (do `task-planner` ghi, đã được người duyệt qua board). Kiểm tra thật, không tin lời gọi:
+**Tiền đề:** `.claude/tasks/{taskid}/plan.md` đã tồn tại (do `task-planner` ghi, đã được người duyệt — qua board, hoặc qua gate duyệt plan của `/deliver` ở luồng TASK). Kiểm tra thật, không tin lời gọi:
 - Chưa có `plan.md` → dừng, báo cần chạy `task-planner`/`tracking-poll` trước. KHÔNG tự bịa plan.
 - Đã có `.claude/tasks/{taskid}/report.md` → task đã build xong (idempotent) → báo và dừng, không build lại.
 
-**Input:** một `taskid` (= ID ticket board, vd `PROJ-123`). Không có → liệt kê `.claude/tasks/` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.
+**Input:** một `taskid` (= ID ticket board, vd `PROJ-123`, hoặc id local `T-{NNN}` do `/spec` cấp). Không có → liệt kê `.claude/tasks/` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.
 
-**Sync tracker:** skill này **KHÔNG tự gọi `msdlc:tracking`** (khác `deliver-auto`). Việc chuyển cột board là do `tracking-poll` lo — nó chuyển `in-progress` TRƯỚC khi gọi skill này và `review` SAU khi skill xong. Nhờ vậy skill chạy được cả khi gọi tay ở dự án không có tracker.
+**Sync tracker:** skill này **KHÔNG tự gọi `msdlc:tracking`** (khác `deliver-story`). Việc chuyển cột board là do `tracking-poll` lo — nó chuyển `in-progress` TRƯỚC khi gọi skill này và `review` SAU khi skill xong. Nhờ vậy skill chạy được cả khi gọi tay ở dự án không có tracker.
 
 ---
 
@@ -78,7 +78,7 @@ Ghi **`.claude/tasks/{taskid}/report.md`**:
 # Delivery Report (light) — {taskid}
 
 > Generated: {date} · Plan: [plan.md](plan.md)
-<!-- git-flow finish sẽ chèn dòng `> MR: <url>` ngay dưới đây khi git flow bật; deliver-light để trống. -->
+<!-- git-flow finish sẽ chèn dòng `> MR: <url>` ngay dưới đây khi git flow bật; deliver-task để trống. -->
 {mr-line-nếu-có}
 
 ## Subtasks

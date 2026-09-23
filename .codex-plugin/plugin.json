@@ -1,6 +1,6 @@
 {
   "name": "msdlc",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Stack-agnostic software delivery pipeline for Codex and Claude Code: spec, architecture, human ADR gate, implementation, QC, security review, documentation sync, optional board tracking, and production-log bug intake.",
   "author": {
     "name": "minhhv"

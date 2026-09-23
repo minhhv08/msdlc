@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Task, Skill, mcp__claude_ai_Atlassian__*
 
 # /msdlc:log-triage — Biến log lỗi thành task fixbug
 
-Đây là **bước đầu tiên của luồng fixbug**: đọc log lỗi production, tổng hợp thành các **loại bug**, và tạo mỗi loại bug thành **một ticket ở cột Todo** trên board. Từ cột Todo, luồng board sẵn có (`/msdlc:tracking-poll` → `task-planner` → `deliver-light`) sẽ tự phân tích và sửa.
+Đây là **bước đầu tiên của luồng fixbug**: đọc log lỗi production, tổng hợp thành các **loại bug**, và tạo mỗi loại bug thành **một ticket ở cột Todo** trên board. Từ cột Todo, luồng board sẵn có (`/msdlc:tracking-poll` → `task-planner` → `deliver-task`) sẽ tự phân tích và sửa.
 
 Lệnh chạy **một lượt rồi dừng**. Muốn chạy định kỳ thì để harness lo: `/loop <thời gian> /msdlc:log-triage <đường dẫn log>` hoặc `schedule`. Không tự viết vòng lặp trong này.
 

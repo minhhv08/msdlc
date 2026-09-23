@@ -1,7 +1,7 @@
 ---
 name: tracking
 description: >-
-  Đồng bộ trạng thái ticket trên board ngoài (Jira/Asana/Linear/Monday/Notion) với tiến độ pipeline msdlc — chuyển cột ticket tại các mốc (todo/planning/validate/approved/in-progress/review) và comment kết quả với prefix `[Claude]`. Được các skill pipeline (`spec`/`deliver`/`deliver-auto`) gọi TỰ ĐỘNG tại mỗi mốc; cũng dùng TAY khi cần re-sync một story. LUÔN dùng skill này khi cần "đồng bộ status ticket", "chuyển cột board", "cập nhật Jira/Asana theo story", hoặc khi một bước pipeline vừa xong và ticket cần đổi cột. KHÔNG tự chuyển Done — Done luôn do người.
+  Đồng bộ trạng thái ticket trên board ngoài (Jira/Asana/Linear/Monday/Notion) với tiến độ pipeline msdlc — chuyển cột ticket tại các mốc (todo/planning/validate/approved/in-progress/review) và comment kết quả với prefix `[Claude]`. Được các skill pipeline (`spec`/`deliver`/`deliver-story`) gọi TỰ ĐỘNG tại mỗi mốc; cũng dùng TAY khi cần re-sync một story. LUÔN dùng skill này khi cần "đồng bộ status ticket", "chuyển cột board", "cập nhật Jira/Asana theo story", hoặc khi một bước pipeline vừa xong và ticket cần đổi cột. KHÔNG tự chuyển Done — Done luôn do người.
 ---
 
 # msdlc:tracking — Đồng bộ trạng thái story ↔ board ngoài
@@ -12,8 +12,8 @@ Skill này là **nơi duy nhất** chứa logic đồng bộ tracker của msdlc
 Ví dụ: `msdlc:tracking 001 review` (luồng thủ công, story) · `msdlc:tracking PROJ-123 validate task` (luồng board nhẹ). Nếu thiếu id/phase → hỏi user.
 
 **Hai convention artifact theo `kind`** (chỉ khác nhau ở 2 điểm: nơi lấy ticket & nguồn nội dung comment; mọi logic resolve-cột/transition/non-fatal/never-Done bên dưới dùng chung):
-- `kind=story` (mặc định — luồng thủ công `/spec`+`/deliver`+`deliver-auto`): artifact ở `.claude/stories/{id}/`, comment ở `validate` dùng `adr.md`, ở `review` dùng `report.md`. `id` là số thứ tự story (vd `001`).
-- `kind=task` (luồng board nhẹ `tracking-poll`+`deliver-light`): artifact ở `.claude/tasks/{id}/`, comment ở `validate` dùng `plan.md`, ở `review` dùng `report.md`. `id` **chính là ID ticket board** (vd `PROJ-123`).
+- `kind=story` (mặc định — luồng thủ công `/spec`+`/deliver`+`deliver-story`): artifact ở `.claude/stories/{id}/`, comment ở `validate` dùng `adr.md`, ở `review` dùng `report.md`. `id` là số thứ tự story (vd `001`).
+- `kind=task` (luồng board nhẹ `tracking-poll`+`deliver-task`): artifact ở `.claude/tasks/{id}/`, comment ở `validate` dùng `plan.md`, ở `review` dùng `report.md`. `id` **chính là ID ticket board** (vd `PROJ-123`).
 
 ## Nguyên tắc bất biến
 
@@ -31,7 +31,7 @@ Thực hiện tuần tự, gặp điều kiện fail nào thì **log một dòng
    - Mục không tồn tại / rỗng / chưa điền tool + project → *"[tracking] Không có cấu hình tracker trong profile — bỏ qua sync."* → dừng.
 2. **Xác định ticket theo `kind`:**
    - `kind=story` (mặc định): đọc `.claude/stories/{id}/requirement.md`, lấy trường `Ticket:` ở dòng header (`> Status: … · Ticket: <ID|URL>`). Không có ticket hoặc giá trị là `—`/trống → *"[tracking] Story {id} chưa gắn ticket — bỏ qua sync."* → dừng.
-   - `kind=task`: **`{id}` CHÍNH LÀ ID ticket board** — ticket luôn tồn tại (đến từ board), KHÔNG đọc `requirement.md` và KHÔNG áp guard "chưa gắn ticket". Chỉ cần `{id}` không rỗng.
+   - `kind=task`: nếu có `.claude/tasks/{id}/request.md` (task do `/spec` tạo) → lấy trường `Ticket:` ở header; `—`/trống → *"[tracking] Task {id} chưa gắn ticket — bỏ qua sync."* → dừng. Không có `request.md` (task đến từ board) → **`{id}` CHÍNH LÀ ID ticket board**, KHÔNG áp guard "chưa gắn ticket"; chỉ cần `{id}` không rỗng.
 3. Xác định MCP connector theo profile (vd Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`, Notion→`Notion`). Nếu connector chưa connect → *"[tracking] Connector <tên> chưa kết nối — bỏ qua sync (chạy được sau khi connect)."* → dừng. Không hỏi token/OAuth.
 
 > **Notion khác Jira:** Notion không có "transition" — "cột" là **giá trị property Status/Select** của page. Do đó ở Bước 2/3: resolve "tên cột" = tên option của property Status; "transition" = `notion-update-page` đặt Status = option tương ứng; comment = `notion-create-comment`/đọc bằng `notion-get-comments`; `{id}` (kind=task) = **page ID** của ticket, board key = **database ID**.
@@ -71,6 +71,6 @@ Log một dòng cho user: ticket đã chuyển từ cột nào sang cột nào (
 ## Ghi chú
 
 - Skill này **tự chứa**: không phụ thuộc skill `task-tracker-handler` (nếu có ở môi trường), dù cùng triết lý (detect-from-tool, never-auto-Done). msdlc không được phụ thuộc file ngoài plugin.
-- Bảng phase→cột ở đây là **nguồn sự thật** cho mọi lời gọi từ `spec`/`deliver`/`deliver-auto`/`tracking-poll`. Khi sửa mapping, sửa ở đây.
+- Bảng phase→cột ở đây là **nguồn sự thật** cho mọi lời gọi từ `spec`/`deliver`/`deliver-story`/`tracking-poll`. Khi sửa mapping, sửa ở đây.
 - **Hai convention artifact-root** (`stories/` cho `kind=story`, `tasks/` cho `kind=task`) chỉ ảnh hưởng hai điểm: xác định ticket (Bước 1.2) và nguồn nội dung comment (Bước 3.2). Toàn bộ resolve-cột/transition/non-fatal/never-Done dùng chung — không fork. Lời gọi 2 tham số cũ (không có `kind`) = `story`, hành xử y hệt trước.
 - Chi tiết cách fetch/transition/comment cho từng tool khác nhau — suy từ schema MCP tool của connector tương ứng; không hardcode field.

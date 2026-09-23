@@ -19,14 +19,14 @@ flowchart LR
     PL -->|"🤖 task-planner → plan + comment"| V["Validate"]
     V -->|"👤 kéo thẻ = duyệt plan"| A["Approved"]
     A -->|"🤖 poll: In Progress → build gọn"| I["In Progress"]
-    I -->|"🤖 xong deliver-light"| R["Review"]
+    I -->|"🤖 xong deliver-task"| R["Review"]
     R -->|"👤 verify + đóng"| D["Done"]
     style V fill:#fff3cd,stroke:#b8860b
     style A fill:#fff3cd,stroke:#b8860b
     style D fill:#d4edda,stroke:#2e7d32
 ```
 
-- **Poll chạy luồng nhẹ**: dành cho feat/fixbug nhỏ trên board, dùng `.claude/tasks/{taskid}/`, `task-planner`, `plan.md` và `deliver-light`. Luồng `/spec` + `/deliver` dùng stories, ADR và `deliver-auto` cho việc lớn.
+- **Poll chạy luồng nhẹ**: dành cho feat/fixbug nhỏ trên board, dùng `.claude/tasks/{taskid}/`, `task-planner`, `plan.md` và `deliver-task`. Luồng `/spec` + `/deliver` dùng stories, ADR và `deliver-story` cho việc lớn.
 - **Vòng sửa plan qua comment**: comment yêu cầu rồi kéo thẻ về `Todo`; poll cập nhật `plan.md` và đưa lại `Validate`. Muốn duyệt kèm làm rõ thì trả lời Open question trong comment rồi kéo sang `Approved`; poll fold câu trả lời vào plan trước khi build.
 - **Cột board là nguồn sự thật**: task kéo về `Todo` luôn được reopen, kể cả từng ở `Review`; poll archive report cũ, cập nhật plan và đưa lại `Validate`. Poll cần MCP tool của connector trong `allowed-tools` để đọc cột và comment.
 - **Planning là claim/lock**: poll chuyển `Todo → Planning` trước khi phân tích để session khác không nhận trùng; nên chạy một poller cho mỗi board.
@@ -57,7 +57,7 @@ sequenceDiagram
     opt Git flow bật
         P->>P: git-flow start - tách nhánh feat/{taskid} từ base
     end
-    P->>P: deliver-light build gọn -> report.md
+    P->>P: deliver-task build gọn -> report.md
     opt Git flow bật
         P->>P: git-flow finish - commit, push, tạo MR
     end
@@ -79,5 +79,5 @@ Checkpoint chính:
 - Bật `## Task tracker` và có cấu hình cột trong `.claude/profile.md`.
 - `/msdlc:tracking-poll` là one-shot; lặp bằng `/loop` hoặc scheduler bên ngoài.
 - Gate của luồng board là thao tác người kéo thẻ `Validate -> Approved`.
-- `deliver-light` không tạo ADR, không map/reduce QC đầy đủ; nó build gọn theo `plan.md`.
+- `deliver-task` không tạo ADR, không map/reduce QC đầy đủ; nó build gọn theo `plan.md`.
 - Máy không bao giờ tự chuyển `Done`.

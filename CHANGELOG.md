@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0] — 2026-09-23
+
+### Added
+
+- **`/spec` phân loại STORY vs TASK trước khi phỏng vấn** (tiết kiệm token): STORY → phỏng vấn 7 phase như cũ → `.claude/stories/{id}/requirement.md`; TASK (feat/fixbug nhỏ) → một lượt hỏi gọn → `.claude/tasks/{taskid}/request.md` (`taskid` = ID ticket hoặc local `T-{NNN}`).
+- **`/deliver` tự định tuyến theo id**: story → architect → [GATE ADR] → `deliver-auto`; task → `task-planner` → [GATE duyệt plan trong chat] → `deliver-task`.
+- `tracking` (`kind=task`) đọc `Ticket:` từ `request.md` nếu có (`—` = no-op); `tracking-poll` bỏ qua task local và xử task do `/spec` tạo (chỉ có `request.md`) như ticket mới.
+- `/deliver` luồng TASK ghi `claim.md` nguồn `/deliver`; `tracking-poll` Bước R bỏ qua các task này để không resume/build trùng với phiên tay. Người kéo thẻ về Todo → poll re-claim và nhận lại quyền điều khiển.
+
+### Changed
+
+- **Đổi tên skill `deliver-light` → `deliver-task`** (khớp khái niệm "task" của luồng nhẹ). Mọi tham chiếu trong skill/command/agent/docs đã cập nhật; lời gọi cũ `deliver-light` không còn.
+- **Đổi tên skill `deliver-auto` → `deliver-story`** (đối xứng với `deliver-task`: `/deliver` định tuyến story → `deliver-story`, task → `deliver-task`). Mọi tham chiếu (skill/command/agent/docs/sơ đồ SVG) đã cập nhật; lời gọi cũ `deliver-auto` không còn.
+
 ## [0.7.0] — 2026-07-29
 
 ### Added

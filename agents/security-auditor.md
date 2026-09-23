@@ -62,7 +62,7 @@ Order findings by severity. If you found nothing exploitable in scope, say so pl
 
 ## Pipeline Output
 
-**When called by the deliver-auto pipeline** (the caller gives you a story id), two things are mandatory:
+**When called by the deliver-story pipeline** (the caller gives you a story id), two things are mandatory:
 
 1. **Write the report** to `.claude/stories/{id}/security/` (e.g. `audit-attempt-{N}.md`) — not optional in this mode.
 2. **End your response with a machine-readable JSON block** so the orchestrator can drive the Critical/High auto-fix loop:

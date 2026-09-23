@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1760" viewBox="0 0 1100 1760" role="img" aria-labelledby="title description">
-  <title id="title">Chi tiet deliver-auto sau khi ADR duoc duyet</title>
+  <title id="title">Chi tiet deliver-story sau khi ADR duoc duyet</title>
   <desc id="description">Luồng tự động từ ADR Accepted qua lập task, build, review, kiểm thử và đồng bộ tài liệu đến report.</desc>
   <style>
     .card { stroke-width: 2; }
@@ -38,7 +38,7 @@
   <!-- Fixed-width cards: x=80, width=700 -->
   <rect class="card" x="80" y="80" width="700" height="130" rx="8" fill="#ECFDF5" stroke="#34D399"/>
   <text class="title" x="112" y="120" fill="#14532D">ADR ACCEPTED</text>
-  <text class="body" x="112" y="164" fill="#14532D">Điều kiện bắt buộc để chạy deliver-auto</text>
+  <text class="body" x="112" y="164" fill="#14532D">Điều kiện bắt buộc để chạy deliver-story</text>
 
   <rect class="card" x="80" y="300" width="700" height="165" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
   <text class="title" x="112" y="340" fill="#172554">PLAN &amp; TEST MAP</text>

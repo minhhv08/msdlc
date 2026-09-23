@@ -82,7 +82,7 @@ Giả định đang dùng + câu hỏi cần user chốt.
 Danh sách file/bảng/migration/doc sẽ bị đụng ở bước implement (checklist cho bước vỡ task).
 ```
 
-> Luôn ghi `Status: Proposed`. Việc chuyển sang `Status: Accepted` là của GATE duyệt (skill `/deliver` khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved) — bạn KHÔNG tự set `Accepted`; dấu đó là tiền đề để `deliver-auto` được phép build.
+> Luôn ghi `Status: Proposed`. Việc chuyển sang `Status: Accepted` là của GATE duyệt (skill `/deliver` khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved) — bạn KHÔNG tự set `Accepted`; dấu đó là tiền đề để `deliver-story` được phép build.
 
 ## Quy ước diagram (mặc định: PlantUML)
 

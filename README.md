@@ -7,12 +7,12 @@ flowchart LR
     idea(["💡 Ý tưởng mơ hồ"]) --> spec["📝 /spec<br/>phỏng vấn có cấu trúc<br/>→ requirement.md"]
     spec --> arch["🏛 architect<br/>thiết kế phương án<br/>→ adr.md"]
     arch --> gate{"🚧 GATE<br/>người duyệt ADR"}
-    gate -->|"duyệt<br/>(Status: Accepted)"| auto["🤖 deliver-auto<br/>build ∥ test ∥ review ∥ docs"]
+    gate -->|"duyệt<br/>(Status: Accepted)"| auto["🤖 deliver-story<br/>build ∥ test ∥ review ∥ docs"]
     gate -.->|"chưa duyệt"| stop(["⛔ dừng"])
     auto --> rep["📊 report.md"] --> commit["✅ /commit"]
 ```
 
-> Chi tiết từng phase bên trong `deliver-auto` và các cách áp dụng: xem [Các workflow áp dụng](#các-workflow-áp-dụng).
+> Chi tiết từng phase bên trong `deliver-story` và các cách áp dụng: xem [Các workflow áp dụng](#các-workflow-áp-dụng).
 
 Mọi đặc thù dự án **không nhúng cứng** trong agent — chúng đọc lúc chạy từ hai nguồn của dự án tiêu thụ:
 - `.claude/profile.md` — **facts**: stack, đường dẫn, lệnh test, hợp đồng lockstep.
@@ -45,11 +45,11 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 
 | Skill | Lệnh | Mô tả |
 |---|---|---|
-| `spec` | `/spec` | Phỏng vấn có cấu trúc để biến ý tưởng còn mơ hồ thành `requirement.md` rõ ràng (mục tiêu, scope, AC, ràng buộc). |
-| `deliver` | `/deliver {id}` | Chạy toàn bộ pipeline cho một story: architect → **[GATE duyệt ADR]** → deliver-auto. |
-| `deliver-auto` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
-| `deliver-light` | (nội bộ) | **Build GỌN** cho task board nhỏ đã có `plan.md` duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer → qc-executor + security-auditor → chronicler → `report.md`. Không vỡ task bằng dev-leader, không QC map/reduce. Gọi bởi `tracking-poll`. |
-| `tracking` | `/msdlc:tracking {id} {phase} [kind]` | Đồng bộ trạng thái sang cột board ngoài (Jira/Asana/Linear/Monday/Notion) tại một mốc (`todo`/`planning`/`validate`/`approved`/`in-progress`/`review`). `kind` ∈ `story` (mặc định, luồng thủ công — artifact `.claude/stories/`, comment ADR) \| `task` (luồng board nhẹ — artifact `.claude/tasks/`, comment plan). Được `spec`/`deliver`/`deliver-auto`/`tracking-poll` gọi tự động; tự **no-op** nếu dự án không cấu hình tracker. Không bao giờ tự chuyển Done. |
+| `spec` | `/spec` | **Phân loại trước** yêu cầu là STORY hay TASK để tiết kiệm token. STORY → phỏng vấn có cấu trúc ra `.claude/stories/{id}/requirement.md`; TASK (feat/fixbug nhỏ) → một lượt hỏi gọn ra `.claude/tasks/{taskid}/request.md` (`taskid` = ID ticket hoặc local `T-{NNN}`). |
+| `deliver` | `/deliver {id}` | Tự định tuyến theo id. Story: architect → **[GATE duyệt ADR]** → deliver-story. Task: task-planner → **[GATE duyệt plan]** → deliver-task (không dev-leader, không QC map/reduce). |
+| `deliver-story` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
+| `deliver-task` | (nội bộ) | **Build GỌN** cho task board nhỏ đã có `plan.md` duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer → qc-executor + security-auditor → chronicler → `report.md`. Không vỡ task bằng dev-leader, không QC map/reduce. Gọi bởi `tracking-poll` hoặc `/deliver` (luồng TASK). |
+| `tracking` | `/msdlc:tracking {id} {phase} [kind]` | Đồng bộ trạng thái sang cột board ngoài (Jira/Asana/Linear/Monday/Notion) tại một mốc (`todo`/`planning`/`validate`/`approved`/`in-progress`/`review`). `kind` ∈ `story` (mặc định, luồng thủ công — artifact `.claude/stories/`, comment ADR) \| `task` (luồng board nhẹ — artifact `.claude/tasks/`, comment plan). Được `spec`/`deliver`/`deliver-story`/`tracking-poll` gọi tự động; tự **no-op** nếu dự án không cấu hình tracker. Không bao giờ tự chuyển Done. |
 | `git-flow` | `/msdlc:git-flow {taskid} {sync\|start\|finish}` | (luồng board, opt-in) `sync`: pull đúng nhánh TRƯỚC khi phân tích (task chưa có nhánh riêng → nhánh base; đã có → chính nhánh task đó), KHÔNG tạo nhánh. `start`: tách nhánh riêng cho mỗi task từ base branch. `finish`: build xong thì một commit (qua `msdlc:commit`) + push + tạo MR/PR + trả link để comment vào ticket. Auto-create MR qua `gh`/`glab` nếu có, không thì fallback link tạo MR tay. Tự **no-op** nếu tắt cờ / không phải git repo. **Máy không bao giờ tự merge.** |
 | `commit` | `/commit` | Tạo git commit tuân thủ quy ước commit của dự án (`.claude/rules/global.md` nhóm `## Commit`); mặc định msdlc: `(type): description` + khai báo `Co-Authored-By` khi có AI hỗ trợ. |
 
@@ -60,7 +60,7 @@ Commands là lệnh `/plugin:tên` dùng để setup — thường chỉ chạy 
 | Command | Lệnh | Mô tả |
 |---|---|---|
 | `init` | `/msdlc:init` | Copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào `.claude/` của dự án, tự dò stack điền profile và auto-seed rule từ config sẵn có. |
-| `tracking-poll` | `/msdlc:tracking-poll` | Quét board ngoài **một lượt** và tự khởi động **luồng nhẹ** cho ticket đang chờ: ticket ở cột intake → claim (Todo→planning) + `task-planner` phân tích + comment plan chi tiết → đẩy sang Validate rồi **dừng**; ticket ở cột Approved (do người kéo) → chuyển in-progress rồi build gọn (`deliver-light`) → Review. Dùng cùng `/loop` hoặc `schedule` để chạy định kỳ. Opt-in (cờ poll trong profile). |
+| `tracking-poll` | `/msdlc:tracking-poll` | Quét board ngoài **một lượt** và tự khởi động **luồng nhẹ** cho ticket đang chờ: ticket ở cột intake → claim (Todo→planning) + `task-planner` phân tích + comment plan chi tiết → đẩy sang Validate rồi **dừng**; ticket ở cột Approved (do người kéo) → chuyển in-progress rồi build gọn (`deliver-task`) → Review. Dùng cùng `/loop` hoặc `schedule` để chạy định kỳ. Opt-in (cờ poll trong profile). |
 | `log-triage` | `/msdlc:log-triage [log\|đường-dẫn-file]` | (fixbug-intake) Đọc log lỗi production (dán trực tiếp hoặc đường dẫn file) → agent `bug-triage` gom thành các loại bug + lọc noise → **tạo ticket Bug ở cột intake (Todo)** trên board để `tracking-poll` xử lý. **Bỏ qua noise** và **bỏ qua bug đã có ticket** (khử trùng qua marker `[bug-sig:…]` trên board + ledger `.claude/bug-triage/ledger.md`). CHỈ đổ ticket vào Todo — không tự build/duyệt/Done. One-shot; lặp qua `/loop` nếu trỏ file log cố định. Cần cấu hình `## Task tracker`. |
 
 ### Hooks
@@ -167,9 +167,9 @@ Xem sơ đồ chi tiết cho từng luồng:
 - [Vận hành theo Kanban Board](docs/workflow-kanban-board.md)
 - [Fixbug từ log](docs/workflow-fixbug-from-log.md)
 
-### Bên trong deliver-auto (Phase 1 → 5)
+### Bên trong deliver-story (Phase 1 → 5)
 
-Sau khi ADR được duyệt, `deliver-auto` tự điều phối các agent — song song tối đa những việc không đụng file nhau:
+Sau khi ADR được duyệt, `deliver-story` tự điều phối các agent — song song tối đa những việc không đụng file nhau:
 
 ```mermaid
 flowchart TB
@@ -231,8 +231,8 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **rules** | Thư mục `.claude/rules/` trong *dự án tiêu thụ* — *rule theo project* (convention, kiến trúc, bảo mật, Definition-of-Done, commit), chia theo scope. Mỗi rule có `id` + `severity` (`MUST` chặn / `SHOULD` gợi ý); `reviewer`/`security-auditor` enforce. Trống → suy convention từ code lân cận. |
 | **ruleId** | Định danh một rule trong `.claude/rules/` (vd `R-BE-1`, `R-SEC-2`). `reviewer`/`security-auditor` gắn `ruleId` vào finding để truy vết về rule bị vi phạm. |
 | **agent-memory** | Cơ chế agent ghi nhớ context giữa các lần chạy, lưu trong `.claude/agent-memory-local/<tên-agent>/`. Giao thức định nghĩa tại `shared/agent-memory.md`. |
-| **story** | (luồng thủ công) Một feature/yêu cầu cụ thể, id dạng số thứ tự (vd `001`). Mọi artifact nằm trong `.claude/stories/{id}/`. Đi qua `/spec`→`/deliver`→`deliver-auto` với gate ADR. |
-| **task (board)** | (luồng board nhẹ) Một feat/fixbug nhỏ từ board ngoài, `taskid` = ID ticket (vd `PROJ-123`). Artifact ở `.claude/tasks/{taskid}/` (`plan.md`/`report.md`). Đi qua `tracking-poll`→`task-planner`→`deliver-light` với gate là kéo thẻ sang Approved. |
+| **story** | (luồng thủ công) Một feature/yêu cầu cụ thể, id dạng số thứ tự (vd `001`). Mọi artifact nằm trong `.claude/stories/{id}/`. Đi qua `/spec`→`/deliver`→`deliver-story` với gate ADR. |
+| **task (board)** | (luồng board nhẹ) Một feat/fixbug nhỏ từ board ngoài, `taskid` = ID ticket (vd `PROJ-123`). Artifact ở `.claude/tasks/{taskid}/` (`plan.md`/`report.md`). Đi qua `tracking-poll`→`task-planner`→`deliver-task` với gate là kéo thẻ sang Approved. |
 | **ADR** | *Architecture Decision Record* — tài liệu quyết định thiết kế do `architect` tạo ra (`adr.md`). Phải được user duyệt trước khi pipeline tự động chạy tiếp. |
 | **requirement** | File `requirement.md` do `/spec` tạo ra — mô tả yêu cầu có cấu trúc (mục tiêu, scope, AC, ràng buộc). |
 | **lockstep** | Hợp đồng đồng bộ giữa các project (vd migration phải chạy trước khi deploy service phụ thuộc). Mô tả trong `profile.md`, agents tôn trọng khi implement. |
@@ -243,7 +243,7 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **consuming project** | Dự án *dùng* plugin này (khác với repo plugin). Phải có `.claude/profile.md` và `.claude/shared/agent-memory.md` để agents hoạt động. |
 | **GATE** | Điểm dừng duy nhất yêu cầu user xác nhận thủ công. Luồng thủ công: sau khi `architect` tạo xong ADR. Luồng board: sau khi `task-planner` comment plan (ticket ở `Validate`) — gate = thao tác người kéo thẻ `Validate`→`Approved`. |
 | **tracker sync** | Cơ chế đồng bộ trạng thái story/task ↔ cột board ngoài, gom trong skill `msdlc:tracking` (tham số `kind` = `story`\|`task`). Opt-in qua mục `## Task tracker` của `profile.md`; tự no-op khi không cấu hình; không bao giờ tự chuyển Done. |
-| **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động **luồng nhẹ** cho ticket ở cột intake/Approved (claim Todo→planning → `task-planner` → plan → build gọn bằng `deliver-light`). Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
+| **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động **luồng nhẹ** cho ticket ở cột intake/Approved (claim Todo→planning → `task-planner` → plan → build gọn bằng `deliver-task`). Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
 | **git flow** | (opt-in, mục `## Git` profile) Luồng poll `sync` pull đúng nhánh trước khi phân tích (chưa có nhánh task → nhánh base; đã có → nhánh task), tách một nhánh/task từ base branch, build xong commit + push + tạo MR/PR + comment link vào ticket. Gom trong skill `msdlc:git-flow`; auto-create MR qua `gh`/`glab` hoặc fallback link tạo tay. Một build/lượt, làm lần lượt từng task; **máy không tự merge** (người merge + đóng ticket). Tắt = phân tích/build thẳng branch hiện tại như cũ. |
 | **fixbug intake / log-triage** | Lệnh `/msdlc:log-triage` biến log lỗi production thành ticket Bug ở cột Todo để luồng board xử lý. Agent `bug-triage` gom log thành các loại bug + lọc noise; main agent khử trùng rồi tạo ticket. Bước **intake** đứng trước `tracking-poll` — chỉ đổ ticket vào Todo, không tự build/duyệt/Done. |
 | **bug-sig** | Chữ ký ổn định của một loại bug (hash của `signatureBasis`: exception type + message chuẩn hóa + top app-frame). Nhúng dạng `[bug-sig:<hash>]` trong description ticket làm **khóa khử trùng** — board là nguồn sự thật, ledger `.claude/bug-triage/ledger.md` chỉ là cache. |

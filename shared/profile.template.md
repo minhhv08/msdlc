@@ -18,7 +18,7 @@
 - ADR: `.claude/stories/{id}/adr.md`
 - Tasks: `.claude/stories/{id}/tasks/` (index `README.md`)
 - Tests (QC design): `.claude/stories/{id}/tests/`
-- Task root (luồng board nhẹ `tracking-poll`+`deliver-light`, `{taskid}` = ID ticket): `.claude/tasks/{taskid}/`
+- Task root (luồng board nhẹ `tracking-poll`+`deliver-task`, `{taskid}` = ID ticket): `.claude/tasks/{taskid}/`
 - Plan (board nhẹ): `.claude/tasks/{taskid}/plan.md`
 - Tài liệu chung: `docs/`
 
@@ -61,7 +61,7 @@
   - in-progress → `<vd InProgress>`
   - review → `<vd Review>`
   - <!-- Done KHÔNG cấu hình: msdlc không bao giờ tự chuyển Done. -->
-- Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`, chạy LUỒNG NHẸ: `.claude/tasks/{taskid}/` + `task-planner` → `plan.md` → `deliver-light`, KHÔNG dùng architect/ADR/deliver-auto):
+- Poll (tự động kéo task từ board — dùng bởi `/msdlc:tracking-poll`, chạy LUỒNG NHẸ: `.claude/tasks/{taskid}/` + `task-planner` → `plan.md` → `deliver-task`, KHÔNG dùng architect/ADR/deliver-story):
   - Cột intake (nơi kéo task mới về để phân tích): `<vd Todo>`
   - Cột build-trigger (người kéo tay sang đây = duyệt plan, cho phép tự build): `<vd Approved>`
   - Bật poll: `<no>` <!-- mặc định no; đổi thành yes để cho phép /msdlc:tracking-poll xử lý. Opt-in vì đây là tự động mạnh. -->

@@ -73,7 +73,7 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`). **Nhấn mạnh cột `planning`**: trong luồng board nhẹ đây là bước **claim/lock** (poll chuyển Todo→planning để nhận ticket) — nên điền rõ tên cột thật, đừng để trống, nếu không cơ chế "chỉ 1 session nhận" dễ hỏng vì detect-keyword đoán trượt.
 3. Nếu không có connector nào hoặc user không dùng tracker → để trống mục này (pipeline chạy thuần local như cũ). KHÔNG hardcode, không bịa tên cột — hỏi user hoặc để skill `msdlc:tracking` tự suy theo keyword lúc chạy.
 
-Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy **luồng nhẹ** (claim ticket ở Todo → `task-planner` phân tích → comment plan → build gọn bằng `deliver-light`, dùng `.claude/tasks/{taskid}/`) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo). Nên chạy **một poller cho mỗi board**.
+Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy **luồng nhẹ** (claim ticket ở Todo → `task-planner` phân tích → comment plan → build gọn bằng `deliver-task`, dùng `.claude/tasks/{taskid}/`) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo). Nên chạy **một poller cho mỗi board**.
 
 ## Bước 2d — Git flow cho poll (optional, chỉ khi dùng poll + là git repo)
 
