@@ -4,7 +4,7 @@ Một plugin Claude Code đóng gói pipeline giao hàng **độc lập stack** 
 
 ```mermaid
 flowchart LR
-    idea(["💡 Ý tưởng mơ hồ"]) --> spec["📝 /spec<br/>phỏng vấn có cấu trúc<br/>→ requirement.md"]
+    idea(["💡 Ý tưởng mơ hồ"]) --> spec["📝 /spec<br/>hỏi thẳng chức năng<br/>→ requirement.md"]
     spec --> arch["🏛 architect<br/>thiết kế phương án<br/>→ adr.md"]
     arch --> gate{"🚧 GATE<br/>người duyệt ADR"}
     gate -->|"duyệt<br/>(Status: Accepted)"| auto["🤖 deliver-story<br/>build ∥ test ∥ review ∥ docs"]
@@ -45,7 +45,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 
 | Skill | Lệnh | Mô tả |
 |---|---|---|
-| `spec` | `/spec` | **Phân loại trước** yêu cầu là STORY hay TASK để tiết kiệm token. STORY → phỏng vấn có cấu trúc ra `.claude/stories/{id}/requirement.md`; TASK (feat/fixbug nhỏ) → một lượt hỏi gọn ra `.claude/tasks/{taskid}/request.md` (`taskid` = ID ticket hoặc local `T-{NNN}`). |
+| `spec` | `/spec` | **Phân loại trước** yêu cầu là STORY hay TASK để tiết kiệm token. STORY → hỏi thẳng vào chức năng (tối đa 5 lượt, hỏi trực tiếp có đáp án gợi ý) ra `.claude/stories/{id}/requirement.md`; TASK (feat/fixbug nhỏ) → một lượt hỏi gọn ra `.claude/tasks/{taskid}/request.md` (`taskid` = ID ticket hoặc local `T-{NNN}`). |
 | `deliver` | `/deliver {id}` | Tự định tuyến theo id. Story: architect → **[GATE duyệt ADR]** → deliver-story. Task: task-planner → **[GATE duyệt plan]** → deliver-task (không dev-leader, không QC map/reduce). |
 | `deliver-story` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
 | `deliver-task` | (nội bộ) | **Build GỌN** cho task board nhỏ đã có `plan.md` duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer → qc-executor + security-auditor → chronicler → `report.md`. Không vỡ task bằng dev-leader, không QC map/reduce. Gọi bởi `tracking-poll` hoặc `/deliver` (luồng TASK). |

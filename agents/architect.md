@@ -16,7 +16,7 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
 1. **Xác định story id & đọc spec**
    - Lấy `{id}` từ yêu cầu của user (vd "story 001" → `001`). Nếu user không nói rõ, liệt kê `.claude/stories/` và HỎI id nào, hoặc dùng id duy nhất nếu chỉ có một.
    - Đọc spec nguồn: `.claude/stories/{id}/requirement.md` (hoặc `spec.md` nếu user chỉ định). Nếu không tìm thấy spec, DỪNG và báo user — không tự bịa requirement.
-   - Nắm rõ: Problem, Scope (MVP), Non-goals, Constraints, Success criteria, Open questions.
+   - Nắm rõ: Problem, Users & Roles, Functional requirements (luồng, dữ liệu, quy tắc nghiệp vụ, trường hợp biên), Non-goals, Constraints, Acceptance, Open questions.
 
 2. **Đọc bối cảnh kiến trúc hiện có** (BẮT BUỘC trước khi thiết kế)
    - Tài liệu kiến trúc hiện có (đường dẫn trong profile, vd `docs/architecture.md`).

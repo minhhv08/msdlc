@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0] — 2026-10-19
+
+### Changed
+
+- **`/spec` hỏi trực tiếp, tập trung vào chức năng**: bỏ phỏng vấn 7 phase (why-now, persona, JTBD, metric, rủi ro dự án). Claude tự suy từ mô tả + codebase trước, rồi hỏi bằng `AskUserQuestion` — mỗi câu là một quyết định cụ thể có đáp án đề xuất sẵn, người dùng chỉ cần bấm chọn (không in danh sách câu hỏi ra chat). Tối đa 5 lần hỏi (mỗi lần ≤4 câu, đủ rõ thì dừng sớm), cuối cùng một câu xác nhận với bản tóm tắt trong preview. Môi trường không có `AskUserQuestion` → hỏi từng câu một trong chat.
+- Template `requirement.md` chuyển sang hướng chức năng (Users & Roles, Functional requirements: luồng/dữ liệu/quy tắc/trường hợp biên, Acceptance) — giữ đánh số mục 1–7 và trường `Ticket:`; `architect` cập nhật danh sách mục đọc cho khớp.
+
 ## [0.8.0] — 2026-09-23
 
 ### Added

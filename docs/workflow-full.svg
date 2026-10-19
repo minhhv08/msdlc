@@ -61,7 +61,7 @@
 
   <rect class="card" x="80" y="300" width="700" height="150" rx="8" fill="#EFF6FF" stroke="#60A5FA"/>
   <text class="title" x="112" y="340" fill="#172554">/SPEC</text>
-  <text class="body" x="112" y="384" fill="#172554">🤖 AI Agent phỏng vấn có cấu trúc để xác định scope, non-goals và AC</text>
+  <text class="body" x="112" y="384" fill="#172554">🤖 AI Agent hỏi thẳng vào chức năng để chốt scope, non-goals và AC</text>
   <text class="body" x="112" y="414" fill="#172554">→ requirement.md</text>
 
   <rect class="card" x="80" y="540" width="700" height="160" rx="8" fill="#F5F3FF" stroke="#A78BFA"/>
