@@ -22,12 +22,12 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ## Phase 1 — Implement (wave song song theo subtask file-disjoint)
 
-1. Đọc `.claude/tasks/{taskid}/plan.md`, lấy **danh sách subtask** ở mục `## 5. Subtasks` (block JSON: `id`, `title`, `agent`, `touchesFiles`, `dependsOn`). Không parse được JSON → fallback đọc mục `## 4. Files sẽ tạo/sửa` để suy subtask; vẫn không được → dừng, báo user plan hỏng.
+1. Đọc `.claude/tasks/{taskid}/plan.md`, lấy **danh sách subtask** ở mục `## 5. Subtasks` (block JSON: `id`, `title`, `agent`, `touchesFiles`, `dependsOn`, tuỳ chọn `readFirst`). Không parse được JSON → fallback đọc mục `## 4. Files sẽ tạo/sửa` để suy subtask; vẫn không được → dừng, báo user plan hỏng.
 2. Triển khai theo **wave topo**, lặp tới khi mọi subtask xong:
    - **Tập sẵn sàng** = subtask chưa làm mà MỌI `dependsOn` đã xong.
    - **Chọn wave** = gom các subtask sẵn sàng có **tập `touchesFiles` rời nhau** (so cả prefix thư mục). Khác project → luôn rời. Cùng project → chỉ chung wave khi không giao file nào. Subtask `touchesFiles` rỗng → chạy một mình trong wave đó cho an toàn.
    - **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các subtask trong wave (mỗi subtask → đúng `agent` của nó: `dev-backend` cho code server-side, `dev-frontend` cho UI). Task nhỏ 1 subtask → chỉ 1 Agent.
-3. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**: đọc `plan.md` (mục Phương án + Acceptance) + subtask được giao, đối chiếu codebase — đã đạt → `already-done`; thiếu phần → `partial`; chưa có → `implemented`; không làm được → `skipped` kèm lý do. Tôn trọng lockstep + rule `MUST` trong profile/rules; nhắc evict cache nếu đụng dữ liệu được cache. Trả JSON `{ status, filesChanged, summary, followUps }`.
+3. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**: đọc `plan.md` (mục 2 Phân tích codebase + Phương án + Acceptance) + subtask được giao, **bắt đầu từ `readFirst` của subtask** (nếu có) thay vì dò lại codebase, đối chiếu codebase — đã đạt → `already-done`; thiếu phần → `partial`; chưa có → `implemented`; không làm được → `skipped` kèm lý do. Tôn trọng lockstep + rule `MUST` trong profile/rules; nhắc evict cache nếu đụng dữ liệu được cache. Trả JSON `{ status, filesChanged, summary, followUps }`.
 4. Sau mỗi wave: gom `filesChanged` + `followUps` toàn wave, đánh dấu subtask done, sang wave kế. **Hết subtask ready mà còn subtask chưa xong** (cycle `dependsOn`, hoặc dep đã fail) → liệt kê subtask kẹt + chuỗi phụ thuộc, đánh dấu `skipped` (lý do blocked/cycle), rồi **dừng** — không chạy review/QC trên code dở; ghi tình trạng vào report (Phase 4 rút gọn) và báo user.
 
 **An toàn:** không bao giờ chạy song song hai Agent đụng cùng file. **KHÔNG dùng git worktree** — luôn làm trên cùng working tree với tập file rời nhau.

@@ -59,7 +59,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - Task không khai báo `touchesFiles` (rỗng) → thận trọng: chỉ chạy một mình trong project đó ở wave này.
 3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent thiết kế test** — nhánh nhỏ: **một `qc-designer` chế độ full** (theo G3); nhánh map/reduce: **một `qc-designer` design-subset cho mỗi bucket** mà `qc-leader` đã trả ở Phase 1 — vào cùng message để flesh-out test song song với dev (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
 4. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**:
-   - Đọc `.claude/stories/{id}/tasks/{file}` (task spec, có mục **Context** chứa phần ADR/rule cần thiết). **Chỉ đọc `adr.md`** khi mục Context ghi rõ cần (`Read adr.md §N`) hoặc thiếu thông tin để làm.
+   - Đọc `.claude/stories/{id}/tasks/{file}` (task spec, có mục **Context** chứa phần ADR/rule cần thiết và danh sách **Read first** — dev bắt đầu từ đó thay vì dò lại codebase). **Chỉ đọc `adr.md`** khi mục Context ghi rõ cần (`Read adr.md §N`) hoặc thiếu thông tin để làm.
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
    - Tôn trọng hợp đồng lockstep trong profile & nhắc evict cache (key/lệnh theo profile) nếu đụng dữ liệu được cache.
    - Trả về JSON block: `status`, `filesChanged` (chỉ file thực sự đụng lần này), `summary`, `followUps`.

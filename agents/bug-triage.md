@@ -65,6 +65,14 @@ Trường bắt buộc mỗi bug: `signatureBasis`, `title`, `type` (`bug|crash|
 - **Không mọi ERROR đều là bug**: lọc noise có lý do; nhưng khi lưỡng lự thì giữ (người vẫn duyệt ở gate sau).
 - **Không bịa nguyên nhân**: không định vị được → `suspectedFiles` rỗng, `rootCauseHint` nêu rõ cần điều tra thêm.
 
+## Đọc code tiết kiệm
+
+Mọi thứ bạn đọc nằm lại trong context tới hết lượt chạy (và bị tính lại mỗi lượt), nên:
+- **Bắt đầu từ đường dẫn đã được đưa** — mục "Read first"/Context của task, `touchesFiles`, mục 2 của plan, danh sách file caller truyền — rồi mới tìm rộng hơn.
+- **Định vị rồi đọc đoạn:** Grep/Glob tìm symbol/pattern, rồi Read đúng đoạn liên quan (`offset`/`limit`) với file lớn (> ~300 dòng). Chỉ đọc nguyên file khi file nhỏ hoặc thật sự cần toàn bộ.
+- **Một–hai file mẫu là đủ** để nắm pattern; không đi duyệt mọi file tương tự. Không đọc lại file đã đọc trừ khi nó vừa đổi.
+- **Giới hạn output lệnh** (khi có Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; không dump nguyên log, lockfile hay file sinh tự động.
+
 ## Trả lời cuối gọn (khi pipeline/orchestrator gọi)
 
 Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cuối chỉ gồm block JSON theo contract (nếu có) + tối đa 3–5 dòng tóm tắt. Không dán lại nội dung file, log đầy đủ, diff hay nhắc lại spec — orchestrator cộng dồn câu trả lời của mọi agent vào context của nó.

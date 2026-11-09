@@ -53,7 +53,7 @@ Kích hoạt khi ticket bị **kéo về Todo kèm góp ý** (sửa plan) hoặc
 Suy từ title+description ticket. Scope gọn, non-goals nếu cần.
 
 ## 2. Phân tích codebase hiện tại
-File/lớp/hàm liên quan (đường dẫn thật), pattern đang dùng, ràng buộc lockstep bị đụng.
+File/lớp/hàm liên quan (đường dẫn thật **kèm vị trí** — hàm hoặc khoảng dòng), pattern đang dùng (1–2 file mẫu để dev bắt chước), ràng buộc lockstep bị đụng. Dev đọc mục này trước thay vì dò lại codebase.
 
 ## 3. Phương án
 Một hướng, mô tả đủ để dev làm: đổi ở project/component nào, data model/migration nếu có,
@@ -69,9 +69,12 @@ API/contract nếu có, ảnh hưởng cache/security. Trade-off ngắn nếu c�
 ```json
 { "subtasks": [
   { "id": "S1", "title": "...", "agent": "dev-backend",
-    "touchesFiles": ["src/foo/bar.ext"], "dependsOn": [] }
+    "touchesFiles": ["src/foo/bar.ext"], "dependsOn": [],
+    "readFirst": ["src/foo/bar.ext:40-120", "src/foo/Example.ext (mẫu pattern)"] }
 ] }
 ```
+
+<!-- `readFirst` (tuỳ chọn): file + vị trí dev nên mở đầu tiên — code cần sửa + file mẫu. Lấy từ phần đã dò ở mục 2, để dev không dò lại. -->
 
 ## 6. Acceptance criteria
 Tiêu chí kiểm được (testable) để reviewer/qc đối chiếu.
@@ -102,6 +105,14 @@ Kèm 2–3 dòng tóm tắt phương án cho người đọc.
 - **Tôn trọng lockstep + rule `MUST`** theo `profile.md` và `.claude/rules/`.
 - **Quyết đoán & gọn**: task nhỏ → plan gọn, thường 1 subtask; đừng nống thành thiết kế lớn.
 - **`touchesFiles` đầy đủ**: khai báo càng đủ càng song song được nhiều; không chắc thì để rỗng (sẽ bị xếp chạy một mình cho an toàn).
+
+## Đọc code tiết kiệm
+
+Mọi thứ bạn đọc nằm lại trong context tới hết lượt chạy (và bị tính lại mỗi lượt), nên:
+- **Bắt đầu từ đường dẫn đã được đưa** — mục "Read first"/Context của task, `touchesFiles`, mục 2 của plan, danh sách file caller truyền — rồi mới tìm rộng hơn.
+- **Định vị rồi đọc đoạn:** Grep/Glob tìm symbol/pattern, rồi Read đúng đoạn liên quan (`offset`/`limit`) với file lớn (> ~300 dòng). Chỉ đọc nguyên file khi file nhỏ hoặc thật sự cần toàn bộ.
+- **Một–hai file mẫu là đủ** để nắm pattern; không đi duyệt mọi file tương tự. Không đọc lại file đã đọc trừ khi nó vừa đổi.
+- **Giới hạn output lệnh** (khi có Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; không dump nguyên log, lockfile hay file sinh tự động.
 
 ## Trả lời cuối gọn (khi pipeline/orchestrator gọi)
 

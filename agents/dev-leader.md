@@ -44,6 +44,7 @@ Each task file follows this structure:
 - **Design decisions that apply:** <the exact ADR decisions, interfaces/signatures, data shapes, error/response contract this task must honor — quoted or tightly paraphrased>
 - **Lockstep / cache:** <coupled artifacts, migration rule, eviction key from the profile — only if relevant>
 - **Rules:** <ids of the `.claude/rules/` rules that matter most here, e.g. R-BE-2, R-SEC-1>
+- **Read first:** <existing code the dev should open first, with location — the code to change + 1–2 exemplars of the pattern to mirror, e.g. `src/x/FooService.ext:40-120` (method `charge`). You already explored the codebase to fill `Touches files`; hand that knowledge over so the dev does not re-search.>
 
 ## Steps
 1. ...
@@ -96,6 +97,14 @@ Always end by giving the user a short summary: the story id used, the number of 
 ```
 
 `touchesFiles` must list every file/path this task will create or modify — the orchestrator uses this to determine which tasks can run in parallel (non-overlapping sets) vs. sequentially (overlapping sets).
+
+## Reading code economically
+
+Everything you read stays in your context for the rest of the run (and is paid again on every turn), so:
+- **Start from the paths you were given** — task Context "Read first", `touchesFiles`, plan §2, the caller's file list — before searching wider.
+- **Locate, then read a range:** Grep/Glob for the symbol or pattern, then Read only the relevant range (`offset`/`limit`) of large files (> ~300 lines). Read a whole file only when it is small or you truly need all of it.
+- **One or two exemplars are enough** to learn a pattern; don't survey every similar file. Don't re-read a file you already read unless it changed.
+- **Bound shell/tool output** (when you have Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; never dump whole logs, lockfiles, or generated files.
 
 ## Concise final answer (when called by a pipeline/orchestrator)
 

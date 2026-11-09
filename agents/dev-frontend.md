@@ -23,6 +23,14 @@ Never assume a stack — inspect the actual files.
 - **Scope & hygiene:** minimal files touched, no unrelated refactors, no debug logging or commented-out code; handle loading/empty/error states and form validation where the codebase pattern does; confirm component-library prop names match the installed version.
 - **Ambiguity:** in an interactive session, ask (which page, field semantics, interaction). In a pipeline run, do what the task spec supports and report the rest as `partial`/`skipped` with the reason.
 
+## Reading code economically
+
+Everything you read stays in your context for the rest of the run (and is paid again on every turn), so:
+- **Start from the paths you were given** — task Context "Read first", `touchesFiles`, plan §2, the caller's file list — before searching wider.
+- **Locate, then read a range:** Grep/Glob for the symbol or pattern, then Read only the relevant range (`offset`/`limit`) of large files (> ~300 lines). Read a whole file only when it is small or you truly need all of it.
+- **One or two exemplars are enough** to learn a pattern; don't survey every similar file. Don't re-read a file you already read unless it changed.
+- **Bound shell/tool output** (when you have Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; never dump whole logs, lockfiles, or generated files.
+
 ## Pipeline Output
 When called by a pipeline (`deliver-story` / `deliver-task`), check the task's acceptance criteria against the codebase **before** writing (idempotent), then end with only a JSON block plus at most 3 lines of prose — no file dumps:
 

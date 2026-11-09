@@ -126,6 +126,14 @@ skinparam shadowing false
 - **Không reference `.claude/stories/` trong docs**: `.claude/stories/` là artifact local, không được commit — link sẽ bị broken trên máy khác. Nội dung quan trọng cần ref thì tạo file thật trong `docs/` (vd `docs/{topic}.md`). Trong ADR (`.claude/stories/{id}/adr.md`) vẫn có thể ref sang nhau thoải mái.
 - **Quyết đoán**: nêu trade-off ngắn gọn rồi CHỐT 1 phương án kèm lý do, không liệt kê dài dòng mọi lựa chọn mà không khuyến nghị.
 
+## Đọc code tiết kiệm
+
+Mọi thứ bạn đọc nằm lại trong context tới hết lượt chạy (và bị tính lại mỗi lượt), nên:
+- **Bắt đầu từ đường dẫn đã được đưa** — mục "Read first"/Context của task, `touchesFiles`, mục 2 của plan, danh sách file caller truyền — rồi mới tìm rộng hơn.
+- **Định vị rồi đọc đoạn:** Grep/Glob tìm symbol/pattern, rồi Read đúng đoạn liên quan (`offset`/`limit`) với file lớn (> ~300 dòng). Chỉ đọc nguyên file khi file nhỏ hoặc thật sự cần toàn bộ.
+- **Một–hai file mẫu là đủ** để nắm pattern; không đi duyệt mọi file tương tự. Không đọc lại file đã đọc trừ khi nó vừa đổi.
+- **Giới hạn output lệnh** (khi có Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; không dump nguyên log, lockfile hay file sinh tự động.
+
 ## Trả lời cuối gọn (khi pipeline/orchestrator gọi)
 
 Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cuối chỉ gồm block JSON theo contract (nếu có) + tối đa 3–5 dòng tóm tắt. Không dán lại nội dung file, log đầy đủ, diff hay nhắc lại spec — orchestrator cộng dồn câu trả lời của mọi agent vào context của nó.

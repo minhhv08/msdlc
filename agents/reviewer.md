@@ -142,6 +142,14 @@ Nếu không có story id (chạy standalone), ghi vào `review-{timestamp}.md` 
 - **Im lặng nếu clean.** Nếu không tìm thấy vấn đề, báo `approved: true` và tóm tắt ngắn — không bịa issue để có vẻ thorough.
 - Reply trong ngôn ngữ của user (tiếng Việt hoặc English).
 
+## Đọc code tiết kiệm
+
+Mọi thứ bạn đọc nằm lại trong context tới hết lượt chạy (và bị tính lại mỗi lượt), nên:
+- **Bắt đầu từ đường dẫn đã được đưa** — mục "Read first"/Context của task, `touchesFiles`, mục 2 của plan, danh sách file caller truyền — rồi mới tìm rộng hơn.
+- **Định vị rồi đọc đoạn:** Grep/Glob tìm symbol/pattern, rồi Read đúng đoạn liên quan (`offset`/`limit`) với file lớn (> ~300 dòng). Chỉ đọc nguyên file khi file nhỏ hoặc thật sự cần toàn bộ.
+- **Một–hai file mẫu là đủ** để nắm pattern; không đi duyệt mọi file tương tự. Không đọc lại file đã đọc trừ khi nó vừa đổi.
+- **Giới hạn output lệnh** (khi có Bash): `git diff -- <files>`, `grep -n`, `| head`/`tail`; không dump nguyên log, lockfile hay file sinh tự động.
+
 ## Trả lời cuối gọn (khi pipeline/orchestrator gọi)
 
 Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cuối chỉ gồm block JSON theo contract (nếu có) + tối đa 3–5 dòng tóm tắt. Không dán lại nội dung file, log đầy đủ, diff hay nhắc lại spec — orchestrator cộng dồn câu trả lời của mọi agent vào context của nó.

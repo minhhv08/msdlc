@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.0] — 2026-11-09
+
+### Changed — tối ưu token (đợt 5: chi phí lúc chạy)
+
+- **`qc-executor` không đổ cả log test vào context:** ưu tiên reporter gọn/fail-only của test runner, ghi output đầy đủ ra file log trong thư mục story/task rồi chỉ `tail` phần tổng kết và `grep` đoạn quanh từng test fail (assertion + ~15 frame trỏ vào code dự án); tối đa ~10 failure chi tiết, phần còn lại chỉ liệt kê tên + đường dẫn log.
+- **Mục "Đọc code tiết kiệm" cho mọi agent đọc code** (dev-backend, dev-frontend, dev-leader, reviewer, architect, task-planner, security-auditor, bug-triage, chronicler): bắt đầu từ đường dẫn được giao; Grep/Glob định vị rồi Read đúng đoạn (`offset`/`limit`) với file lớn; 1–2 file mẫu là đủ; không đọc lại; giới hạn output lệnh.
+- **Bàn giao kết quả dò code cho dev:** task file của `dev-leader` có thêm dòng **Read first** trong mục Context (code cần sửa + file mẫu, kèm vị trí); subtask trong `plan.md` của `task-planner` có trường tuỳ chọn **`readFirst`** và mục 2 ghi kèm vị trí hàm/dòng. `deliver-story`/`deliver-task` chỉ thị dev bắt đầu từ đó thay vì dò lại codebase. Contract JSON không đổi (chỉ thêm trường tuỳ chọn).
+
 ## [0.12.0] — 2026-11-09
 
 ### Changed — tối ưu token (đợt 4)
