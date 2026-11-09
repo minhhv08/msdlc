@@ -78,6 +78,16 @@
 - MR tool: `<để trống → auto-detect từ remote URL | gh | glab | bitbucket>`
 - MR target branch: `<để trống → = Base branch>`
 
+## Pipeline (tuỳ chọn — tối ưu token)
+
+<!-- Bỏ trống = auto: deliver-story/deliver-task chỉ gọi security-auditor / chronicler khi thay đổi cần tới,
+     story nhỏ dùng 1 qc-designer thay cho map/reduce. Chi tiết tiêu chí: skills/deliver-story/gating.md của plugin.
+     Đặt `always` để luôn chạy như trước. -->
+- security-audit: auto
+- docs-sync: auto
+- qc-design: auto
+- security-sensitive-paths: <tuỳ chọn, vd thư mục auth/, payment/>
+
 ## Quy tắc commit
 <!-- Commit rule KHÔNG còn ở profile. Xem `.claude/rules/global.md` nhóm `## Commit`. -->
 → Quy tắc commit sống ở `.claude/rules/global.md` (nhóm `## Commit`). Skill `msdlc:commit` đọc từ đó.

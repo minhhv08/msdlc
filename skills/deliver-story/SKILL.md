@@ -19,16 +19,20 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ---
 
+## Gating (đọc một lần trước Phase 1)
+
+Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test) — chỉ gọi agent khi cần, override được qua mục `## Pipeline` của profile. Áp **G3 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce.
+
 ## Phase 1 — Plan + QC enumerate (song song)
 
 Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột InProgress.
 
-Phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
+**Nhánh test nhỏ (G3):** chỉ phát `dev-leader`, KHÔNG gọi `qc-leader`. **Nhánh map/reduce:** phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
 
 - **Agent `dev-leader`** — vỡ task (mô tả ngay dưới).
 - **Agent `qc-leader` (chế độ enumerate)** — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
 
-Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task atomic, GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
+Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task gọn theo cụm việc (ít task, mỗi task file có mục **Context** tự đủ — xem prompt dev-leader), GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
 
 - `id` (vd `"01"`), `file` (tên file task đã ghi), `title`
 - `project`: một trong các project tên trong `.claude/profile.md` | `docs` | `cross-cutting`
@@ -53,9 +57,9 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
    - Hai task **khác project** → không bao giờ đụng file chung → luôn chạy song song được.
    - Hai task **cùng project** → song song được **chỉ khi** `touchesFiles` không giao nhau (so cả prefix thư mục). Nếu giao dù 1 file → để task sau sang wave kế.
    - Task không khai báo `touchesFiles` (rỗng) → thận trọng: chỉ chạy một mình trong project đó ở wave này.
-3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm các Agent `qc-designer` (chế độ design-subset) — một cho mỗi bucket mà `qc-leader` đã trả ở Phase 1** — vào cùng message để flesh-out test song song với dev (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
+3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent thiết kế test** — nhánh nhỏ: **một `qc-designer` chế độ full** (theo G3); nhánh map/reduce: **một `qc-designer` design-subset cho mỗi bucket** mà `qc-leader` đã trả ở Phase 1 — vào cùng message để flesh-out test song song với dev (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
 4. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**:
-   - Đọc `.claude/stories/{id}/tasks/{file}` (task spec) + `.claude/stories/{id}/adr.md` (bám thiết kế).
+   - Đọc `.claude/stories/{id}/tasks/{file}` (task spec, có mục **Context** chứa phần ADR/rule cần thiết). **Chỉ đọc `adr.md`** khi mục Context ghi rõ cần (`Read adr.md §N`) hoặc thiếu thông tin để làm.
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
    - Tôn trọng hợp đồng lockstep trong profile & nhắc evict cache (key/lệnh theo profile) nếu đụng dữ liệu được cache.
    - Trả về JSON block: `status`, `filesChanged` (chỉ file thực sự đụng lần này), `summary`, `followUps`.
@@ -88,13 +92,15 @@ Khâu thiết kế test được cắt thành **map/reduce** để không thành
 
 2. **Fan-out — `qc-designer` × N (chế độ design-subset).** Vì `buckets` đã sẵn sau Phase 1, phát fan-out **ngay ở Wave 1** (kèm cùng message với dev, xem step 3). Với **mỗi bucket** trong `buckets`, phát **một Agent `qc-designer` riêng**, truyền danh sách stub của bucket đó + **file output riêng** `.claude/stories/{id}/tests/testcases-part-{k}.md` (k = 1..N). Mỗi instance flesh-out stub thành đặc tả đầy đủ (Preconditions/Test Data/Steps/Expected/Notes), **giữ nguyên `id`/`source` từ stub**, không đẻ case ngoài stub, trả JSON `{ file, casesWritten, followUps }`. Các file part rời nhau và rời hoàn toàn với `tasks/`/code → an toàn chạy song song với nhau và với dev. Nếu chỉ có 1 bucket (story nhỏ) → chỉ 1 `qc-designer`, không fan-out thừa.
 
-3. **Reduce — `qc-leader` (merge).** Sau khi tất cả `qc-designer` design-subset xong, phát lại **Agent `qc-leader` (chế độ merge)**: đọc các `tests/testcases-part-*.md` + `coverageGaps` từ bước enumerate, ghi `.claude/stories/{id}/tests/README.md` (Traceability Matrix tổng + Coverage & Gaps), trả JSON `{ totalCases, gaps }`. Gap rõ → đưa vào `followUps` của Phase 5.
+3. **Reduce — `qc-leader` (merge).** Chỉ khi có ≥ 2 bucket (1 bucket → main tự ghi `tests/README.md` gọn, xem G3). Sau khi tất cả `qc-designer` design-subset xong, phát lại **Agent `qc-leader` (chế độ merge)**: đọc các `tests/testcases-part-*.md` + `coverageGaps` từ bước enumerate, ghi `.claude/stories/{id}/tests/README.md` (Traceability Matrix tổng + Coverage & Gaps), trả JSON `{ totalCases, gaps }`. Gap rõ → đưa vào `followUps` của Phase 5.
 
 > enumerate overlap với khâu vỡ task ở Phase 1; fan-out design + merge overlap với dev implement (bắt đầu ngay Wave 1). Đến Phase 3 đã có test suite + traceability sẵn.
 
 ---
 
 ## Phase 2.5 — Code Review (reviewer, auto-fix ≤ 1 vòng)
+
+**Trước khi gọi reviewer, áp G1** (gating.md) trên `filesChanged` để quyết định Phase 3 có chạy `security-auditor` không. Không chạy → truyền thêm cờ **`securityLite: true`** cho reviewer.
 
 Gọi **Agent `reviewer`** với story id, **truyền kèm tập `filesChanged` gom từ các wave của Phase 2** để giới hạn scope — reviewer review đúng phần code story này đổi, không dính nhiễu khi working tree có thay đổi khác (quan trọng khi `tracking-poll` build nhiều story tuần tự trên cùng cây). Reviewer đọc `git diff` (lọc theo tập file đó) + `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md` + `.claude/profile.md` + `.claude/rules/` (mọi file rule), review implementation theo các dimensions (correctness vs spec, lockstep, logic, convention & project rules, test alignment, readability), ghi `.claude/stories/{id}/review/review-attempt-1.md`, và trả JSON `{ approved, blockingFindings, suggestions, summary }`. Mỗi finding bám một rule mang thêm field `ruleId` (vd `"R-BE-1"`); vi phạm rule `MUST` → `blockingFindings`, vi phạm rule `SHOULD` → `suggestions`.
 
@@ -109,7 +115,7 @@ Gọi **Agent `reviewer`** với story id, **truyền kèm tập `filesChanged` 
 
 ## Phase 3 — QC + Security (song song, auto-fix ≤ 2)
 
-> Test case đã được thiết kế theo map/reduce (`qc-leader` enumerate → `qc-designer` × N design-subset → `qc-leader` merge) song song từ Wave 1 của Phase 2 (ghi tại `.claude/stories/{id}/tests/`, tổng hợp ở `tests/README.md`). Việc này chạy trong lúc dev implement, nên đến Phase 3 đã có test suite + traceability sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
+> Test case đã được thiết kế từ Wave 1 của Phase 2 (nhánh nhỏ: 1 `qc-designer` full; nhánh lớn: map/reduce) (ghi tại `.claude/stories/{id}/tests/`, tổng hợp ở `tests/README.md`). Việc này chạy trong lúc dev implement, nên đến Phase 3 đã có test suite + traceability sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
 
 Phát **cùng một message** tất cả Agent sau song song — chúng chạy trên project/scope rời nhau nên không đụng file:
 
@@ -117,7 +123,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 > Ví dụ: story đụng 2 project backend + 1 project frontend → phát 3 `qc-executor` song song trong 1 message.
 
-1b. **Agent `security-auditor`** (song song với các qc-executor) — audit diff của story này (truyền kèm tập `filesChanged` gom từ Phase 2 để giới hạn scope, như với reviewer) tìm lỗ hổng (theo lockstep/secrets/cache của profile **và rule `R-SEC-*` trong `.claude/rules/security.md`**). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` trong `security.md` được nâng severity tối thiểu `High` (kèm `ruleId`) nên sẽ lọt vòng auto-fix Critical/High dưới đây.
+1b. **Agent `security-auditor`** — **chỉ khi G1 quyết định chạy** (song song với các qc-executor) — audit diff của story này (truyền kèm tập `filesChanged` gom từ Phase 2 để giới hạn scope, như với reviewer) tìm lỗ hổng (theo lockstep/secrets/cache của profile **và rule `R-SEC-*` trong `.claude/rules/security.md`**). Ghi báo cáo vào `.claude/stories/{id}/security/` và trả về `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` trong `security.md` được nâng severity tối thiểu `High` (kèm `ruleId`) nên sẽ lọt vòng auto-fix Critical/High dưới đây.
 
 2. **Ghi execution report & vòng auto-fix (ngân sách chung ≤ 2 vòng):**
 
@@ -138,7 +144,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
 ## Phase 4 — Docs (chronicler)
 
-Gọi **Agent `chronicler`**: đồng bộ README/docs/docstring/inline comment với code vừa đổi. Lưu ý `docs/architecture.md` đã được architect cập nhật ở bước thiết kế — chỉ bổ sung phần còn lệch, không tự thêm tính năng chưa có trong code.
+**Áp G2** (gating.md). Không cần → bỏ qua, ghi `docs: skipped (lý do)` vào report. Cần → gọi **Agent `chronicler`** (truyền `filesChanged`): đồng bộ README/docs/docstring/inline comment với code vừa đổi. Lưu ý `docs/architecture.md` đã được architect cập nhật ở bước thiết kế — chỉ bổ sung phần còn lệch, không tự thêm tính năng chưa có trong code.
 
 ---
 

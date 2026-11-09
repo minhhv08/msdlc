@@ -6,7 +6,7 @@ description: >-
 
 # deliver-task — Build gọn một task board (main điều phối)
 
-Bản **nhẹ** của `deliver-story` cho task nhỏ trên board: bỏ bước vỡ task (`dev-leader`) và bỏ thiết kế test map/reduce (`qc-leader`/`qc-designer`). Việc vỡ subtask đã do `task-planner` làm sẵn trong `plan.md`. Main agent **tự điều phối** chuỗi agent bằng **Agent tool** — không dùng Workflow — chạy song song tối đa các subtask không đụng file, và báo cáo trung thực.
+Bản **nhẹ** của `deliver-story` cho task nhỏ trên board: bỏ bước vỡ task (`dev-leader`) và bỏ thiết kế test map/reduce (`qc-leader`/`qc-designer`); `security-auditor` và `chronicler` chỉ chạy khi cần (gating G1/G2). Việc vỡ subtask đã do `task-planner` làm sẵn trong `plan.md`. Main agent **tự điều phối** chuỗi agent bằng **Agent tool** — không dùng Workflow — chạy song song tối đa các subtask không đụng file, và báo cáo trung thực.
 
 Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
 
@@ -36,6 +36,8 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ## Phase 2 — Code Review (reviewer, auto-fix ≤ 1 vòng)
 
+**Trước khi gọi reviewer:** Read `../deliver-story/gating.md` (tương đối từ thư mục skill này) và **áp G1** trên `filesChanged` để quyết định Phase 3 có chạy `security-auditor` không; không chạy → truyền cờ **`securityLite: true`** cho reviewer.
+
 Gọi **Agent `reviewer`** với `taskid`, **truyền kèm tập `filesChanged` gom từ Phase 1** để giới hạn scope (quan trọng khi `tracking-poll` build nhiều task tuần tự trên cùng working tree). Reviewer đọc `git diff` (lọc theo tập file đó) + `.claude/tasks/{taskid}/plan.md` + `.claude/profile.md` + `.claude/rules/`, review theo các dimensions (correctness vs plan, lockstep, logic, convention & rule, readability), ghi `.claude/tasks/{taskid}/review/review-attempt-1.md`, trả JSON `{ approved, blockingFindings, suggestions, summary }` (finding bám rule mang `ruleId`).
 
 **Xử lý:**
@@ -53,7 +55,7 @@ Phát **cùng một message** các Agent sau (scope rời nhau nên không đụ
 
 1a. **Agent `qc-executor` × N project** — lấy danh sách project mà các subtask đụng tới (từ `agent`/`touchesFiles` trong plan). Với **mỗi** project có lệnh test trong `.claude/profile.md`, phát **một `qc-executor`** trong cùng message, chỉ định project scope. Trả `project`, `allPassed`, `infraMissing`, `failures[{test,message}]`, `report`.
 
-1b. **Agent `security-auditor`** (song song) — audit diff của task (truyền kèm `filesChanged` từ Phase 1 để giới hạn scope), tìm lỗ hổng theo lockstep/secrets/cache của profile **và rule `R-SEC-*`**. Ghi báo cáo vào `.claude/tasks/{taskid}/security/`, trả `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` nâng severity tối thiểu `High`.
+1b. **Agent `security-auditor`** — **chỉ khi G1 quyết định chạy** (song song) — audit diff của task (truyền kèm `filesChanged` từ Phase 1 để giới hạn scope), tìm lỗ hổng theo lockstep/secrets/cache của profile **và rule `R-SEC-*`**. Ghi báo cáo vào `.claude/tasks/{taskid}/security/`, trả `findings[{severity,title,file,line,remediation,ruleId}]`. Vi phạm rule `MUST` nâng severity tối thiểu `High`.
 
 2. **Ghi execution report & vòng auto-fix (ngân sách ≤ 2 vòng):** sau mỗi lần chạy qc-executor, mỗi project ghi `.claude/tasks/{taskid}/tests/{project}-execution-attempt-{N}.md` (Status/Commands/Result/Infra + bảng Failures + Notes).
    - Mọi project `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
@@ -66,7 +68,7 @@ Phát **cùng một message** các Agent sau (scope rời nhau nên không đụ
 
 ## Phase 4 — Docs (chronicler)
 
-Gọi **Agent `chronicler`**: đồng bộ README/docs/docstring/inline comment với code vừa đổi. Chỉ bổ sung phần lệch, không tự thêm tính năng chưa có trong code.
+**Áp G2** (gating.md). Không cần → bỏ qua, ghi `docs: skipped (lý do)` vào report. Cần → gọi **Agent `chronicler`** (truyền `filesChanged`): đồng bộ README/docs/docstring/inline comment với code vừa đổi. Chỉ bổ sung phần lệch, không tự thêm tính năng chưa có trong code.
 
 ---
 

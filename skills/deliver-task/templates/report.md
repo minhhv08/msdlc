@@ -21,6 +21,11 @@
 
 > BLOCKED projects (infra missing): ...
 
+## Gating
+
+- security-auditor: ran | skipped (lý do)
+- docs (chronicler): ran | skipped (lý do)
+
 ## Security
 | Severity | Count | Status |
 |---|---|---|

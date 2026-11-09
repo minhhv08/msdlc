@@ -25,6 +25,12 @@
 
 > BLOCKED projects (infra missing): ...
 
+## Gating
+
+- security-auditor: ran | skipped (lý do)
+- docs (chronicler): ran | skipped (lý do)
+- test design: small (1 qc-designer full) | map/reduce
+
 ## Security
 
 | Severity | Count | Status |

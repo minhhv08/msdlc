@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0] — 2026-11-09
+
+### Changed — tối ưu token (nhóm B: bỏ agent không cần)
+
+- **Gating mới `skills/deliver-story/gating.md`** (dùng chung cho `deliver-story` và `deliver-task`), override qua mục `## Pipeline` mới trong `profile.template.md` (`security-audit` / `docs-sync` / `qc-design`: `auto` | `always` | …; vắng mục = `auto`). Mọi lần bỏ qua ghi `skipped (lý do)` vào report (mục `## Gating` mới trong template report).
+  - **G1 — `security-auditor` chỉ chạy khi diff chạm vùng nhạy cảm** (auth/authz, crypto/secret, upload/path, endpoint, truy vấn động, deserialize, outbound HTTP, cấu hình bảo mật, dependency, `security-sensitive-paths` của profile, hoặc rule `R-SEC-*` `MUST` khớp scope). Không chạy → `reviewer` nhận cờ `securityLite: true` và kiêm checklist bảo mật nhanh (finding nghiêm trọng vào `blockingFindings`).
+  - **G2 — `chronicler` chỉ chạy khi thay đổi ảnh hưởng tài liệu** (public API/contract, config/env/CLI, build/deps, docs đang nhắc tới file/symbol bị đổi, followUps về docs, hoặc rule DoD bắt buộc).
+  - **G3 — story nhỏ bỏ QC map/reduce**: ≤ 8 mục requirement/acceptance và ≤ 2 project → không gọi `qc-leader`, chỉ một `qc-designer` chế độ full ghi thẳng `tests/README.md` (trả `{ file, casesWritten, gaps, followUps }`). Map/reduce mà enumerate ra đúng 1 bucket → bỏ bước merge, main tự ghi `tests/README.md` gọn.
+- **`dev-leader` gom task theo cụm việc** (mặc định ≤ 3 task/project; migration+model+repository+service của một entity là MỘT task; test nằm trong task thay vì task test riêng). Mỗi task file có mục **Context** tự đủ (quyết định ADR liên quan, lockstep/cache, rule id) → dev chỉ đọc `adr.md` khi Context ghi rõ cần.
+- Contract JSON không đổi, trừ việc `qc-designer` full mode giờ cũng trả JSON khi pipeline gọi.
+- **Thay đổi hành vi mặc định:** dự án muốn giữ y như cũ đặt `security-audit: always`, `docs-sync: always`, `qc-design: always-mapreduce` trong `## Pipeline` của profile.
+
 ## [0.10.0] — 2026-11-09
 
 ### Changed — tối ưu token (nhóm A)
