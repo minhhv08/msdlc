@@ -1,7 +1,7 @@
 ---
 name: deliver-task
 description: >-
-  Build GỌN một task nhỏ (feat/fixbug) từ board ngoài đã có plan duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer (auto-fix ≤1) → qc-executor + security-auditor song song (auto-fix ≤2) → chronicler → ghi report. Main agent TỰ điều phối bằng Agent tool (không dùng Workflow), KHÔNG vỡ task bằng dev-leader, KHÔNG QC map/reduce. Dùng khi .claude/tasks/{taskid}/plan.md đã tồn tại (đã được người duyệt qua board — kéo ticket sang Approved). Gọi bởi msdlc:tracking-poll (Bước 2) hoặc trực tiếp với một taskid. KHÔNG tự chạy nếu chưa có plan.md.
+  Build gọn một task nhỏ đã có plan.md duyệt: dev song song theo subtask file-disjoint → reviewer (fix ≤1) → qc-executor ∥ security-auditor (fix ≤2) → chronicler → report. Không dev-leader, không QC map/reduce. Gọi từ tracking-poll, /deliver hoặc trực tiếp với taskid; KHÔNG chạy nếu chưa có plan.md.
 ---
 
 # deliver-task — Build gọn một task board (main điều phối)
@@ -74,39 +74,7 @@ Gọi **Agent `chronicler`**: đồng bộ README/docs/docstring/inline comment 
 
 Ghi **`.claude/tasks/{taskid}/report.md`**:
 
-```markdown
-# Delivery Report (light) — {taskid}
-
-> Generated: {date} · Plan: [plan.md](plan.md)
-<!-- git-flow finish sẽ chèn dòng `> MR: <url>` ngay dưới đây khi git flow bật; deliver-task để trống. -->
-{mr-line-nếu-có}
-
-## Subtasks
-| # | Title | Agent | Status | Files changed |
-|---|---|---|---|---|
-| S1 | ... | dev-backend | implemented | src/foo.ext |
-
-**Summary:** {N} subtasks — {implemented}/{already-done}/{partial}/{skipped}.
-
-## Code Review
-| Attempt | Approved | Blocking | Suggestions | Report |
-|---|---|---|---|---|
-
-## Tests
-| Project | Status | Passed | Failed | Attempts | Report |
-|---|---|---|---|---|---|
-
-> BLOCKED projects (infra missing): ...
-
-## Security
-| Severity | Count | Status |
-|---|---|---|
-
-Security reports: `.claude/tasks/{taskid}/security/`
-
-## Follow-ups
-- [ ] <lockstep, cache eviction, blocking/finding còn lại (kèm ruleId), open items>
-```
+Template: `templates/report.md` trong thư mục skill này — chỉ Read khi tới bước này.
 
 Sau khi ghi `report.md` → trả về JSON tóm tắt `{ taskid, subtasks, tests, security, followUps }` cho caller (`tracking-poll` dùng để comment ở mốc review). **KHÔNG tự chuyển Done** — Review chờ người verify.
 

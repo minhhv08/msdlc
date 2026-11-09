@@ -96,6 +96,8 @@ Báo cho user (một khối ngắn): lượt này Bước R nhặt lại task n�
 
 ## Ghi chú vận hành
 
+- **Tiết kiệm token:** trong một lượt, skill `msdlc:tracking` và `msdlc:git-flow` mỗi skill chỉ invoke **một lần** (lần gọi đầu tiên); các mốc/op sau làm theo trực tiếp body skill đã có trong context với tham số mới, không invoke lại. `git-flow` tắt cờ → không invoke lần nào.
+
 - Chạy định kỳ: `/loop 10m /msdlc:tracking-poll` (interval, cần phiên đang mở) hoặc tạo scheduled cloud agent qua skill `schedule` (chạy nền kể cả tắt máy). Chọn theo nhu cầu; xem README.
 - Mỗi lượt idempotent → chạy lại nhiều lần an toàn: trạng thái nằm ở cột board + sự tồn tại của `plan.md`/`report.md` trong `.claude/tasks/{taskid}/`.
 - Cột `planning` giờ là bước **claim/lock**, không còn cosmetic — nên override tên cột `planning` trong profile để tránh detect-keyword đoán trượt.

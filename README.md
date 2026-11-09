@@ -78,7 +78,7 @@ File dùng chung — copy vào `.claude/` của dự án tiêu thụ khi init.
 
 | File | Mô tả |
 |---|---|
-| `shared/agent-memory.md` | Giao thức memory ~140 dòng dùng chung cho mọi agent — định nghĩa cách đọc/ghi/cập nhật memory cục bộ. |
+| `shared/agent-memory.md` | Quy ước memory gọn (~40 dòng) dùng chung — agent chỉ đọc khi định ghi memory. |
 | `shared/profile.template.md` | Mẫu `profile.md` — nguồn sự thật cho *facts* của dự án (stack, lệnh build/test, lockstep). |
 | `shared/rules/*.md` | Mẫu `.claude/rules/` — nguồn *rule* theo project (`global`/`backend`/`frontend`/`security`/`testing`); mỗi rule có `id` + `severity`. |
 
@@ -254,5 +254,5 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 
 - Agent chỉ giữ **vai trò + quy trình**; *facts* dự án nằm trong `profile.md`, *rule* dự án nằm trong `.claude/rules/`.
 - `dev-backend` phục vụ mọi ngôn ngữ/framework backend (tự nhận diện theo file đụng tới); `dev-frontend` phục vụ UI web.
-- Giao thức memory ~140 dòng gom 1 bản tại `shared/agent-memory.md` thay vì lặp trong từng agent.
+- Quy ước memory gọn (~40 dòng) gom 1 bản tại `shared/agent-memory.md` thay vì lặp trong từng agent.
 - Rule là *cấu hình per-project*, không phải prompt: thêm/sửa rule trong dự án tiêu thụ không cần đụng định nghĩa agent. Dự án chưa có `.claude/rules/` chạy y hệt như trước.

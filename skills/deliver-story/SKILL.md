@@ -1,7 +1,7 @@
 ---
 name: deliver-story
 description: >-
-  Từ ADR đã duyệt của một story id: vỡ task (dev-leader) **song song** thiết kế test map/reduce (qc-leader enumerate → qc-designer ×N design-subset → qc-leader merge) → implement song song theo file-disjoint (dev-backend/dev-frontend) → review (reviewer, auto-fix ≤1) → chạy test + audit bảo mật song song (qc-executor + security-auditor, auto-fix ≤2) → đồng bộ docs (chronicler). Main agent TỰ điều phối bằng Agent tool (không dùng Workflow). Dùng khi .claude/stories/{id}/adr.md đã được duyệt (header `Status: Accepted`) và muốn tự động build + test + sync docs. Gọi qua skill /deliver (Bước B) hoặc trực tiếp với một story id. KHÔNG tự chạy nếu ADR chưa được duyệt.
+  Build tự động một story từ ADR đã duyệt (Status: Accepted): dev-leader ∥ qc-leader → dev song song theo file-disjoint (+ qc-designer) → reviewer (fix ≤1) → qc-executor ∥ security-auditor (fix ≤2) → chronicler → report. Main tự điều phối bằng Agent tool. Gọi từ /deliver hoặc trực tiếp với story id; KHÔNG chạy nếu ADR chưa duyệt.
 ---
 
 # deliver-story — Build tự động một story (main điều phối)
@@ -21,7 +21,7 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ## Phase 1 — Plan + QC enumerate (song song)
 
-Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (tự no-op nếu không có tracker) để đưa ticket sang cột InProgress.
+Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột InProgress.
 
 Phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
 
@@ -123,22 +123,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
 
    Sau mỗi lần chạy qc-executor (lần đầu hoặc re-run), với mỗi project **ghi** `.claude/stories/{id}/tests/{project}-execution-attempt-{N}.md`:
 
-   ```markdown
-   # Execution Report — {project} (attempt {N})
-
-   - **Status:** PASS | FAIL | BLOCKED
-   - **Commands run:** <lệnh thực tế đã chạy>
-   - **Result:** {passed}/{total} passed, {skipped} skipped
-   - **Infra missing:** yes | no
-
-   ## Failures
-   | Test | Message |
-   |---|---|
-   | TestFoo#testBar | AssertionError: expected 200 but was 500 |
-
-   ## Notes
-   <environmental issues, stale-cache risk, lockstep mismatches>
-   ```
+   Template: `templates/execution-report.md` trong thư mục skill này — chỉ Read khi tới bước ghi report.
 
    (Nếu `allPassed` và không có failure, mục Failures để trống.)
 
@@ -161,56 +146,11 @@ Gọi **Agent `chronicler`**: đồng bộ README/docs/docstring/inline comment 
 
 Ghi **`.claude/stories/{id}/report.md`** với nội dung sau, rồi tóm tắt ngắn cho user trong conversation và dẫn link file:
 
-```markdown
-# Delivery Report — {id}
-
-> Generated: {date}
-
-## Tasks
-
-| # | Title | Agent | Status | Files changed |
-|---|---|---|---|---|
-| 01 | ... | dev-backend | implemented | src/foo.ts |
-
-**Summary:** {N} tasks — {implemented} implemented, {already-done} already-done, {partial} partial, {skipped} skipped.
-
-## Code Review
-
-| Attempt | Approved | Blocking | Suggestions | Report |
-|---|---|---|---|---|
-| 1 | No | 2 | 4 | review/review-attempt-1.md |
-| 2 | Yes | 0 | 2 | review/review-attempt-2.md |
-
-## Tests
-
-| Project | Status | Passed | Failed | Attempts | Report |
-|---|---|---|---|---|---|
-| payment-service | PASS | 42 | 0 | 1 | tests/payment-service-execution-attempt-1.md |
-
-> BLOCKED projects (infra missing): ...
-
-## Security
-
-| Severity | Count | Status |
-|---|---|---|
-| Critical | 0 | — |
-| High | 1 | fixed |
-| Medium | 2 | followUp |
-
-Security reports: `.claude/stories/{id}/security/`
-
-## Follow-ups
-
-- [ ] <lockstep, cache eviction, open items>
-
-## Notes
-
-<cache eviction keys cần chạy, infra còn thiếu, vi phạm rule còn lại (kèm ruleId), v.v.>
-```
+Template: `templates/report.md` trong thư mục skill này — chỉ Read khi tới bước này.
 
 > Khi liệt kê blocking findings / security findings còn lại trong report, ghi kèm `ruleId` nếu finding bám một rule trong `.claude/rules/` — để truy vết về rule cụ thể.
 
-Sau khi ghi `report.md`: gọi skill **`msdlc:tracking {id} review`** (tự no-op nếu không có tracker) để đưa ticket sang cột Review + comment tóm tắt. **KHÔNG tự chuyển Done** — Review chờ người verify rồi đóng thủ công.
+Sau khi ghi `report.md`: gọi skill **`msdlc:tracking {id} review`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột Review + comment tóm tắt. **KHÔNG tự chuyển Done** — Review chờ người verify rồi đóng thủ công.
 
 Nếu user muốn commit → dùng skill **`msdlc:commit`**.
 

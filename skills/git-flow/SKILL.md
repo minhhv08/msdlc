@@ -1,7 +1,7 @@
 ---
 name: git-flow
 description: >-
-  Quản lý git flow cho luồng board nhẹ của msdlc — trước khi phân tích thì đồng bộ đúng nhánh (op `sync`), mỗi task board làm trên một nhánh riêng tách từ base branch, build xong thì commit (một commit qua msdlc:commit) → push → tạo merge/pull request → trả URL để comment vào ticket. Nơi DUY NHẤT chứa logic git của msdlc; tự no-op khi tắt cờ hoặc không phải git repo. Máy KHÔNG tự merge — merge là quyền người. Được `tracking-poll` gọi (op `sync` trước mỗi lần task-planner phân tích, `start` trước build, `finish` sau build); cũng dùng tay khi cần re-sync một task. LUÔN dùng skill này khi cần "pull đúng nhánh trước khi phân tích", "tạo nhánh cho task board", "tạo MR sau khi build", hoặc khi một bước poll cần thao tác git.
+  Nơi duy nhất chứa logic git của msdlc cho luồng board: op sync (pull đúng nhánh trước khi phân tích), start (nhánh riêng cho task), finish (commit → push → tạo MR, trả URL). No-op khi tắt cờ hoặc không phải git repo; không bao giờ tự merge. Được tracking-poll gọi hoặc dùng tay để re-sync một task.
 ---
 
 # msdlc:git-flow — Nhánh/task + MR cho luồng board

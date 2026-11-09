@@ -1,7 +1,7 @@
 ---
 name: tracking
 description: >-
-  Đồng bộ trạng thái ticket trên board ngoài (Jira/Asana/Linear/Monday/Notion) với tiến độ pipeline msdlc — chuyển cột ticket tại các mốc (todo/planning/validate/approved/in-progress/review) và comment kết quả với prefix `[Claude]`. Được các skill pipeline (`spec`/`deliver`/`deliver-story`) gọi TỰ ĐỘNG tại mỗi mốc; cũng dùng TAY khi cần re-sync một story. LUÔN dùng skill này khi cần "đồng bộ status ticket", "chuyển cột board", "cập nhật Jira/Asana theo story", hoặc khi một bước pipeline vừa xong và ticket cần đổi cột. KHÔNG tự chuyển Done — Done luôn do người.
+  Đồng bộ cột ticket trên board ngoài (Jira/Asana/Linear/Monday/Notion) theo mốc pipeline msdlc (todo/planning/validate/approved/in-progress/review) và comment `[Claude]`. Pipeline gọi tự động; dùng tay khi cần 'đồng bộ status ticket', 'chuyển cột board'. Không bao giờ tự chuyển Done.
 ---
 
 # msdlc:tracking — Đồng bộ trạng thái story ↔ board ngoài
@@ -22,6 +22,15 @@ Ví dụ: `msdlc:tracking 001 review` (luồng thủ công, story) · `msdlc:tra
 3. **Detect từ chính tool, đừng đoán.** Ưu tiên override tên cột trong profile; nếu không có thì suy từ danh sách transitions thực tế của ticket.
 4. **Không sửa định nghĩa agent, không đụng code sản phẩm.** Skill chỉ đọc artifact story + gọi MCP tool của tracker.
 5. **Lỗi giữa chừng cũng là non-fatal.** Qua guard rồi mà transition/comment vẫn fail (MCP rớt kết nối, transition không hợp lệ, thiếu quyền) → bắt lỗi, log một dòng mô tả rồi kết thúc bình thường — KHÔNG throw, KHÔNG làm dừng skill/pipeline đang gọi tới. Sync là side-effect, không phải gate; board lệch một nhịp thì lượt sync sau (hoặc người) chỉnh lại.
+
+## Quy ước gọi tiết kiệm token (cho skill/command gọi tới đây)
+
+Mỗi lần invoke skill là nạp lại toàn bộ file này vào context, nên bên gọi tuân theo:
+
+1. **Pre-check một lần ở đầu pipeline/lượt, không invoke skill:** đọc `## Task tracker` của profile + trường `Ticket:` (story: `requirement.md`; task: `request.md` nếu có — task board không có `request.md` thì coi như có ticket). Tracker chưa cấu hình **hoặc** `Ticket:` là `—`/trống → **tracker tắt cho cả lần chạy**: bỏ qua mọi lời gọi `msdlc:tracking` còn lại, chỉ ghi một dòng *"[tracking] tắt — bỏ qua sync"* vào báo cáo cuối.
+2. **Tracker bật → invoke skill đúng một lần** ở mốc đầu tiên. Các mốc sau trong cùng phiên/lượt: body skill đã có trong context → **làm theo trực tiếp với `id`/`phase`/`kind` mới, không invoke lại**. Guard Bước 1 đã qua thì chỉ cần kiểm lại connector khi lần trước lỗi kết nối.
+
+Pre-check này chỉ là đường tắt của Bước 1.1–1.2; khi đã invoke skill thì Bước 1 bên dưới vẫn là nguồn sự thật.
 
 ## Bước 1 — Guard: có nên sync không?
 

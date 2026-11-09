@@ -1,6 +1,7 @@
 ---
 name: spec
-description: Phân loại yêu cầu là STORY (tính năng lớn, cần ADR) hay TASK (feat/fixbug nhỏ) để chọn flow tiết kiệm token, rồi hỏi trực tiếp bằng AskUserQuestion, chỉ vào chức năng (tối đa 5 lần, có đáp án đề xuất sẵn, không hỏi lan man) — story → spec chức năng ở .claude/stories/{id}/requirement.md; task → brief gọn ở .claude/tasks/{taskid}/request.md (đi luồng nhẹ task-planner → deliver-task). LUÔN dùng skill này khi người dùng muốn build một sản phẩm/tính năng/sửa lỗi nhưng "chưa có PRD rõ ràng", nói các cụm như "muốn làm X nhưng chưa rõ scope", "giúp tao định nghĩa sản phẩm", "viết spec/PRD cho ý tưởng này", "làm rõ yêu cầu", "không biết bắt đầu từ đâu", hoặc khi đưa ra một ý tưởng còn chung chung và cần được làm rõ trước khi thiết kế kiến trúc hay vỡ task. Đây là mắt xích ĐẦU của pipeline; output là input cho `/deliver {id}`.
+description: >-
+  Làm rõ yêu cầu trước khi thiết kế: phân loại STORY (lớn, cần ADR) hay TASK (feat/fixbug nhỏ), hỏi bằng AskUserQuestion tập trung chức năng (≤5 lượt), ghi .claude/stories/{id}/requirement.md hoặc .claude/tasks/{taskid}/request.md. Dùng khi user có ý tưởng/tính năng/bug nhưng chưa rõ scope, hoặc muốn 'viết spec/PRD', 'làm rõ yêu cầu'.
 ---
 
 # Spec Discovery
@@ -64,41 +65,7 @@ Sau khi người dùng xác nhận bản tóm tắt, ghi spec ra file **`.claude
 
 Nội dung file theo ĐÚNG template sau:
 
-```markdown
-# Spec: [Tên sản phẩm/tính năng]
-
-> Status: Draft · Ngày: [YYYY-MM-DD] · Người tạo: [tên] · Ticket: [ID|URL hoặc —]
-
-## 1. Problem
-- **Vấn đề / mục tiêu:** ... (1–2 câu, lấy từ mô tả ban đầu)
-
-## 2. Users & Roles
-- **Vai trò dùng chức năng:** ... (ai được làm gì)
-
-## 3. Scope — Functional requirements
-Các luồng chức năng (mỗi luồng: ai → thao tác → hệ thống phản hồi):
-- [ ] F1. ...
-- [ ] F2. ...
-
-**Dữ liệu:** input/field + validate; output/hiển thị/API trả về.
-**Quy tắc nghiệp vụ:** điều kiện, công thức, trạng thái, phân quyền.
-**Trường hợp biên & lỗi:** ...
-
-## 4. Non-goals
-Rõ ràng KHÔNG làm ở phiên bản này:
-- ...
-
-## 5. Constraints
-- **Kỹ thuật/tích hợp:** hệ thống/module/API đang có phải đụng tới ...
-- **Bảo mật/dữ liệu:** ... (bỏ nếu không có)
-
-## 6. Success criteria — Acceptance
-- [ ] AC1. ... (kiểm được)
-- [ ] AC2. ...
-
-## 7. Open questions
-- ❓ ... (bỏ mục nếu không có)
-```
+Template: `templates/requirement.md` trong thư mục skill này — Read ngay trước khi ghi file (nhánh STORY).
 
 Quy tắc khi điền:
 - Mỗi mục phải dựa trên câu trả lời thực của người dùng. Mục nào chưa rõ → để vào "Open questions", KHÔNG bịa.
@@ -108,7 +75,7 @@ Quy tắc khi điền:
 
 ## Gắn ticket board (nếu dự án dùng tracker)
 
-Nếu `.claude/profile.md` có mục `## Task tracker` đã cấu hình: hỏi (optional, **gộp làm một câu trong lần gọi `AskUserQuestion` đầu**, không tốn lượt riêng) story/task này có gắn ticket trên board không. Nếu có → ghi ID/URL vào trường `Ticket:` ở header; với **STORY** gọi thêm skill **`msdlc:tracking {id} todo`** để đưa ticket về cột intake (TASK không gọi — xem Nhánh TASK). Không có tracker hoặc không có ticket → bỏ qua (skill `msdlc:tracking` tự no-op, không cần điều kiện gì thêm).
+Nếu `.claude/profile.md` có mục `## Task tracker` đã cấu hình: hỏi (optional, **gộp làm một câu trong lần gọi `AskUserQuestion` đầu**, không tốn lượt riêng) story/task này có gắn ticket trên board không. Nếu có → ghi ID/URL vào trường `Ticket:` ở header; với **STORY** gọi thêm skill **`msdlc:tracking {id} todo`** để đưa ticket về cột intake (TASK không gọi — xem Nhánh TASK). Không có tracker hoặc không có ticket → **không invoke** `msdlc:tracking` (tiết kiệm token).
 
 ## Sau khi xong
 
@@ -134,23 +101,7 @@ Vẫn áp dụng *Nguyên tắc hỏi* ở trên (hỏi bằng tool, đề xuấ
 
 **Ghi `.claude/tasks/{taskid}/request.md`:**
 
-```markdown
-# Task: [tiêu đề ngắn]
-
-> Kind: fixbug|feat · Ngày: [YYYY-MM-DD] · Người tạo: [tên] · Ticket: [ID|URL hoặc —]
-
-## Mô tả
-[fixbug: actual vs expected + cách tái hiện/log; feat: thay đổi cụ thể + nơi áp dụng + ví dụ]
-
-## Acceptance
-- [ ] ...
-
-## Non-goals
-- ... (bỏ mục nếu không có)
-
-## Open questions
-- ❓ ... (bỏ mục nếu không có)
-```
+Template: `templates/request.md` trong thư mục skill này — Read ngay trước khi ghi file (nhánh TASK).
 
 **Tracker:** nhánh TASK **không** gọi `msdlc:tracking … todo` — `/deliver` sẽ claim thẳng ticket sang `planning` khi bắt đầu. Nếu profile bật **poll** và ticket đang nằm ở cột intake của board → nhắc người dùng: *"Ticket này `tracking-poll` sẽ tự nhặt — không cần chạy tay; nếu vẫn muốn chạy tay thì `/deliver {taskid}` sẽ claim trước để poll không nhặt trùng."*
 

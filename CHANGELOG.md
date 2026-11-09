@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.10.0] — 2026-11-09
+
+### Changed — tối ưu token (nhóm A)
+
+- **`shared/agent-memory.md` rút từ ~140 dòng (11.6KB) xuống ~40 dòng.** Bỏ phần lặp với cơ chế `memory: local` có sẵn của Claude Code. Agent mặc định **không đọc** file này; chỉ đọc khi định ghi một memory không hiển nhiên. Mục memory trong mọi agent gom thành 1 đoạn (kèm gợi ý điều đáng ghi riêng từng agent), bỏ danh sách "Examples of what to record" vốn mâu thuẫn với quy tắc "không lưu convention/kiến trúc". Dự án đã init trước đây vẫn giữ bản cũ (init không ghi đè) — xoá `.claude/shared/agent-memory.md` rồi chạy lại `/msdlc:init` nếu muốn bản gọn; dù vậy agent vẫn chỉ đọc file khi định ghi memory.
+- **Gọi `msdlc:tracking` / `msdlc:git-flow` tiết kiệm:** bên gọi pre-check tracker + `Ticket:` một lần đầu pipeline; tắt → không invoke skill lần nào (trước đây invoke ở mỗi mốc chỉ để no-op, mỗi lần nạp lại ~10KB). Bật → invoke một lần, các mốc sau làm theo body đã có trong context. Quy ước nằm trong `skills/tracking/SKILL.md` (vẫn là nơi duy nhất chứa logic sync).
+- **Tách template ra file riêng, chỉ Read khi tới bước ghi:** `skills/deliver-story/templates/{report,execution-report}.md`, `skills/deliver-task/templates/report.md`, `skills/spec/templates/{requirement,request}.md`. Nội dung template không đổi.
+- **Mọi agent trả lời cuối gọn khi pipeline gọi:** chỉ block JSON theo contract + 3–5 dòng tóm tắt; chi tiết nằm trong file artifact. `qc-executor` không in QC report văn xuôi trong pipeline (orchestrator tự ghi execution report từ JSON). Contract JSON không đổi.
+- **Rút gọn `description` của 12 agent và 6 skill** (bỏ few-shot `<example>`, ~25KB → ~6KB) — phần này được nạp vào mọi session có cài plugin.
+
 ## [0.9.1] — 2026-11-09
 
 ### Changed

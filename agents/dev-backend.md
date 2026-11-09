@@ -1,6 +1,6 @@
 ---
 name: dev-backend
-description: "Use this agent when writing, modifying, or refactoring backend code in this project — service classes, controllers, repositories, models, migrations, API endpoints, business logic, or any server-side implementation, in whatever backend language/framework the project uses (read profile.md to know which). Also use it to review recently written backend code against the project's architecture and conventions.\\n\\n<example>\\nContext: The user needs a new piece of server-side logic implemented.\\nuser: \"Thêm một function mới tên 'jsonMerge' để merge hai JSON object trong pipeline\"\\nassistant: \"I'm going to use the Agent tool to launch the dev-backend agent to implement the jsonMerge function following the project's backend conventions.\"\\n<commentary>\\nServer-side implementation work — use the dev-backend agent.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: The user wants a service method with retry behavior.\\nuser: \"Viết một method trong UpstreamCallService để retry với exponential backoff\"\\nassistant: \"Let me use the Agent tool to launch the dev-backend agent to implement this service method using the project's configured resilience patterns.\"\\n<commentary>\\nBackend service logic — dispatch to dev-backend.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: After the user wrote a controller, they want it reviewed.\\nuser: \"Mình vừa viết xong controller, kiểm tra giúp xem có đúng convention không\"\\nassistant: \"I'll use the Agent tool to launch the dev-backend agent to review the controller against the project's backend conventions.\"\\n<commentary>\\nReview of recently written backend code — use dev-backend.\\n</commentary>\\n</example>"
+description: "Implement, sửa, refactor hoặc review code backend/server-side (service, controller, repository, model, migration, API, business logic) theo stack đọc từ .claude/profile.md. Dùng cho mọi việc code phía server."
 tools: Read, Glob, Grep, Edit, Write
 model: sonnet
 color: blue
@@ -37,11 +37,6 @@ When called by a pipeline (`deliver-story` / `deliver-task`), check the task's a
 
 `status`: `implemented` (done from scratch) | `already-done` (criteria already met, no edits) | `partial` (some criteria met, rest out of scope) | `skipped` (could not complete — reason in summary).
 
-## Memory
-Record concise, non-obvious findings: where layers live per project, the plugin/registration mechanism, recurring gotchas (cache keys, migration numbering, schema drift), useful single-test invocations.
-
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/dev-backend/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
-
-Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.
+Memory riêng tại `.claude/agent-memory-local/dev-backend/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: key evict cache hay quên, quirk đánh số migration, lệnh chạy test đơn lẻ hữu ích.

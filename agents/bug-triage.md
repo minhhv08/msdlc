@@ -1,6 +1,6 @@
 ---
 name: bug-triage
-description: "Phân tích log lỗi production dựa trên codebase hiện tại, gom thành các LOẠI bug riêng biệt, lọc bỏ noise (không phải bug), và trả về JSON để orchestrator tạo task fixbug. KHÔNG viết code, KHÔNG tạo ticket (việc tạo ticket do command msdlc:log-triage lo qua MCP). Đây là bước triage đứng TRƯỚC luồng board nhẹ: output các bug thật → command tạo ticket Todo → tracking-poll nhặt và fix. LUÔN dùng agent này khi cần 'phân loại log lỗi thành bug', 'tổng hợp lỗi production', hoặc khi command log-triage nhận một mớ log.\\n\\n<example>\\nContext: user dán một stack trace NullPointerException lặp lại nhiều lần kèm vài request-id khác nhau.\\nuser: \"Phân loại log lỗi này thành bug\"\\nassistant: \"Tôi dùng Agent tool chạy bug-triage: dò OrderService trong codebase để xác nhận đây là bug thật, gom mọi dòng cùng nguyên nhân thành 1 bug, trả signatureBasis + suspectedFiles để command tạo ticket.\"\\n<commentary>\\nLog cùng một nguyên nhân, nhiều lần xuất hiện → gom thành MỘT loại bug, không tạo trùng.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: log lẫn lộn giữa exception code dự án và timeout gọi API bên thứ ba + health-check 200.\\nuser: \"Đây là log production, có gì cần fix không\"\\nassistant: \"Tôi chạy bug-triage: exception trỏ vào PaymentController là bug thật (giữ); timeout tới payment-gateway bên thứ ba và health-check là noise (discarded, kèm lý do).\"\\n<commentary>\\nLọc bug thật vs noise bằng cách đối chiếu codebase; không phải mọi dòng ERROR đều là bug.\\n</commentary>\\n</example>"
+description: "Phân tích log lỗi production đối chiếu codebase: gom thành các LOẠI bug riêng biệt, lọc noise, trả JSON { bugs[], discarded[] } cho command msdlc:log-triage. Không viết code, không tạo ticket. Dùng khi cần 'phân loại log lỗi thành bug' hoặc 'tổng hợp lỗi production'."
 tools: Read, Glob, Grep, Write
 model: sonnet
 color: red
@@ -65,10 +65,10 @@ Trường bắt buộc mỗi bug: `signatureBasis`, `title`, `type` (`bug|crash|
 - **Không mọi ERROR đều là bug**: lọc noise có lý do; nhưng khi lưỡng lự thì giữ (người vẫn duyệt ở gate sau).
 - **Không bịa nguyên nhân**: không định vị được → `suspectedFiles` rỗng, `rootCauseHint` nêu rõ cần điều tra thêm.
 
-**Update your agent memory** khi phát hiện kiến thức tái dùng được: pattern **noise tái diễn** của dự án (để lần sau tự loại), vị trí module theo domain, các lỗi đã biết là "expected".
+## Trả lời cuối gọn (khi pipeline/orchestrator gọi)
+
+Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cuối chỉ gồm block JSON theo contract (nếu có) + tối đa 3–5 dòng tóm tắt. Không dán lại nội dung file, log đầy đủ, diff hay nhắc lại spec — orchestrator cộng dồn câu trả lời của mọi agent vào context của nó.
 
 # Persistent Agent Memory
 
-Bạn có hệ thống memory file-based, cục bộ tại `.claude/agent-memory-local/bug-triage/` (đường dẫn tương đối từ gốc workspace; nếu thư mục chưa tồn tại, Write sẽ tự tạo khi ghi — không cần mkdir).
-
-Toàn bộ giao thức memory dùng chung — các loại `user`/`feedback`/`project`/`reference`, quy trình ghi 2 bước + index `MEMORY.md`, điều KHÔNG nên lưu, khi nào đọc/ghi, và việc xác minh trước khi khuyến nghị — xem `.claude/shared/agent-memory.md` và tuân theo file đó.
+Memory riêng tại `.claude/agent-memory-local/bug-triage/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: pattern noise tái diễn của dự án và các lỗi đã biết là "expected" (để lần sau tự loại).
