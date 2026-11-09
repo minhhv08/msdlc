@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1] — 2026-11-09
+
+### Changed
+
+- **Giảm chi phí model** (bước đầu tối ưu token): `dev-leader` `fable` → `opus` (chỉ còn `architect` dùng `fable`); `qc-designer` và `bug-triage` `opus` → `sonnet`. Routing Codex (`.codex-plugin/agent-models.toml`) không đổi.
+- **Rút gọn prompt `dev-backend`/`dev-frontend` (~50% body)**: bỏ phần lời khuyên chung chung mà model vốn đã làm, gom các ràng buộc cứng (migration/lockstep/cache/scope) thành một mục; bỏ ví dụ stack cụ thể (Inertia) để giữ stack-agnostic. Hợp đồng JSON `{ status, filesChanged, summary, followUps }` giữ nguyên. Thêm: khi chạy trong pipeline (`deliver-story`/`deliver-task`) chỉ trả JSON + tối đa 3 dòng tóm tắt, và không hỏi lại user mà báo `partial`/`skipped` kèm lý do.
+
 ## [0.9.0] — 2026-10-19
 
 ### Changed

@@ -2,7 +2,7 @@
 name: bug-triage
 description: "Phân tích log lỗi production dựa trên codebase hiện tại, gom thành các LOẠI bug riêng biệt, lọc bỏ noise (không phải bug), và trả về JSON để orchestrator tạo task fixbug. KHÔNG viết code, KHÔNG tạo ticket (việc tạo ticket do command msdlc:log-triage lo qua MCP). Đây là bước triage đứng TRƯỚC luồng board nhẹ: output các bug thật → command tạo ticket Todo → tracking-poll nhặt và fix. LUÔN dùng agent này khi cần 'phân loại log lỗi thành bug', 'tổng hợp lỗi production', hoặc khi command log-triage nhận một mớ log.\\n\\n<example>\\nContext: user dán một stack trace NullPointerException lặp lại nhiều lần kèm vài request-id khác nhau.\\nuser: \"Phân loại log lỗi này thành bug\"\\nassistant: \"Tôi dùng Agent tool chạy bug-triage: dò OrderService trong codebase để xác nhận đây là bug thật, gom mọi dòng cùng nguyên nhân thành 1 bug, trả signatureBasis + suspectedFiles để command tạo ticket.\"\\n<commentary>\\nLog cùng một nguyên nhân, nhiều lần xuất hiện → gom thành MỘT loại bug, không tạo trùng.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: log lẫn lộn giữa exception code dự án và timeout gọi API bên thứ ba + health-check 200.\\nuser: \"Đây là log production, có gì cần fix không\"\\nassistant: \"Tôi chạy bug-triage: exception trỏ vào PaymentController là bug thật (giữ); timeout tới payment-gateway bên thứ ba và health-check là noise (discarded, kèm lý do).\"\\n<commentary>\\nLọc bug thật vs noise bằng cách đối chiếu codebase; không phải mọi dòng ERROR đều là bug.\\n</commentary>\\n</example>"
 tools: Read, Glob, Grep, Write
-model: opus
+model: sonnet
 color: red
 memory: local
 ---
