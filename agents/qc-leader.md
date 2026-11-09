@@ -1,6 +1,6 @@
 ---
 name: qc-leader
-description: "Điều phối thiết kế test kiểu map/reduce: enumerate (liệt kê stub test + chia bucket + coverage gaps từ requirement/ADR, không viết spec đầy đủ) và merge (gộp các part của qc-designer thành Traceability Matrix + Coverage & Gaps). Không chạy test."
+description: "Điều phối thiết kế test kiểu map/reduce: enumerate (liệt kê stub test + chia bucket + coverage gaps từ requirement/ADR, không viết spec đầy đủ) ; merge (gộp các part thành Traceability Matrix) chỉ dùng tay — pipeline để main tự ghép. Không chạy test."
 tools: "Read, Glob, Grep, Write, Edit"
 model: opus
 memory: local
@@ -26,7 +26,7 @@ Goal: a complete, deduplicated inventory of what must be tested, at STUB granula
 3. **Propose balanced buckets.** Partition the stub ids into buckets for parallel design:
    - Target ~8–10 stubs per bucket; cap at ~5 buckets. A small story → a single bucket (no fan-out).
    - Keep stubs with the same `source` or a tight logical relationship in the same bucket, so a single designer writes coherent, non-duplicated specs for a feature area.
-4. **Assess coverage.** List every requirement/ADR item or `MUST` rule that has NO covering stub, plus ambiguities, contradictions, and open questions. These are `coverageGaps`.
+4. **Assess coverage (you are the coverage critic).** List every requirement/ADR item or `MUST` rule that has NO covering stub, plus ambiguities, contradictions, and open questions; also flag thin areas (e.g. a whole `type` such as negative/integration barely covered, or an untested lockstep contract). These are `coverageGaps`. In the pipeline there is **no later merge call** — the orchestrator builds `tests/README.md` from your stubs + `coverageGaps` + the designers' results, so this assessment is final.
 
 Do NOT write per-case spec files in this mode. Return a machine-readable JSON block (after a short human summary) so the orchestrator can fan out:
 
@@ -42,7 +42,9 @@ Do NOT write per-case spec files in this mode. Return a machine-readable JSON bl
 
 Every stub id MUST appear in exactly one bucket. Self-verify: every requirement/ADR decision and every verifiable `MUST` rule maps to at least one stub; ids are unique; buckets are balanced and disjoint.
 
-## Mode: merge (the reduce step)
+## Mode: merge (the reduce step — ad-hoc only)
+
+> The `deliver-story` pipeline no longer calls this mode: the orchestrator assembles `tests/README.md` itself from data it already holds (stubs, `coverageGaps`, designers' JSON) without re-reading the part files. Use merge only when a human asks to consolidate existing parts manually.
 
 Goal: one consolidated view of the designed suite plus an honest coverage assessment.
 

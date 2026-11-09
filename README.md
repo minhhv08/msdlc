@@ -32,7 +32,7 @@ Mỗi agent là một vai trò AI chuyên biệt — được gọi qua `Agent t
 | `dev-leader` | Đọc `adr.md` + `requirement.md`, vỡ thành danh sách task atomic có dependency graph, ghi ra `tasks/`. |
 | `dev-backend` | Implement code server-side (bất kỳ ngôn ngữ/framework theo profile): service, controller, repository, migration, API endpoint… |
 | `dev-frontend` | Implement UI web theo task spec — đọc profile để biết framework/component convention của dự án. |
-| `qc-leader` | Điều phối thiết kế test theo map/reduce: *enumerate* (liệt kê test-case stub + chia bucket cân bằng + coverage) và *merge* (gộp các part → Traceability Matrix + Coverage & Gaps ở `tests/README.md`). Đối xứng với `dev-leader`. |
+| `qc-leader` | Điều phối thiết kế test theo map/reduce: *enumerate* (liệt kê test-case stub + chia bucket cân bằng + đánh giá coverage). Chế độ *merge* chỉ dùng tay — pipeline để main tự ghép `tests/README.md`. Đối xứng với `dev-leader`. |
 | `qc-designer` | Thiết kế test case (positive/negative/boundary/edge) từ spec + ADR, ghi ra `tests/`. Chế độ *design-subset*: flesh-out một bucket stub do `qc-leader` giao (fan-out song song); chế độ *full*: tự làm trọn gói khi gọi lẻ. |
 | `qc-executor` | Chạy test suite thực tế bằng lệnh trong profile, báo pass/fail/infraMissing, auto-fix ≤2 vòng. |
 | `reviewer` | Review diff theo nhiều chiều (đúng spec, lockstep, logic, convention & **rule dự án**, test alignment, readability); vi phạm rule `MUST` → blocking (kèm `ruleId`). Trả verdict có cấu trúc. |
@@ -47,7 +47,7 @@ Skills là lệnh `/tên` người dùng gọi trực tiếp trong Claude Code.
 |---|---|---|
 | `spec` | `/spec` | **Phân loại trước** yêu cầu là STORY hay TASK để tiết kiệm token. STORY → hỏi thẳng vào chức năng (tối đa 5 lượt, hỏi trực tiếp có đáp án gợi ý) ra `.claude/stories/{id}/requirement.md`; TASK (feat/fixbug nhỏ) → một lượt hỏi gọn ra `.claude/tasks/{taskid}/request.md` (`taskid` = ID ticket hoặc local `T-{NNN}`). |
 | `deliver` | `/deliver {id}` | Tự định tuyến theo id. Story: architect → **[GATE duyệt ADR]** → deliver-story. Task: task-planner → **[GATE duyệt plan]** → deliver-task (không dev-leader, không QC map/reduce). |
-| `deliver-story` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → qc-leader merge → reviewer → qc-executor + security-auditor → chronicler. |
+| `deliver-story` | (nội bộ) | Điều phối Phase 1–5 sau khi ADR đã duyệt: (dev-leader ∥ qc-leader enumerate) → dev (song song) ∥ qc-designer ×N (fan-out từ Wave 1) → main tự ghép `tests/README.md` → reviewer → qc-executor + security-auditor → chronicler. |
 | `deliver-task` | (nội bộ) | **Build GỌN** cho task board nhỏ đã có `plan.md` duyệt: implement song song theo subtask file-disjoint (dev-backend/dev-frontend) → reviewer → qc-executor + security-auditor → chronicler → `report.md`. Không vỡ task bằng dev-leader, không QC map/reduce. Gọi bởi `tracking-poll` hoặc `/deliver` (luồng TASK). |
 | `tracking` | `/msdlc:tracking {id} {phase} [kind]` | Đồng bộ trạng thái sang cột board ngoài (Jira/Asana/Linear/Monday/Notion) tại một mốc (`todo`/`planning`/`validate`/`approved`/`in-progress`/`review`). `kind` ∈ `story` (mặc định, luồng thủ công — artifact `.claude/stories/`, comment ADR) \| `task` (luồng board nhẹ — artifact `.claude/tasks/`, comment plan). Được `spec`/`deliver`/`deliver-story`/`tracking-poll` gọi tự động; tự **no-op** nếu dự án không cấu hình tracker. Không bao giờ tự chuyển Done. |
 | `git-flow` | `/msdlc:git-flow {taskid} {sync\|start\|finish}` | (luồng board, opt-in) `sync`: pull đúng nhánh TRƯỚC khi phân tích (task chưa có nhánh riêng → nhánh base; đã có → chính nhánh task đó), KHÔNG tạo nhánh. `start`: tách nhánh riêng cho mỗi task từ base branch. `finish`: build xong thì một commit (qua `msdlc:commit`) + push + tạo MR/PR + trả link để comment vào ticket. Auto-create MR qua `gh`/`glab` nếu có, không thì fallback link tạo MR tay. Tự **no-op** nếu tắt cờ / không phải git repo. **Máy không bao giờ tự merge.** |
@@ -184,7 +184,7 @@ flowchart TB
     subgraph P2["Phase 2 — Implement ∥ thiết kế test"]
         W["dev-backend ∥ dev-frontend<br/>Wave 1..n theo file-disjoint"]
         QD["qc-designer × N — design-subset<br/>mỗi bucket một agent, fan-out từ Wave 1"]
-        QL2["qc-leader — merge<br/>tests/README.md (Traceability Matrix)"]
+        QL2["main tự ghép tests/README.md<br/>(Traceability Matrix từ stub + JSON designer)"]
         QD --> QL2
     end
     DL --> W
@@ -204,12 +204,12 @@ flowchart TB
 Ba trục song song hoá chính:
 
 - **Wave file-disjoint** — các dev task có `touchesFiles` rời nhau chạy cùng lúc; đụng file chung thì xếp wave sau.
-- **Map/reduce thiết kế test** — `qc-leader` liệt kê stub + chia bucket ngay ở Phase 1, N `qc-designer` flesh-out song song với dev từ Wave 1, `qc-leader` merge lại; đến Phase 3 test suite đã sẵn.
+- **Map/reduce thiết kế test** — `qc-leader` liệt kê stub + chia bucket ngay ở Phase 1, N `qc-designer` flesh-out song song với dev từ Wave 1, main tự ghép Traceability Matrix từ stub + JSON của designer (không gọi lại qc-leader); đến Phase 3 test suite đã sẵn.
 - **QC ∥ Security** — mỗi project một `qc-executor`, chạy cùng lúc với `security-auditor`; lỗi test hoặc finding Critical/High → dev fix rồi chạy lại, ngân sách chung ≤ 2 vòng.
 
 Gating tiết kiệm token (`skills/deliver-story/gating.md`, override qua mục `## Pipeline` của `.claude/msdlc.md` — đặt `always` để chạy như cũ):
 
-- **Story nhỏ** (≤ 8 mục requirement/acceptance, ≤ 2 project) → bỏ `qc-leader`, chỉ một `qc-designer` chế độ full; story lớn mới dùng map/reduce (1 bucket thì bỏ bước merge).
+- **Story nhỏ** (≤ 8 mục requirement/acceptance, ≤ 2 project) → bỏ `qc-leader`, chỉ một `qc-designer` chế độ full; story lớn mới dùng map/reduce (không còn bước qc-leader merge).
 - **`security-auditor`** chỉ chạy khi diff chạm vùng nhạy cảm (auth, crypto, secret, upload, endpoint, truy vấn động, deserialize, dependency…); còn lại `reviewer` kiêm checklist bảo mật nhanh (`securityLite`).
 - **`chronicler`** chỉ chạy khi thay đổi ảnh hưởng tài liệu (public API, config/CLI, build, hoặc docs đang nhắc tới thứ vừa đổi).
 - **`dev-leader`** gom task theo cụm việc (thường ≤ 3 task/project), mỗi task file có mục *Context* tự đủ nên dev không phải đọc lại cả ADR.

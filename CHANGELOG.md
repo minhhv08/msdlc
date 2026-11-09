@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.15.0] — 2026-11-09
+
+### Changed — bỏ bước `qc-leader` merge trong pipeline
+
+- **Main tự ghép `tests/README.md`** ở nhánh map/reduce thay vì gọi lại `qc-leader` (opus) chỉ để đọc lại toàn bộ `testcases-part-*.md`. Traceability Matrix dựng từ stub (id/title/source/type/priority) của bước enumerate; Coverage & Gaps = `coverageGaps` + `gaps` của từng designer + stub chưa thiết kế + bucket lỗi; thêm bảng phân bố theo `type`. Không đọc lại file part (chỉ Grep id khi JSON designer thiếu để đối chiếu).
+- **`qc-designer` design-subset trả thêm `designed[]` và `gaps[]`** (contract mở rộng, field mới tuỳ chọn về mặt tương thích).
+- **`qc-leader` enumerate kiêm vai coverage critic** (vùng `type` mỏng, lockstep chưa có test) vì không còn lượt merge sau. Chế độ merge giữ lại cho dùng tay.
+- Lý do không gộp `dev-leader` + `qc-leader`: chỉ tiết kiệm một lượt overhead (~2–5% story lớn) nhưng mất song song Phase 1, làm test bám theo cách vỡ task (mất tính độc lập), và context agent gộp phình vì phần dò code.
+
 ## [0.14.0] — 2026-11-09
 
 ### Changed — tối ưu token (đợt 6)

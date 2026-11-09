@@ -81,7 +81,7 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 ### Thiết kế test song song (chạy trong lúc dev implement)
 
 - **Nhánh nhỏ (G3):** một `qc-designer` chế độ full phát ở Wave 1, ghi `tests/README.md`, trả `{ file, casesWritten, gaps, followUps }` — `gaps` đưa vào `followUps` của Phase 5.
-- **Nhánh map/reduce:** Read `qc-mapreduce.md` trong thư mục skill này (enumerate → fan-out `qc-designer` × N → merge) — chỉ đọc khi đi nhánh này.
+- **Nhánh map/reduce:** Read `qc-mapreduce.md` trong thư mục skill này (enumerate → fan-out `qc-designer` × N → main tự ghép `tests/README.md`, không gọi lại qc-leader) — chỉ đọc khi đi nhánh này.
 
 ---
 

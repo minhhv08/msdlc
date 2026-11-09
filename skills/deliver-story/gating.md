@@ -43,7 +43,7 @@ Không chạy → report ghi `docs: skipped (không có thay đổi ảnh hưở
 Quyết định **trước Phase 1**, chỉ từ `requirement.md` + `adr.md`. `auto`:
 
 - **Story nhỏ** — mục Functional requirements + Acceptance của requirement cộng lại ≤ 8 mục **và** ADR chỉ chạm ≤ 2 project → **bỏ `qc-leader`**. Ở Wave 1 phát **một `qc-designer` chế độ full**, chỉ định file output `.claude/stories/{id}/tests/README.md` (case + Traceability Matrix + Coverage & Gaps trong một file); trả `{ file, casesWritten, gaps, followUps }`.
-- **Story lớn** (ngược lại, hoặc `qc-design: always-mapreduce`) → map/reduce như cũ. Nếu `qc-leader` enumerate trả **đúng 1 bucket** → không gọi `qc-leader` merge: main tự ghi `tests/README.md` gọn (bảng `id → source` từ stub + `coverageGaps`).
+- **Story lớn** (ngược lại, hoặc `qc-design: always-mapreduce`) → map/reduce như cũ. Không còn bước `qc-leader` merge: main tự ghép `tests/README.md` từ stub + `coverageGaps` + JSON của designer (xem `qc-mapreduce.md`).
 
 ## G4 — model theo lần gọi (Claude Code)
 
