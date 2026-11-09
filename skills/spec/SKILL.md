@@ -26,8 +26,9 @@ Dựa trên mô tả ban đầu của người dùng (+ dò nhanh codebase bằn
 - **Báo kết quả trong 1 dòng kèm lý do** (vd *"Mình xếp đây là TASK (fixbug trong 1 module, không cần quyết định kiến trúc) → đi luồng nhẹ. Muốn làm story đầy đủ thì nói nhé."*) rồi đi tiếp ngay theo nhánh đã chọn — không chờ xác nhận riêng; người dùng có thể đổi ở bất kỳ lượt nào.
 - Đang ở nhánh TASK mà câu trả lời lộ ra độ phức tạp của story (cần contract mới, nhiều luồng, quyết định kiến trúc) → nói rõ và **chuyển sang nhánh STORY**, tận dụng câu trả lời đã có (không hỏi lại).
 
-→ **STORY**: làm theo *Nguyên tắc hỏi* → *Câu hỏi chức năng* → *Output* bên dưới.
-→ **TASK**: làm theo mục **Nhánh TASK** ở cuối file.
+→ **STORY**: Read `story.md` trong thư mục skill này (checklist cần chốt + output `requirement.md`), hỏi theo *Nguyên tắc hỏi* bên dưới.
+→ **TASK**: Read `task.md` trong thư mục skill này (brief gọn + output `request.md`), hỏi theo *Nguyên tắc hỏi* bên dưới.
+Chỉ đọc file của nhánh đã chọn (chuyển nhánh giữa chừng → đọc thêm file nhánh kia).
 
 ## Nguyên tắc hỏi
 
@@ -43,66 +44,6 @@ Dựa trên mô tả ban đầu của người dùng (+ dò nhanh codebase bằn
 
 5. **Xác nhận bằng một câu hỏi cuối.** Gọi `AskUserQuestion` một câu *"Spec đã đúng chưa?"* với option `Đúng, ghi file (Recommended)` (đặt bản tóm tắt bullet — luồng chức năng + quy tắc + acceptance + non-goals — trong `preview`) và `Cần sửa` (người dùng gõ chỗ sai qua "Other"/ghi chú). Có thể gộp câu xác nhận này vào lần gọi cuối nếu còn chỗ.
 
-## Điểm cần chốt (checklist nội bộ — KHÔNG in ra cho người dùng)
-
-Dùng để xác định câu nào còn thiếu; điểm nào đã rõ từ mô tả/codebase thì bỏ qua:
-
-- **Luồng chức năng:** vai trò nào làm thao tác gì → hệ thống phản hồi gì (3–7 luồng ở vòng đầu).
-- **Dữ liệu:** input/field + validate; output/hiển thị/API trả về.
-- **Quy tắc nghiệp vụ & phân quyền:** điều kiện, công thức, trạng thái chuyển đổi; ai được làm gì.
-- **Trường hợp biên & lỗi:** rỗng/trùng/vượt giới hạn, lỗi tích hợp → xử lý thế nào.
-- **Tích hợp & ràng buộc kỹ thuật:** hệ thống/module/API đang có phải đụng tới; bảo mật/dữ liệu nhạy cảm/hiệu năng — chỉ khi liên quan.
-- **Ngoài phạm vi:** cái gì KHÔNG làm ở bản này (đưa ứng viên dễ bị scope creep thành option `multiSelect`).
-- **Nghiệm thu:** 3–7 tiêu chí kiểm được — tự đề xuất từ các luồng, người dùng duyệt ở câu xác nhận cuối.
-
-## Output: .claude/stories/{id}/requirement.md
-
-Sau khi người dùng xác nhận bản tóm tắt, ghi spec ra file **`.claude/stories/{id}/requirement.md`** (tính từ thư mục gốc dự án), trong đó `{id}` là **số thứ tự kế tiếp, padding 3 chữ số** (`001`, `002`, …):
-
-- Tìm các thư mục con đang có trong `.claude/stories/`, lấy số lớn nhất rồi +1. Nếu `.claude/stories/` chưa tồn tại hoặc rỗng → dùng `001`.
-- Mỗi yêu cầu (mỗi lần chạy skill) là **một thư mục `.claude/stories/{id}/` riêng**, để các bước sau (architecture, vỡ task) ghi thêm file vào cùng thư mục đó.
-- Tạo thư mục nếu chưa có. KHÔNG ghi đè thư mục/id đã tồn tại — luôn cấp id mới.
-
-Nội dung file theo ĐÚNG template sau:
-
-Template: `templates/requirement.md` trong thư mục skill này — Read ngay trước khi ghi file (nhánh STORY).
-
-Quy tắc khi điền:
-- Mỗi mục phải dựa trên câu trả lời thực của người dùng. Mục nào chưa rõ → để vào "Open questions", KHÔNG bịa.
-- Giữ Scope ngắn gọn ở vòng đầu — thà ít luồng rõ ràng còn hơn nhiều luồng mơ hồ.
-- Dùng ngôn ngữ cụ thể, kiểm được; thay "nhanh" bằng con số, thay "quản lý" bằng thao tác cụ thể.
-- Mục không có nội dung thực (vd Constraints bảo mật) → ghi "—" hoặc bỏ dòng, không độn chữ.
-
 ## Gắn ticket board (nếu dự án dùng tracker)
 
-Nếu `.claude/profile.md` có mục `## Task tracker` đã cấu hình: hỏi (optional, **gộp làm một câu trong lần gọi `AskUserQuestion` đầu**, không tốn lượt riêng) story/task này có gắn ticket trên board không. Nếu có → ghi ID/URL vào trường `Ticket:` ở header; với **STORY** gọi thêm skill **`msdlc:tracking {id} todo`** để đưa ticket về cột intake (TASK không gọi — xem Nhánh TASK). Không có tracker hoặc không có ticket → **không invoke** `msdlc:tracking` (tiết kiệm token).
-
-## Sau khi xong
-
-Báo cho người dùng biết file `.claude/stories/{id}/requirement.md` đã sẵn sàng (nêu rõ `{id}` đã cấp) và đây là input cho bước tiếp theo (thiết kế kiến trúc → vỡ task). Bước tiếp là **`/deliver {id}`** (architect → GATE duyệt ADR → build).
-
----
-
-## Nhánh TASK — brief gọn cho luồng nhẹ
-
-Task không cần PRD: `task-planner` sẽ tự dò codebase và chốt phương án. Việc của spec chỉ là gom **đủ mô tả để không phải đoán scope** — thường 1–2 lần gọi `AskUserQuestion` là đủ, tối đa 5 lần như nhánh STORY.
-
-**Hỏi trực tiếp bằng `AskUserQuestion`** (tối đa 4 câu, đáp án đề xuất sẵn; bỏ điểm người dùng đã nói hoặc suy được từ code). Điểm cần chốt — checklist nội bộ, KHÔNG in ra:
-- *Fixbug:* hiện tượng (actual) vs mong đợi (expected); cách tái hiện / input / log lỗi nếu có; vùng code/màn hình/API liên quan (nếu biết).
-- *Feat nhỏ:* thay đổi cụ thể là gì; áp dụng ở đâu (màn hình/API/module); ví dụ input → output mong muốn.
-- *Cả hai:* tiêu chí "xong" (1–3 acceptance kiểm được); có gì rõ ràng KHÔNG làm không.
-
-Vẫn áp dụng *Nguyên tắc hỏi* ở trên (hỏi bằng tool, đề xuất sẵn, đào sâu câu mơ hồ, đừng tự bịa) — chỗ chưa rõ ghi vào Open questions (task-planner sẽ đưa ra lúc duyệt plan). **Không** hỏi bối cảnh/why-now/metric/rủi ro dự án. Không cần bước phản chiếu riêng: brief ngắn — ghi luôn rồi cho người dùng xem.
-
-**`{taskid}`:**
-- Có ticket board (xem mục *Gắn ticket board* — gộp làm một câu trong cùng lần gọi trên) → `{taskid}` = **ID ticket** (vd `PROJ-123`), cùng convention với luồng board.
-- Không có ticket → id local **`T-{NNN}`**: lấy số lớn nhất trong các thư mục `.claude/tasks/T-*` rồi +1, padding 3 chữ số (`T-001`, `T-002`, …).
-- Thư mục `.claude/tasks/{taskid}/` đã tồn tại → KHÔNG ghi đè; báo người dùng (ticket đã được luồng board/lần trước xử lý) và hỏi muốn dùng tiếp hay không.
-
-**Ghi `.claude/tasks/{taskid}/request.md`:**
-
-Template: `templates/request.md` trong thư mục skill này — Read ngay trước khi ghi file (nhánh TASK).
-
-**Tracker:** nhánh TASK **không** gọi `msdlc:tracking … todo` — `/deliver` sẽ claim thẳng ticket sang `planning` khi bắt đầu. Nếu profile bật **poll** và ticket đang nằm ở cột intake của board → nhắc người dùng: *"Ticket này `tracking-poll` sẽ tự nhặt — không cần chạy tay; nếu vẫn muốn chạy tay thì `/deliver {taskid}` sẽ claim trước để poll không nhặt trùng."*
-
-**Sau khi xong:** báo `.claude/tasks/{taskid}/request.md` đã sẵn sàng và bước tiếp là **`/deliver {taskid}`** (luồng nhẹ: `task-planner` lập plan → **[GATE duyệt plan]** → `deliver-task`).
+Nếu `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`) có mục `## Task tracker` đã cấu hình: hỏi (optional, **gộp làm một câu trong lần gọi `AskUserQuestion` đầu**, không tốn lượt riêng) story/task này có gắn ticket trên board không. Nếu có → ghi ID/URL vào trường `Ticket:` ở header; với **STORY** gọi thêm skill **`msdlc:tracking {id} todo`** để đưa ticket về cột intake (TASK không gọi — xem Nhánh TASK). Không có tracker hoặc không có ticket → **không invoke** `msdlc:tracking` (tiết kiệm token).

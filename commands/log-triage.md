@@ -30,9 +30,9 @@ Lệnh chạy **một lượt rồi dừng**. Muốn chạy định kỳ thì đ
 
 ### Bước 0 — Kiểm tra cấu hình
 
-1. Đọc mục `## Task tracker` trong `.claude/profile.md`.
-   - Chưa cấu hình (thiếu tool hoặc project) → báo: *"Chưa cấu hình tracker trong profile — không có nơi tạo ticket. Chạy `/msdlc:init` để cấu hình."* rồi **dừng**.
-2. Lấy từ profile: connector MCP (Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`, Notion→`Notion`), project/board key, và **tên cột Todo** (ánh xạ `todo` trong `## Task tracker` — ticket mới phải nằm đúng cột này thì `tracking-poll` mới nhặt được; cách suy tên cột giống skill `msdlc:tracking`).
+1. Đọc mục `## Task tracker` trong `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`).
+   - Chưa cấu hình (thiếu tool hoặc project) → báo: *"Chưa cấu hình tracker trong `.claude/msdlc.md` — không có nơi tạo ticket. Chạy `/msdlc:init` để cấu hình."* rồi **dừng**.
+2. Lấy từ cấu hình tracker (msdlc.md/profile): connector MCP (Jira→`Atlassian`, Asana→`Asana`, Linear→`Linear`, Monday→`monday`, Notion→`Notion`), project/board key, và **tên cột Todo** (ánh xạ `todo` trong `## Task tracker` — ticket mới phải nằm đúng cột này thì `tracking-poll` mới nhặt được; cách suy tên cột giống skill `msdlc:tracking`).
    - Connector chưa kết nối → báo và **dừng** (không hỏi token/OAuth).
 3. **Mặc định, không cần cấu hình thêm:** issue type = `Bug`, label = `from-log`. Nếu board không có issue type `Bug` → dùng type mặc định của project hoặc hỏi người dùng một lần, không tự bịa.
 4. **Dò field BẮT BUỘC của tracker** cho issue type sẽ tạo (đúng tinh thần "hỏi chính tool, không đoán schema"):

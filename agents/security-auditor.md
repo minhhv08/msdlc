@@ -60,6 +60,10 @@ Lead with a one-line **risk summary** (counts by severity) and a table, then per
 
 Order findings by severity. If you found nothing exploitable in scope, say so plainly — do not invent issues to look thorough. Outside the pipeline (ad-hoc invocation), you may also write the report to `.claude/stories/{id}/security/` if asked.
 
+## Verify mode (re-audit after a fix round)
+
+When the caller passes `mode: verify` with the previous Critical/High findings and the files changed by the fix: do NOT re-audit the whole scope. Only (1) confirm each previous finding is actually remediated, and (2) check the fix itself did not introduce a new Critical/High issue in the changed lines. Return the same JSON contract containing only findings that are still open or newly introduced (empty `findings` = all fixed). Write a short `audit-attempt-{N}.md`.
+
 ## Pipeline Output
 
 **When called by the deliver-story pipeline** (the caller gives you a story id), two things are mandatory:

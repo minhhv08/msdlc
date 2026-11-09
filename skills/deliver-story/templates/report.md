@@ -29,6 +29,7 @@
 
 - security-auditor: ran | skipped (lý do)
 - docs (chronicler): ran | skipped (lý do)
+- models (G4): qc-executor=<model>, reviewer=<model>, …
 - test design: small (1 qc-designer full) | map/reduce
 
 ## Security

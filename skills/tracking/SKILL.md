@@ -27,7 +27,7 @@ Ví dụ: `msdlc:tracking 001 review` (luồng thủ công, story) · `msdlc:tra
 
 Mỗi lần invoke skill là nạp lại toàn bộ file này vào context, nên bên gọi tuân theo:
 
-1. **Pre-check một lần ở đầu pipeline/lượt, không invoke skill:** đọc `## Task tracker` của profile + trường `Ticket:` (story: `requirement.md`; task: `request.md` nếu có — task board không có `request.md` thì coi như có ticket). Tracker chưa cấu hình **hoặc** `Ticket:` là `—`/trống → **tracker tắt cho cả lần chạy**: bỏ qua mọi lời gọi `msdlc:tracking` còn lại, chỉ ghi một dòng *"[tracking] tắt — bỏ qua sync"* vào báo cáo cuối.
+1. **Pre-check một lần ở đầu pipeline/lượt, không invoke skill:** đọc `## Task tracker` trong `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`) + trường `Ticket:` (story: `requirement.md`; task: `request.md` nếu có — task board không có `request.md` thì coi như có ticket). Tracker chưa cấu hình **hoặc** `Ticket:` là `—`/trống → **tracker tắt cho cả lần chạy**: bỏ qua mọi lời gọi `msdlc:tracking` còn lại, chỉ ghi một dòng *"[tracking] tắt — bỏ qua sync"* vào báo cáo cuối.
 2. **Tracker bật → invoke skill đúng một lần** ở mốc đầu tiên. Các mốc sau trong cùng phiên/lượt: body skill đã có trong context → **làm theo trực tiếp với `id`/`phase`/`kind` mới, không invoke lại**. Guard Bước 1 đã qua thì chỉ cần kiểm lại connector khi lần trước lỗi kết nối.
 
 Pre-check này chỉ là đường tắt của Bước 1.1–1.2; khi đã invoke skill thì Bước 1 bên dưới vẫn là nguồn sự thật.
@@ -36,8 +36,8 @@ Pre-check này chỉ là đường tắt của Bước 1.1–1.2; khi đã invok
 
 Thực hiện tuần tự, gặp điều kiện fail nào thì **log một dòng và dừng ngay**:
 
-1. Đọc mục `## Task tracker` trong `.claude/profile.md`.
-   - Mục không tồn tại / rỗng / chưa điền tool + project → *"[tracking] Không có cấu hình tracker trong profile — bỏ qua sync."* → dừng.
+1. Đọc mục `## Task tracker` trong `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`).
+   - Mục không tồn tại / rỗng / chưa điền tool + project → *"[tracking] Không có cấu hình tracker trong `.claude/msdlc.md` — bỏ qua sync."* → dừng.
 2. **Xác định ticket theo `kind`:**
    - `kind=story` (mặc định): đọc `.claude/stories/{id}/requirement.md`, lấy trường `Ticket:` ở dòng header (`> Status: … · Ticket: <ID|URL>`). Không có ticket hoặc giá trị là `—`/trống → *"[tracking] Story {id} chưa gắn ticket — bỏ qua sync."* → dừng.
    - `kind=task`: nếu có `.claude/tasks/{id}/request.md` (task do `/spec` tạo) → lấy trường `Ticket:` ở header; `—`/trống → *"[tracking] Task {id} chưa gắn ticket — bỏ qua sync."* → dừng. Không có `request.md` (task đến từ board) → **`{id}` CHÍNH LÀ ID ticket board**, KHÔNG áp guard "chưa gắn ticket"; chỉ cần `{id}` không rỗng.
@@ -51,7 +51,7 @@ Qua hết Bước 1 nghĩa là: có tracker + có ticket + MCP sẵn sàng → t
 
 Từ `target-phase`, tìm tên status/cột thực tế trên board theo thứ tự:
 
-1. **Override trong profile** (mục `## Task tracker`, ánh xạ phase→cột). Nếu có dòng cho phase này → dùng đúng tên đó.
+1. **Override trong cấu hình** (mục `## Task tracker` của `.claude/msdlc.md`/profile, ánh xạ phase→cột). Nếu có dòng cho phase này → dùng đúng tên đó.
 2. **Detect theo keyword** từ danh sách transitions/statuses fetch được của ticket (case-insensitive, bỏ dấu). Ánh xạ phase → nhóm keyword:
    - `validate`, `review` → review-like: `review`, `qa`, `testing`, `verify`, `validate`, `staging`, `uat`
    - `in-progress` → in-progress: `progress`, `doing`, `wip`, `development`, `dev`, `đang làm`, `start`

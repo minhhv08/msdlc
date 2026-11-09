@@ -3,7 +3,7 @@ description: Cấu hình project hiện tại để dùng plugin msdlc — copy 
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 ---
 
-Bạn đang giúp user **khởi tạo cấu hình msdlc cho project hiện tại**. Plugin không tự mang cấu hình theo, nên các file sau phải tồn tại trong `.claude/` của project: `.claude/shared/agent-memory.md` (bản dùng chung), `.claude/profile.md` (đặc thù project — *facts*: stack/lệnh/path/lockstep) và `.claude/rules/` (rule theo project — *normative*: convention/kiến trúc/security/DoD/commit). Agent đọc cả ba lúc chạy.
+Bạn đang giúp user **khởi tạo cấu hình msdlc cho project hiện tại**. Plugin không tự mang cấu hình theo, nên các file sau phải tồn tại trong `.claude/` của project: `.claude/shared/agent-memory.md` (bản dùng chung), `.claude/profile.md` (đặc thù project — *facts*: stack/lệnh/path/lockstep), `.claude/msdlc.md` (cấu hình điều phối chỉ main agent đọc: tracker / git flow / pipeline gating) và `.claude/rules/` (rule theo project — *normative*: convention/kiến trúc/security/DoD/commit). Agent đọc cả ba lúc chạy.
 
 ## Bước 1 — Copy file từ plugin vào project
 
@@ -16,6 +16,14 @@ if [ -f .claude/shared/agent-memory.md ]; then
 else
   cp "$CLAUDE_PLUGIN_ROOT/shared/agent-memory.md" .claude/shared/agent-memory.md
   echo "Đã tạo .claude/shared/agent-memory.md"
+fi
+if [ -f .claude/msdlc.md ]; then
+  echo "ĐÃ CÓ .claude/msdlc.md — KHÔNG ghi đè"
+elif [ -f .claude/profile.md ] && grep -q '^## Task tracker' .claude/profile.md; then
+  echo "profile.md cũ còn mục Task tracker/Git/Pipeline — xem Bước 2e để chuyển sang .claude/msdlc.md"
+else
+  cp "$CLAUDE_PLUGIN_ROOT/shared/msdlc.template.md" .claude/msdlc.md
+  echo "Đã tạo .claude/msdlc.md từ template"
 fi
 if [ -f .claude/profile.md ]; then
   echo "ĐÃ CÓ .claude/profile.md — KHÔNG ghi đè"
@@ -70,7 +78,7 @@ Gắn `severity` hợp lý: thứ repo **ép/bắt buộc** (lint fail CI, polic
 Đây là bước **optional** — chỉ làm nếu dự án đồng bộ story với board (Jira/Asana/Linear/Monday/Notion):
 
 1. Kiểm tra các connector MCP đang connect (Atlassian/Asana/Linear/monday/Notion). Nếu có ít nhất một → **hỏi user** có muốn bật đồng bộ tracker không. (Notion: "board" = một database; "cột" = option của property Status; ticket = page.)
-2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/profile.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`). **Nhấn mạnh cột `planning`**: trong luồng board nhẹ đây là bước **claim/lock** (poll chuyển Todo→planning để nhận ticket) — nên điền rõ tên cột thật, đừng để trống, nếu không cơ chế "chỉ 1 session nhận" dễ hỏng vì detect-keyword đoán trượt.
+2. Nếu có → hỏi và điền mục `## Task tracker` trong `.claude/msdlc.md`: tool + connector, project/board key, ánh xạ tên cột cho từng mốc (planning/validate/approved/in-progress/review), cột intake + cột build-trigger cho poll, và **cờ bật poll** (mặc định `no`). **Nhấn mạnh cột `planning`**: trong luồng board nhẹ đây là bước **claim/lock** (poll chuyển Todo→planning để nhận ticket) — nên điền rõ tên cột thật, đừng để trống, nếu không cơ chế "chỉ 1 session nhận" dễ hỏng vì detect-keyword đoán trượt.
 3. Nếu không có connector nào hoặc user không dùng tracker → để trống mục này (pipeline chạy thuần local như cũ). KHÔNG hardcode, không bịa tên cột — hỏi user hoặc để skill `msdlc:tracking` tự suy theo keyword lúc chạy.
 
 Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy **luồng nhẹ** (claim ticket ở Todo → `task-planner` phân tích → comment plan → build gọn bằng `deliver-task`, dùng `.claude/tasks/{taskid}/`) — chỉ bật khi đã hiểu; loop vẫn giữ cổng duyệt (dừng ở Validate, chỉ tự build ticket ở cột Approved do người kéo). Nên chạy **một poller cho mỗi board**.
@@ -80,15 +88,19 @@ Nhắc user: bật poll (`/msdlc:tracking-poll`) là tự động mạnh, chạy
 Chỉ làm nếu dự án là git repo và user muốn poll tự tách nhánh + tạo MR cho mỗi task:
 
 1. Kiểm tra `git rev-parse` là repo. Không phải → bỏ qua mục này.
-2. Nếu có → hỏi và điền mục `## Git` trong `.claude/profile.md`:
+2. Nếu có → hỏi và điền mục `## Git` trong `.claude/msdlc.md`:
    - **Base branch**: gợi ý theo default branch detect (`git symbolic-ref refs/remotes/origin/HEAD`) — xác nhận với user (có thể là `main`/`master`/`production`).
    - **MR tool**: gợi ý theo remote (`git remote get-url origin`): github → `gh`, gitlab → `glab`, bitbucket → `bitbucket`; hoặc để trống cho auto-detect. Nếu chọn `gh`/`glab` → nhắc cần cài + auth CLI đó (không có cũng chạy được: skill fallback push + link tạo MR tay).
    - **Branch pattern / MR target**: để trống dùng mặc định (`<type>/<taskid>-<slug>`, target = base).
    - **Cờ bật git flow**: mặc định `no` (opt-in).
 3. Nhắc user: bật git flow → máy tạo nhánh + MR cho mỗi task và comment link vào ticket, **một build/lượt**, nhưng **KHÔNG tự merge** — người review MR rồi merge + đóng ticket.
 
+## Bước 2e — Chuyển cấu hình cũ sang `.claude/msdlc.md` (dự án đã init trước 0.12)
+
+Nếu `.claude/profile.md` còn các mục `## Task tracker` / `## Git` / `## Pipeline` và chưa có `.claude/msdlc.md`: đề xuất với user **di chuyển nguyên văn** ba mục đó sang `.claude/msdlc.md` (tạo từ `shared/msdlc.template.md`, thay phần tương ứng bằng nội dung cũ) rồi xoá khỏi profile — để mỗi subagent đỡ đọc phần chỉ main dùng. User không đồng ý → để nguyên (msdlc vẫn fallback đọc profile).
+
 ## Bước 3 — Hậu kiểm
 
-- Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/`, `.claude/tasks/` và `.claude/bug-triage/` vào `.gitignore` (memory + artifact story/task + ledger khử-trùng của `/msdlc:log-triage`, đều cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/` và `.claude/profile.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
+- Đề xuất thêm `.claude/agent-memory-local/`, `.claude/stories/`, `.claude/tasks/` và `.claude/bug-triage/` vào `.gitignore` (memory + artifact story/task + ledger khử-trùng của `/msdlc:log-triage`, đều cục bộ per-máy, không nên commit). **Lưu ý:** `.claude/rules/`, `.claude/profile.md` và `.claude/msdlc.md` thì NÊN commit — đây là cấu hình dùng chung cho cả team.
 - Tóm tắt cho user: đã copy file gì, đã điền mục nào của profile, rule nào được seed (kèm nguồn), mục/rule nào còn cần user xác nhận.
 - Nhắc: chạy thử một mắt xích (`/spec`, hoặc gọi `architect`/`dev-leader`) để xác nhận agent đọc được profile + rules.

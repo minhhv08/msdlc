@@ -4,7 +4,7 @@ Dùng chung cho `deliver-story` và `deliver-task`. Main tự quyết định b�
 
 ## Override theo dự án
 
-Mục `## Pipeline` trong `.claude/profile.md` (không có mục/dòng nào → `auto`):
+Mục `## Pipeline` trong `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`) (không có mục/dòng nào → `auto`):
 
 ```markdown
 ## Pipeline
@@ -12,6 +12,7 @@ Mục `## Pipeline` trong `.claude/profile.md` (không có mục/dòng nào → 
 - docs-sync: auto | always | never
 - qc-design: auto | always-mapreduce        # chỉ deliver-story
 - security-sensitive-paths: <glob/đường dẫn, tuỳ chọn>
+- model-downgrade: auto | never
 ```
 
 `always` = hành vi cũ (luôn chạy). Mọi lần bỏ qua đều ghi một dòng `skipped (lý do)` vào report — không bỏ im lặng.
@@ -43,3 +44,14 @@ Quyết định **trước Phase 1**, chỉ từ `requirement.md` + `adr.md`. `a
 
 - **Story nhỏ** — mục Functional requirements + Acceptance của requirement cộng lại ≤ 8 mục **và** ADR chỉ chạm ≤ 2 project → **bỏ `qc-leader`**. Ở Wave 1 phát **một `qc-designer` chế độ full**, chỉ định file output `.claude/stories/{id}/tests/README.md` (case + Traceability Matrix + Coverage & Gaps trong một file); trả `{ file, casesWritten, gaps, followUps }`.
 - **Story lớn** (ngược lại, hoặc `qc-design: always-mapreduce`) → map/reduce như cũ. Nếu `qc-leader` enumerate trả **đúng 1 bucket** → không gọi `qc-leader` merge: main tự ghi `tests/README.md` gọn (bảng `id → source` từ stub + `coverageGaps`).
+
+## G4 — model theo lần gọi (Claude Code)
+
+Agent tool nhận tham số `model` để ghi đè model mặc định của agent cho **một lần gọi** — không sửa định nghĩa agent. Override qua profile: `model-downgrade: auto | never` (mục `## Pipeline`; `never` = luôn dùng model mặc định).
+
+- **`qc-executor` → `haiku`** cho lần chạy đầu và các lần re-run: việc chính là chạy lệnh test từ profile và đọc kết quả. Nếu lần chạy trả `failures` mà phần chẩn đoán không rõ nguyên nhân (message mơ hồ, nghi lỗi môi trường) → lần re-run sau dùng model mặc định.
+- **`reviewer` → `sonnet`** khi diff nhỏ: tổng ≤ ~150 dòng đổi **và** ≤ 5 file **và** G1 không thấy vùng nhạy cảm. Ngược lại giữ model mặc định. Chế độ `verify` (re-review sau fix) luôn có thể dùng `sonnet`.
+- **`security-auditor` chế độ `verify` → `sonnet`** (chỉ kiểm lại finding cũ). Lần audit đầu giữ model mặc định.
+- Ghi model đã dùng cho mỗi agent vào mục `## Gating` của report.
+
+Trong Codex: bỏ qua G4, chọn model theo `.codex-plugin/agent-models.toml` như cũ.

@@ -12,6 +12,7 @@ Thực thi đúng contract của command Claude `commands/init.md`, nhưng trong
 3. Khi command nhắc tới `$CLAUDE_PLUGIN_ROOT`, hiểu là thư mục plugin `msdlc`.
 4. Nếu đang chạy trong Codex, vẫn tạo/cập nhật các artifact runtime trong dự án tiêu thụ theo convention hiện có của msdlc:
    - `.claude/profile.md`
+   - `.claude/msdlc.md`
    - `.claude/rules/*.md`
    - `.claude/shared/agent-memory.md`
 5. Không ghi đè cấu hình đã có nếu command không cho phép ghi đè.

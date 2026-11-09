@@ -36,13 +36,13 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ## Phase 2 — Code Review (reviewer, auto-fix ≤ 1 vòng)
 
-**Trước khi gọi reviewer:** Read `../deliver-story/gating.md` (tương đối từ thư mục skill này) và **áp G1** trên `filesChanged` để quyết định Phase 3 có chạy `security-auditor` không; không chạy → truyền cờ **`securityLite: true`** cho reviewer.
+**Trước khi gọi reviewer:** Read `../deliver-story/gating.md` (tương đối từ thư mục skill này), **áp G4** (model theo lần gọi cho `reviewer`/`qc-executor`/re-verify) và **áp G1** trên `filesChanged` để quyết định Phase 3 có chạy `security-auditor` không; không chạy → truyền cờ **`securityLite: true`** cho reviewer.
 
 Gọi **Agent `reviewer`** với `taskid`, **truyền kèm tập `filesChanged` gom từ Phase 1** để giới hạn scope (quan trọng khi `tracking-poll` build nhiều task tuần tự trên cùng working tree). Reviewer đọc `git diff` (lọc theo tập file đó) + `.claude/tasks/{taskid}/plan.md` + `.claude/profile.md` + `.claude/rules/`, review theo các dimensions (correctness vs plan, lockstep, logic, convention & rule, readability), ghi `.claude/tasks/{taskid}/review/review-attempt-1.md`, trả JSON `{ approved, blockingFindings, suggestions, summary }` (finding bám rule mang `ruleId`).
 
 **Xử lý:**
 - `approved: true` → tiếp Phase 3.
-- `approved: false` → gọi **Agent dev** (backend/frontend tùy file bị flag) để **chỉ sửa blocking findings, KHÔNG đổi scope** → re-run reviewer 1 lần (ghi `review-attempt-2.md`).
+- `approved: false` → gọi **Agent dev** (backend/frontend tùy file bị flag) để **chỉ sửa blocking findings, KHÔNG đổi scope**. Agent dev sửa lỗi chỉ nhận **danh sách finding/failure + các file liên quan** (không cần đọc lại task spec/ADR trừ khi finding đòi hỏi). Sau đó re-run reviewer ở **chế độ `verify`** (truyền blockingFindings cũ + `filesChanged` của lần fix; chỉ kiểm finding cũ + lỗi mới do phần sửa gây ra) (ghi `review-attempt-2.md`).
 - Sau 1 vòng: tiếp Phase 3 dù còn blocking — đưa findings còn lại vào `followUps` của Phase 4.
 
 > Ngân sách: ≤ 1 vòng fix, độc lập với ngân sách ≤ 2 vòng của Phase 3.
@@ -60,7 +60,7 @@ Phát **cùng một message** các Agent sau (scope rời nhau nên không đụ
 2. **Ghi execution report & vòng auto-fix (ngân sách ≤ 2 vòng):** sau mỗi lần chạy qc-executor, mỗi project ghi `.claude/tasks/{taskid}/tests/{project}-execution-attempt-{N}.md` (Status/Commands/Result/Infra + bảng Failures + Notes).
    - Mọi project `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
    - `infraMissing` → phần test không tự fix được, báo trung thực; vẫn xử lý security.
-   - Còn lượt mà có **test failures** hoặc finding **Critical/High** → tăng `attempt`, gọi **Agent dev** (lỗi BE→`dev-backend`, UI→`dev-frontend`) **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, chạy lại **chỉ qc-executor cho project lỗi** (và/hoặc security-auditor nếu còn finding).
+   - Còn lượt mà có **test failures** hoặc finding **Critical/High** → tăng `attempt`, gọi **Agent dev** (lỗi BE→`dev-backend`, UI→`dev-frontend`) **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, chạy lại **chỉ qc-executor cho project lỗi** (và/hoặc security-auditor ở **chế độ `verify`** — chỉ kiểm lại finding Critical/High cũ). Agent dev sửa lỗi chỉ nhận **danh sách finding/failure + các file liên quan** (không cần đọc lại task spec/ADR trừ khi finding đòi hỏi).
    - **Tối đa 2 vòng.** Sau 2 vòng vẫn còn → dừng, báo cáo failures + findings còn lại.
    - Finding `Medium`/`Low`/`Info` → không chặn, đưa vào `followUps`.
 

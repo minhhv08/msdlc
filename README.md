@@ -80,6 +80,7 @@ File dùng chung — copy vào `.claude/` của dự án tiêu thụ khi init.
 |---|---|
 | `shared/agent-memory.md` | Quy ước memory gọn (~40 dòng) dùng chung — agent chỉ đọc khi định ghi memory. |
 | `shared/profile.template.md` | Mẫu `profile.md` — nguồn sự thật cho *facts* của dự án (stack, lệnh build/test, lockstep). |
+| `shared/msdlc.template.md` | Mẫu `.claude/msdlc.md` — cấu hình điều phối **chỉ main agent đọc**: `## Task tracker`, `## Git`, `## Pipeline` (tách khỏi profile để subagent đỡ tốn token; dự án cũ để trong profile vẫn chạy). |
 | `shared/rules/*.md` | Mẫu `.claude/rules/` — nguồn *rule* theo project (`global`/`backend`/`frontend`/`security`/`testing`); mỗi rule có `id` + `severity`. |
 
 ## Cài đặt
@@ -137,6 +138,7 @@ Lệnh này copy `agent-memory.md` + tạo `profile.md` + `.claude/rules/` vào 
 mkdir -p .claude/shared .claude/rules
 cp "<msdlc>/shared/agent-memory.md" .claude/shared/agent-memory.md
 cp "<msdlc>/shared/profile.template.md" .claude/profile.md
+cp "<msdlc>/shared/msdlc.template.md" .claude/msdlc.md
 cp "<msdlc>"/shared/rules/*.md .claude/rules/
 ```
 
@@ -205,7 +207,7 @@ Ba trục song song hoá chính:
 - **Map/reduce thiết kế test** — `qc-leader` liệt kê stub + chia bucket ngay ở Phase 1, N `qc-designer` flesh-out song song với dev từ Wave 1, `qc-leader` merge lại; đến Phase 3 test suite đã sẵn.
 - **QC ∥ Security** — mỗi project một `qc-executor`, chạy cùng lúc với `security-auditor`; lỗi test hoặc finding Critical/High → dev fix rồi chạy lại, ngân sách chung ≤ 2 vòng.
 
-Gating tiết kiệm token (`skills/deliver-story/gating.md`, override qua mục `## Pipeline` của profile — đặt `always` để chạy như cũ):
+Gating tiết kiệm token (`skills/deliver-story/gating.md`, override qua mục `## Pipeline` của `.claude/msdlc.md` — đặt `always` để chạy như cũ):
 
 - **Story nhỏ** (≤ 8 mục requirement/acceptance, ≤ 2 project) → bỏ `qc-leader`, chỉ một `qc-designer` chế độ full; story lớn mới dùng map/reduce (1 bucket thì bỏ bước merge).
 - **`security-auditor`** chỉ chạy khi diff chạm vùng nhạy cảm (auth, crypto, secret, upload, endpoint, truy vấn động, deserialize, dependency…); còn lại `reviewer` kiêm checklist bảo mật nhanh (`securityLite`).
@@ -251,7 +253,7 @@ Hook exit 1 → Claude Code hủy lệnh tương ứng và hiện thông báo `[
 | **GATE** | Điểm dừng duy nhất yêu cầu user xác nhận thủ công. Luồng thủ công: sau khi `architect` tạo xong ADR. Luồng board: sau khi `task-planner` comment plan (ticket ở `Validate`) — gate = thao tác người kéo thẻ `Validate`→`Approved`. |
 | **tracker sync** | Cơ chế đồng bộ trạng thái story/task ↔ cột board ngoài, gom trong skill `msdlc:tracking` (tham số `kind` = `story`\|`task`). Opt-in qua mục `## Task tracker` của `profile.md`; tự no-op khi không cấu hình; không bao giờ tự chuyển Done. |
 | **poll** | Lệnh `/msdlc:tracking-poll` quét board một lượt, tự khởi động **luồng nhẹ** cho ticket ở cột intake/Approved (claim Todo→planning → `task-planner` → plan → build gọn bằng `deliver-task`). Lặp bằng `/loop` hoặc `schedule`. Opt-in (cờ `poll` trong profile), vẫn giữ cổng duyệt. |
-| **git flow** | (opt-in, mục `## Git` profile) Luồng poll `sync` pull đúng nhánh trước khi phân tích (chưa có nhánh task → nhánh base; đã có → nhánh task), tách một nhánh/task từ base branch, build xong commit + push + tạo MR/PR + comment link vào ticket. Gom trong skill `msdlc:git-flow`; auto-create MR qua `gh`/`glab` hoặc fallback link tạo tay. Một build/lượt, làm lần lượt từng task; **máy không tự merge** (người merge + đóng ticket). Tắt = phân tích/build thẳng branch hiện tại như cũ. |
+| **git flow** | (opt-in, mục `## Git` trong `.claude/msdlc.md`) Luồng poll `sync` pull đúng nhánh trước khi phân tích (chưa có nhánh task → nhánh base; đã có → nhánh task), tách một nhánh/task từ base branch, build xong commit + push + tạo MR/PR + comment link vào ticket. Gom trong skill `msdlc:git-flow`; auto-create MR qua `gh`/`glab` hoặc fallback link tạo tay. Một build/lượt, làm lần lượt từng task; **máy không tự merge** (người merge + đóng ticket). Tắt = phân tích/build thẳng branch hiện tại như cũ. |
 | **fixbug intake / log-triage** | Lệnh `/msdlc:log-triage` biến log lỗi production thành ticket Bug ở cột Todo để luồng board xử lý. Agent `bug-triage` gom log thành các loại bug + lọc noise; main agent khử trùng rồi tạo ticket. Bước **intake** đứng trước `tracking-poll` — chỉ đổ ticket vào Todo, không tự build/duyệt/Done. |
 | **bug-sig** | Chữ ký ổn định của một loại bug (hash của `signatureBasis`: exception type + message chuẩn hóa + top app-frame). Nhúng dạng `[bug-sig:<hash>]` trong description ticket làm **khóa khử trùng** — board là nguồn sự thật, ledger `.claude/bug-triage/ledger.md` chỉ là cache. |
 

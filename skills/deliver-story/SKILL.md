@@ -21,7 +21,7 @@ Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plug
 
 ## Gating (đọc một lần trước Phase 1)
 
-Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test) — chỉ gọi agent khi cần, override được qua mục `## Pipeline` của profile. Áp **G3 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce.
+Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test), G4 (model theo lần gọi cho `qc-executor`/`reviewer`/re-verify) — chỉ gọi agent khi cần và dùng model vừa đủ, override được qua mục `## Pipeline` của profile. Áp **G3 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce.
 
 ## Phase 1 — Plan + QC enumerate (song song)
 
@@ -78,23 +78,10 @@ Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 **An toàn:** không bao giờ chạy song song hai agent đụng cùng file → tránh ghi đè. KHÔNG dùng git worktree (thay đổi ở worktree riêng không gộp lại thành cây build được); luôn làm trên cùng working tree với tập file rời nhau.
 
-### Thiết kế test song song (map/reduce, chạy trong lúc dev implement)
+### Thiết kế test song song (chạy trong lúc dev implement)
 
-Khâu thiết kế test được cắt thành **map/reduce** để không thành đường găng của Phase 3. Ba bước, chạy song song với việc vỡ task + implement:
-
-1. **Map — `qc-leader` (enumerate).** Đã chạy **song song với `dev-leader` ở Phase 1** (không phụ thuộc task breakdown). Nó đọc `requirement.md` + `adr.md` + `profile.md` + `rules/`, **chỉ liệt kê stub** (id + title + source + type + priority — KHÔNG viết steps chi tiết), cấp **id toàn cục duy nhất**, đề xuất **bucket cân bằng**, và trả JSON:
-
-   ```json
-   { "stubs": [ { "id": "TC-001", "title": "...", "source": "REQ-3 / ADR §2", "type": "Functional|Negative|Boundary|NFR|Integration|Regression", "priority": "High|Medium|Low" } ],
-     "buckets": [ ["TC-001", "TC-004"], ["TC-002", "TC-003"] ],
-     "coverageGaps": [ "<item requirement/ADR chưa phủ / ambiguity / open question>" ] }
-   ```
-
-2. **Fan-out — `qc-designer` × N (chế độ design-subset).** Vì `buckets` đã sẵn sau Phase 1, phát fan-out **ngay ở Wave 1** (kèm cùng message với dev, xem step 3). Với **mỗi bucket** trong `buckets`, phát **một Agent `qc-designer` riêng**, truyền danh sách stub của bucket đó + **file output riêng** `.claude/stories/{id}/tests/testcases-part-{k}.md` (k = 1..N). Mỗi instance flesh-out stub thành đặc tả đầy đủ (Preconditions/Test Data/Steps/Expected/Notes), **giữ nguyên `id`/`source` từ stub**, không đẻ case ngoài stub, trả JSON `{ file, casesWritten, followUps }`. Các file part rời nhau và rời hoàn toàn với `tasks/`/code → an toàn chạy song song với nhau và với dev. Nếu chỉ có 1 bucket (story nhỏ) → chỉ 1 `qc-designer`, không fan-out thừa.
-
-3. **Reduce — `qc-leader` (merge).** Chỉ khi có ≥ 2 bucket (1 bucket → main tự ghi `tests/README.md` gọn, xem G3). Sau khi tất cả `qc-designer` design-subset xong, phát lại **Agent `qc-leader` (chế độ merge)**: đọc các `tests/testcases-part-*.md` + `coverageGaps` từ bước enumerate, ghi `.claude/stories/{id}/tests/README.md` (Traceability Matrix tổng + Coverage & Gaps), trả JSON `{ totalCases, gaps }`. Gap rõ → đưa vào `followUps` của Phase 5.
-
-> enumerate overlap với khâu vỡ task ở Phase 1; fan-out design + merge overlap với dev implement (bắt đầu ngay Wave 1). Đến Phase 3 đã có test suite + traceability sẵn.
+- **Nhánh nhỏ (G3):** một `qc-designer` chế độ full phát ở Wave 1, ghi `tests/README.md`, trả `{ file, casesWritten, gaps, followUps }` — `gaps` đưa vào `followUps` của Phase 5.
+- **Nhánh map/reduce:** Read `qc-mapreduce.md` trong thư mục skill này (enumerate → fan-out `qc-designer` × N → merge) — chỉ đọc khi đi nhánh này.
 
 ---
 
@@ -106,7 +93,7 @@ Gọi **Agent `reviewer`** với story id, **truyền kèm tập `filesChanged` 
 
 **Xử lý kết quả:**
 - `approved: true` → tiếp Phase 3.
-- `approved: false` (có `blockingFindings`) → gọi **Agent dev** (backend/frontend tùy file bị flag) để **chỉ sửa các blocking findings, KHÔNG đổi scope** → re-run reviewer 1 lần nữa (ghi `review-attempt-2.md`).
+- `approved: false` (có `blockingFindings`) → gọi **Agent dev** (backend/frontend tùy file bị flag) để **chỉ sửa các blocking findings, KHÔNG đổi scope**. Agent dev sửa lỗi chỉ nhận **danh sách finding/failure + các file liên quan** (không cần đọc lại task spec/ADR trừ khi finding đòi hỏi). Sau đó re-run reviewer ở **chế độ `verify`** (truyền blockingFindings cũ + `filesChanged` của lần fix): chỉ kiểm finding cũ đã hết chưa và phần vừa sửa có gây lỗi mới không — không review lại toàn bộ (ghi `review-attempt-2.md`).
 - Sau 1 vòng fix: tiếp Phase 3 dù còn blocking findings — đưa findings còn lại vào Phase 5 dưới dạng `followUps`.
 
 > Ngân sách: ≤ 1 vòng fix, độc lập với ngân sách ≤ 2 vòng của Phase 3.
@@ -136,7 +123,7 @@ Phát **cùng một message** tất cả Agent sau song song — chúng chạy t
    Sau khi đã ghi report:
    - Mọi project `allPassed` **và** không có finding `Critical`/`High` → xong Phase 3.
    - `infraMissing` (hạ tầng test chưa up) → phần test **không tự fix được**, báo cáo trung thực; vẫn xử lý phần security.
-   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **chỉ qc-executor cho project bị lỗi** (và/hoặc security-auditor nếu có finding chưa fix) — ghi report của lần chạy mới với `attempt` tăng lên.
+   - Còn lượt mà có **test `failures`** hoặc finding **`Critical`/`High`** → tăng `attempt`, gọi **Agent dev** (lỗi backend → `dev-backend`, lỗi UI → `dev-frontend`) để **chỉ sửa cho qua test + bịt lỗ hổng Critical/High, không đổi scope**, rồi chạy lại **chỉ qc-executor cho project bị lỗi** (và/hoặc security-auditor ở **chế độ `verify`** — chỉ kiểm lại các finding Critical/High cũ trên phần vừa sửa, không audit lại toàn bộ). Agent dev sửa lỗi chỉ nhận **danh sách finding/failure + các file liên quan** (không cần đọc lại task spec/ADR trừ khi finding đòi hỏi). — ghi report của lần chạy mới với `attempt` tăng lên.
    - **Tối đa 2 vòng fix.** Sau 2 vòng vẫn còn → dừng, báo cáo `failures` + findings còn lại.
    - Finding `Medium`/`Low`/`Info` → **không chặn**, đưa vào báo cáo Phase 5 dưới dạng `followUps`.
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.12.0] — 2026-11-09
+
+### Changed — tối ưu token (đợt 4)
+
+- **`/msdlc:tracking-poll` có đường thoát nhanh khi rảnh.** Command chỉ còn guard + **Bước Q quét nhanh** (task local dở dang, ticket cột intake, ticket Approved đủ điều kiện) — không có gì thì dừng với một dòng. Logic chi tiết (Bước R/1/2/3/4) chuyển sang skill nội bộ mới **`msdlc:poll-run`**, chỉ nạp khi có việc và dùng lại kết quả quét (không fetch lại). Command 18KB → ~4KB mỗi lượt `/loop` rảnh.
+- **Vòng fix kiểm lại đúng chỗ đã sửa (chế độ `verify`):** `reviewer` re-review chỉ kiểm finding cũ + lỗi mới do phần sửa; `security-auditor` re-audit chỉ kiểm Critical/High cũ. Agent dev sửa lỗi chỉ nhận danh sách finding/failure + file liên quan. Contract JSON không đổi.
+- **G4 — model theo lần gọi** (`gating.md`): `qc-executor` chạy `haiku` (lên model mặc định khi lỗi khó chẩn đoán); `reviewer` chạy `sonnet` khi diff nhỏ (≤ ~150 dòng, ≤ 5 file, không chạm vùng nhạy cảm) và ở chế độ `verify`; `security-auditor` `verify` chạy `sonnet`. Tắt bằng `model-downgrade: never`. Codex vẫn theo `agent-models.toml`.
+- **Tách cấu hình điều phối ra `.claude/msdlc.md`** (template mới `shared/msdlc.template.md`): `## Task tracker`, `## Git`, `## Pipeline` chỉ main agent đọc, nên không còn nằm trong `profile.md` mà mọi subagent phải đọc. **Tương thích ngược:** chưa có `msdlc.md` → đọc các mục cũ trong profile. `/msdlc:init` tạo `msdlc.md` cho dự án mới và (Bước 2e) đề xuất chuyển mục cũ sang.
+- **Nạp theo nhánh:** phần map/reduce thiết kế test của `deliver-story` sang `skills/deliver-story/qc-mapreduce.md` (chỉ đọc khi G3 chọn map/reduce); `spec` tách `story.md` / `task.md`, chỉ đọc file của nhánh đã phân loại.
+
 ## [0.11.0] — 2026-11-09
 
 ### Changed — tối ưu token (nhóm B: bỏ agent không cần)

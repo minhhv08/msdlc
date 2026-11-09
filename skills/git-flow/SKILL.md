@@ -24,14 +24,14 @@ Skill này là **nơi duy nhất** chứa logic git của msdlc: tạo nhánh th
 
 Thực hiện tuần tự, fail điều kiện nào thì **log một dòng và dừng (no-op)**:
 
-1. Đọc mục `## Git` trong `.claude/profile.md`. Không có mục / **cờ "Bật git flow" ≠ yes** → *"[git-flow] Git flow tắt (opt-in) — bỏ qua."* → dừng.
+1. Đọc mục `## Git` trong `.claude/msdlc.md` (dự án cũ chưa có file này → mục cùng tên trong `.claude/profile.md`). Không có mục / **cờ "Bật git flow" ≠ yes** → *"[git-flow] Git flow tắt (opt-in) — bỏ qua."* → dừng.
 2. `git rev-parse --is-inside-work-tree` không phải repo → *"[git-flow] Không phải git repo — bỏ qua."* → dừng.
 
 Qua Bước 0 nghĩa là: git flow bật + đang trong git repo → tiếp tục.
 
-## Bước 1 — Resolve config (từ profile + suy từ git)
+## Bước 1 — Resolve config (từ mục `## Git` của msdlc.md/profile + suy từ git)
 
-- **Base branch**: lấy từ profile `## Git` → nếu trống, auto-detect default branch: `git symbolic-ref --quiet refs/remotes/origin/HEAD` (vd `origin/main` → `main`); vẫn không có → thử `main`/`master` đang tồn tại. Ghi rõ base đã chọn vào log.
+- **Base branch**: lấy từ mục `## Git` (msdlc.md/profile) → nếu trống, auto-detect default branch: `git symbolic-ref --quiet refs/remotes/origin/HEAD` (vd `origin/main` → `main`); vẫn không có → thử `main`/`master` đang tồn tại. Ghi rõ base đã chọn vào log.
 - **Branch pattern**: profile → mặc định `<type>/<taskid>-<slug>`.
   - `type`: suy từ **loại ticket** (issue type: `Bug`/`Defect` → `fix`; còn lại → `feat`), giới hạn trong danh sách hợp lệ của `msdlc:commit` (`feat|fix|refactor|perf|docs|test|chore|build|ci|revert`).
   - `slug`: kebab-case từ **title ticket** (đọc header `.claude/tasks/{taskid}/plan.md` hoặc dùng thông tin caller truyền), bỏ dấu, cắt ~40 ký tự. Không có title → chỉ dùng `{taskid}`.
