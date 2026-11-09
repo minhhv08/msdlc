@@ -49,4 +49,4 @@ Respond in the user's language (Vietnamese or English).
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/dev-frontend/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: quirk bundler/alias/thư viện component, chỗ mapping registry lockstep dễ lệch.
+Memory riêng tại `.claude/agent-memory-local/dev-frontend/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: quirk bundler/alias/thư viện component, chỗ mapping registry lockstep dễ lệch.

@@ -1,0 +1,11 @@
+# deliver — luồng TASK (chỉ đọc khi id là task)
+
+## Luồng TASK (id có `.claude/tasks/{taskid}/request.md`)
+
+Bản nhẹ cho feat/fixbug nhỏ: `task-planner` thay `architect`, `plan.md` thay ADR, `deliver-task` thay `deliver-story` (không `dev-leader`, không QC map/reduce). **Vẫn đúng một cổng duyệt** — duyệt plan, trước mọi bước build. Mọi lời gọi `msdlc:tracking` dùng `kind=task`; pre-check một lần theo "Quy ước gọi tiết kiệm token" của `msdlc:tracking` — task không gắn ticket → bỏ qua mọi lời gọi.
+
+1. **Tiền kiểm:** đã có `.claude/tasks/{taskid}/report.md` → task đã build xong → báo và dừng. Nhắc tiền đề hạ tầng local như Bước 0 của story.
+2. **Plan:** ghi `.claude/tasks/{taskid}/claim.md` với nguồn **`/deliver`** (+ ngày) — đánh dấu task do phiên tay này điều khiển để `tracking-poll` không resume/build trùng — rồi gọi `msdlc:tracking {taskid} planning task`. Nếu **chưa có** `plan.md` → gọi **Agent `task-planner`** cho `{taskid}`, truyền **nội dung `request.md`** (tiêu đề làm title; Mô tả + Acceptance + Non-goals + Open questions làm description) và `Ticket:` nếu có → agent ghi `.claude/tasks/{taskid}/plan.md`. Đã có `plan.md` → hỏi user dùng lại hay lập lại (lập lại = task-planner chế độ cập nhật, truyền plan.md cũ + góp ý của user).
+3. **GATE — Duyệt plan (BẮT BUỘC dừng):** gọi `msdlc:tracking {taskid} validate task`. Tóm tắt phương án + subtask + files đụng + Open questions + đường dẫn `plan.md`, rồi **DỪNG** hỏi user duyệt. User góp ý / trả lời Open questions → gọi `task-planner` chế độ cập nhật (plan.md hiện có + góp ý) rồi hỏi duyệt lại. Không có xác nhận rõ ràng → không build.
+4. **Build:** khi user duyệt → gọi `msdlc:tracking {taskid} in-progress task` (chuyển TRƯỚC khi làm) → gọi **skill `deliver-task {taskid}`** (main tự điều phối, không hỏi gate lần nữa) → skill ghi `report.md`.
+5. **Kết thúc:** gọi `msdlc:tracking {taskid} review task`, rồi tóm tắt ngắn cho user từ `.claude/tasks/{taskid}/report.md`: subtask + file đổi, trạng thái test (pass/fail/`infraMissing`), finding bảo mật còn lại, `followUps`/lockstep/evict cache. Muốn commit → skill **`msdlc:commit`**. Không tự chuyển Done.

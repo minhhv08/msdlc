@@ -26,7 +26,9 @@ Convention/kiến trúc/đường dẫn (thuộc `.claude/rules/` hoặc suy t�
    ---
    <nội dung>
    ```
-2. Thêm một dòng `- [Title](file.md) — hook` (< 150 ký tự) vào `MEMORY.md`. Không ghi nội dung vào `MEMORY.md`; giữ dưới 200 dòng.
+2. Thêm một dòng `- [Title](file.md) — hook` (< 150 ký tự) vào `MEMORY.md`. Không ghi nội dung vào `MEMORY.md`.
+
+**Giới hạn: `MEMORY.md` của mỗi agent tối đa ~30 dòng** — file này được nạp vào MỌI lần agent được gọi, nên mỗi dòng là chi phí lặp lại. Sắp vượt → gộp memory trùng/gần giống, xoá cái lỗi thời hoặc ít giá trị, trước khi thêm mới. Mỗi file memory cũng giữ ngắn (vài dòng).
 
 Cập nhật thay vì tạo trùng; xóa memory sai/lỗi thời.
 

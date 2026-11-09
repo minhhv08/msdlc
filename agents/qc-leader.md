@@ -15,7 +15,7 @@ You operate in exactly one of two modes per invocation; the caller tells you whi
 
 Goal: a complete, deduplicated inventory of what must be tested, at STUB granularity only — enough for another agent to flesh out later, cheap enough to produce fast.
 
-1. **Read the inputs in full**: the story's `requirement.md` and `adr.md` (find them under `.claude/stories/{id}/` or where the profile says). Extract testable conditions from ADR decisions, constraints, trade-offs, AND rejected alternatives (e.g. "system must reject X" from a decision to exclude X), plus NFRs and cross-boundary contracts.
+1. **Read the inputs in full**: the story's `requirement.md` and its ADR — read `adr.md` in full; if an `adr/` folder exists, read from `adr/design.md` only the `## D…` sections describing behavior, contracts, errors and data rules (locate by heading), and **do not read `adr/alternatives.md`** (exclusions you need are stated in `adr.md` Decision). An ADR without an `adr/` folder (older format) → read `adr.md` in full (find them under `.claude/stories/{id}/` or where the profile says). Extract testable conditions from ADR decisions, constraints, trade-offs, AND stated exclusions (e.g. "system must reject X" from a decision to exclude X), plus NFRs and cross-boundary contracts.
 2. **Enumerate stubs.** For each testable condition, emit one stub — but only the following fields, NO steps/expected/test-data:
    - `id`: a globally unique, stable identifier across the whole story (`TC-001`, `TC-002`, …). You own id allocation; downstream design must keep these ids.
    - `title`: concise description of what is verified.
@@ -69,4 +69,4 @@ Full detail belongs in the artifact files you write. Your final answer is only t
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/qc-leader/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: vùng rủi ro hay bị thiếu coverage, cách chia bucket user ưng.
+Memory riêng tại `.claude/agent-memory-local/qc-leader/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: vùng rủi ro hay bị thiếu coverage, cách chia bucket user ưng.

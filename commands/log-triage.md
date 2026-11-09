@@ -1,6 +1,6 @@
 ---
 description: Đọc log lỗi production → gom thành các loại bug (đối chiếu codebase) → tạo task Bug ở cột Todo trên board để luồng fixbug xử lý. Bỏ qua log không phải bug, và bỏ qua bug đã có ticket. Nhận log dán trực tiếp hoặc đường dẫn file. Chạy một lượt; lặp được bằng /loop nếu trỏ vào một file log cố định.
-allowed-tools: Read, Write, Glob, Grep, Task, Skill, mcp__claude_ai_Atlassian__*, mcp__claude_ai_Asana__*, mcp__claude_ai_Linear__*, mcp__claude_ai_monday_com__*, mcp__claude_ai_Notion__*
+allowed-tools: Read, Write, Glob, Grep, Task, Skill, Bash, mcp__claude_ai_Atlassian__*, mcp__claude_ai_Asana__*, mcp__claude_ai_Linear__*, mcp__claude_ai_monday_com__*, mcp__claude_ai_Notion__*
 # Cần MCP tool của tracker (Jira/Asana/Linear/Monday/Notion) để: (1) tìm ticket đã có → tránh tạo trùng, (2) tạo ticket mới.
 # Dự án dùng MCP server tên khác → thêm tool của nó vào dòng allowed-tools ở trên.
 # Riêng Notion: "cột" = giá trị property Status của page; tạo ticket = tạo page (notion-create-pages); "board key" = database ID.
@@ -43,15 +43,22 @@ Lệnh chạy **một lượt rồi dừng**. Muốn chạy định kỳ thì đ
 ### Bước 1 — Lấy log
 
 Đọc log từ **tham số của lệnh**:
-- Tham số là **đường dẫn file/thư mục** có thật → `Read` nội dung (nhiều file → đọc lần lượt, ưu tiên file error/exception).
-- Tham số là **đoạn log dán trực tiếp** → dùng luôn.
+- Tham số là **đường dẫn file/thư mục** có thật → **KHÔNG `Read` nguyên file** nếu lớn: đo bằng `wc -l` trước; ≤ ~500 dòng mới `Read` thẳng, lớn hơn → làm **digest** (dưới).
+- Tham số là **đoạn log dán trực tiếp** → nếu dài (> ~200 dòng) thì ghi ra `.claude/bug-triage/raw-<ngày>.log` rồi làm digest như file; ngắn thì dùng luôn.
 - **Không có tham số** → hỏi người dùng dán log hoặc đưa đường dẫn. Không tự bịa log.
 
-Log quá dài → ưu tiên các dòng ERROR/FATAL/exception/stack trace, nhưng giữ đủ ngữ cảnh quanh mỗi lỗi để agent gom nhóm được (đừng cắt cụt làm mất manh mối).
+**Digest — gộp log trùng trước khi phân loại** (log production thường lặp một lỗi hàng nghìn lần; gộp lại giảm 10–100 lần lượng chữ phải đọc). Bằng Bash, không đọc nguyên file:
+
+1. Lọc dòng lỗi: `grep -n -i -E 'error|fatal|exception|panic|traceback|caused by'` (bổ sung pattern theo định dạng log thực tế nếu cần).
+2. Chuẩn hoá phần biến thiên rồi đếm: bỏ timestamp, thay id/hex/uuid/số bằng placeholder (vd `sed -E` thay `[0-9a-f]{8,}` → `<id>`, số → `<n>`), rồi `sort | uniq -c | sort -rn | head -50` → danh sách **chữ ký lỗi + số lần xuất hiện**.
+3. Với mỗi chữ ký trong top: lấy **một mẫu đầy đủ** kèm stack trace — tìm dòng đầu tiên khớp (`grep -n -m1 -F`) rồi in một cửa sổ giới hạn (`sed -n 'A,Bp'`, ~30 dòng).
+4. Ghi digest ra `.claude/bug-triage/digest-<ngày>.md`: mỗi chữ ký = số lần + thời điểm đầu/cuối (nếu có) + 1 mẫu. Ghi rõ tổng số dòng log gốc và số chữ ký bị cắt khỏi top (nếu có).
+
+Lệnh cụ thể tuỳ định dạng log — các lệnh trên là gợi ý, chỉnh pattern cho khớp; không bao giờ `cat` nguyên file lớn.
 
 ### Bước 2 — Phân loại bằng agent bug-triage
 
-Gọi **Agent `bug-triage`** (qua Task tool), đưa cho nó **log** (hoặc đường dẫn file) + gợi ý project nếu biết. Agent đọc codebase và trả về JSON:
+Gọi **Agent `bug-triage`** (qua Task tool), đưa cho nó **đường dẫn digest** (hoặc log ngắn) + gợi ý project nếu biết — không đưa log thô dài. Agent đọc codebase và trả về JSON:
 
 ```json
 { "bugs": [ { "signatureBasis": "...", "title": "...", "type": "...", "severity": "...",

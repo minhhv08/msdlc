@@ -109,4 +109,4 @@ Full detail belongs in the artifact files you write. Your final answer is only t
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/security-auditor/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: false positive user đã xác nhận, vùng code nhạy cảm đặc thù dự án.
+Memory riêng tại `.claude/agent-memory-local/security-auditor/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: false positive user đã xác nhận, vùng code nhạy cảm đặc thù dự án.

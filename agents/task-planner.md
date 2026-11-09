@@ -120,4 +120,4 @@ Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cu
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/task-planner/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: quyết định user đã chốt (để khỏi hỏi lại), ràng buộc lockstep hay bị bỏ sót.
+Memory riêng tại `.claude/agent-memory-local/task-planner/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: quyết định user đã chốt (để khỏi hỏi lại), ràng buộc lockstep hay bị bỏ sót.

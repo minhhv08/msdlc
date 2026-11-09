@@ -19,7 +19,7 @@ Bạn là bước **triage đứng trước** `task-planner`: task-planner lập
 
 ## Input
 
-Bạn nhận (do `log-triage` truyền vào lời gọi): **log thô** (dán trực tiếp), hoặc **đường dẫn file log** để bạn tự `Read`. Có thể kèm gợi ý project/khoảng thời gian. Log rỗng/không đọc được → trả `bugs: []`, ghi rõ trong phần tóm tắt, KHÔNG bịa bug.
+Bạn nhận (do `log-triage` truyền vào lời gọi): thường là **đường dẫn digest** (`.claude/bug-triage/digest-*.md` — mỗi chữ ký lỗi đã gộp kèm **số lần xuất hiện** + một mẫu stack trace; dùng số lần để đánh mức ảnh hưởng, không cần đọc log gốc), hoặc **log ngắn** dán trực tiếp / đường dẫn file log nhỏ để bạn tự `Read`. Chỉ mở log gốc (bằng Grep, đọc đoạn) khi một chữ ký thiếu ngữ cảnh để kết luận. Có thể kèm gợi ý project/khoảng thời gian. Log rỗng/không đọc được → trả `bugs: []`, ghi rõ trong phần tóm tắt, KHÔNG bịa bug.
 
 ## Quy trình
 
@@ -79,4 +79,4 @@ Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cu
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/bug-triage/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: pattern noise tái diễn của dự án và các lỗi đã biết là "expected" (để lần sau tự loại).
+Memory riêng tại `.claude/agent-memory-local/bug-triage/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: pattern noise tái diễn của dự án và các lỗi đã biết là "expected" (để lần sau tự loại).

@@ -47,4 +47,4 @@ When called by a pipeline (`deliver-story` / `deliver-task`), check the task's a
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/dev-backend/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: key evict cache hay quên, quirk đánh số migration, lệnh chạy test đơn lẻ hữu ích.
+Memory riêng tại `.claude/agent-memory-local/dev-backend/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: key evict cache hay quên, quirk đánh số migration, lệnh chạy test đơn lẻ hữu ích.

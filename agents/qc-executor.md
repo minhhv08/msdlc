@@ -76,4 +76,4 @@ Full detail belongs in the artifact files you write. Your final answer is only t
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/qc-executor/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: test flaky + cách xác nhận, điều kiện hạ tầng của từng suite, lệnh test target nhanh nhất.
+Memory riêng tại `.claude/agent-memory-local/qc-executor/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: test flaky + cách xác nhận, điều kiện hạ tầng của từng suite, lệnh test target nhanh nhất.

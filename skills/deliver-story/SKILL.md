@@ -32,7 +32,7 @@ Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (b�
 - **Agent `dev-leader`** — vỡ task (mô tả ngay dưới).
 - **Agent `qc-leader` (chế độ enumerate)** — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
 
-Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `.claude/stories/{id}/requirement.md`, vỡ thành task gọn theo cụm việc (ít task, mỗi task file có mục **Context** tự đủ — xem prompt dev-leader), GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
+Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `adr/design.md` (nếu có — **không** đọc `adr/alternatives.md`) + `.claude/stories/{id}/requirement.md`, vỡ thành task gọn theo cụm việc (ít task, mỗi task file có mục **Context** tự đủ — xem prompt dev-leader), GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
 
 - `id` (vd `"01"`), `file` (tên file task đã ghi), `title`
 - `project`: một trong các project tên trong `.claude/profile.md` | `docs` | `cross-cutting`

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.14.0] — 2026-11-09
+
+### Changed — tối ưu token (đợt 6)
+
+- **ADR chia theo người đọc:** `adr.md` là lõi (mục tiêu ≤ ~80 dòng: Status, Context, Decision tóm tắt kèm điều cố ý không làm, Consequences ≤ 5 bullet, Assumptions & Open questions, Impacted artifacts, mục lục). Chi tiết dài tách ra `adr/design.md` (mục `## D1…` theo project/component) và `adr/alternatives.md` (chỉ cho người — không agent nào đọc). Story nhỏ vẫn chỉ một file. Người đọc chỉ đọc phần cần: `dev-leader` đọc `adr.md` + `design.md`; `qc-leader`/`qc-designer`/`reviewer` đọc `adr.md` + các mục `D…` liên quan; dev trỏ tới mục cụ thể (`adr/design.md §D2`). ADR cũ (không có thư mục `adr/`) vẫn được đọc nguyên file. Header `Status:` vẫn ở `adr.md` nên gate/`deliver-story` không đổi. Mục ADR đánh số lại 1–5 (Alternatives chuyển sang file riêng).
+- **`MEMORY.md` mỗi agent tối đa ~30 dòng** (nạp vào mọi lần gọi agent): sắp vượt thì gộp/xoá trước khi thêm.
+- **`/msdlc:log-triage` gộp log trùng trước khi phân loại:** file lớn không còn bị `Read` nguyên; dùng Bash lọc dòng lỗi → chuẩn hoá phần biến thiên → `uniq -c` ra chữ ký + số lần → một mẫu stack trace mỗi chữ ký → ghi `.claude/bug-triage/digest-<ngày>.md` và đưa digest (không phải log thô) cho `bug-triage`. Command thêm `Bash` vào `allowed-tools`.
+- **`deliver` tách theo nhánh:** `skills/deliver/story.md` / `task.md`, chỉ đọc file đúng loại id (SKILL.md 8.8KB → 2.4KB).
+- **`reviewer` đọc rule theo phạm vi diff:** luôn `global` + `testing`; `backend`/`frontend` theo loại code trong diff; `security` chỉ khi chạy `securityLite`.
+
 ## [0.13.0] — 2026-11-09
 
 ### Changed — tối ưu token (đợt 5: chi phí lúc chạy)

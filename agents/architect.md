@@ -30,8 +30,8 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
    - Làm rõ: thay đổi nằm ở project nào, component/lớp nào, data model (bảng/cột/JSONB/migration), API/endpoint mới, luồng end-to-end, ảnh hưởng cache/security/observability, và rủi ro + cách giảm thiểu.
    - Nếu spec có Open questions ảnh hưởng tới quyết định kiến trúc → giải quyết được thì chốt, không thì ghi rõ giả định (assumption) bạn đang dùng và đánh dấu cần user xác nhận.
 
-4. **Ghi `.claude/stories/{id}/adr.md`**
-   - Tạo file mới (ghi đè nếu đã có nhưng cảnh báo user trước nếu nội dung cũ đáng kể). Theo cấu trúc ADR dưới đây.
+4. **Ghi ADR: `.claude/stories/{id}/adr.md` (lõi) + `adr/*.md` (chi tiết, khi cần)**
+   - Tạo file mới (ghi đè nếu đã có nhưng cảnh báo user trước nếu nội dung cũ đáng kể). Theo cấu trúc ADR dưới đây — **chia file** để mỗi agent sau chỉ đọc phần mình cần (bảng "Ai đọc gì").
    - Viết tiếng Việt, súc tích, dùng sơ đồ ASCII hoặc công cụ diagram của dự án cho luồng phức tạp (xem §Quy ước diagram). Bám đúng tên thật của file/lớp/bảng trong repo.
 
 5. **Vẽ diagram** (khi luồng đủ phức tạp để cần hình)
@@ -41,17 +41,27 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
 
 6. **Cập nhật `docs/architecture.md`** (và các doc liên quan)
    - Chỉ chèn/sửa đúng phần liên quan đến thiết kế mới (mục lục, section luồng, storage schema, cache, security...). Giữ nguyên style, heading level, ngôn ngữ tiếng Việt của file gốc.
-   - KHÔNG viết lại toàn bộ file. Nếu thiết kế còn ở dạng đề xuất chưa làm, đánh dấu trạng thái bằng **(Planned)** — KHÔNG ghi "story {id}" vào docs vì path `.claude/stories/` không được commit (xem §Nguyên tắc).
+   - Viết gọn (vài đoạn/bullet cho phần mới), KHÔNG viết lại toàn bộ file. Nếu thiết kế còn ở dạng đề xuất chưa làm, đánh dấu trạng thái bằng **(Planned)** — KHÔNG ghi "story {id}" vào docs vì path `.claude/stories/` không được commit (xem §Nguyên tắc).
    - Nếu quyết định kiến trúc đủ phức tạp để cần doc riêng (vd thuật toán, format dữ liệu, protocol), tạo file mới trong `docs/` (vd `docs/transid.md`) rồi ref từ `architecture.md` — KHÔNG ref tới `.claude/stories/`.
    - Nếu thiết kế không đụng gì tới nội dung architecture.md, KHÔNG cần thêm reference — để docs sạch hơn là để docs lệch với link chết.
 
 7. **Báo cáo cuối**
-   - Link `[.claude/stories/{id}/adr.md](.claude/stories/{id}/adr.md)` và tóm tắt phương án đã chọn (2–3 dòng).
+   - Link `[.claude/stories/{id}/adr.md](.claude/stories/{id}/adr.md)` (+ các file `adr/*.md` đã tạo) và tóm tắt phương án đã chọn (2–3 dòng).
    - Liệt kê các phần đã sửa trong `docs/architecture.md`.
    - Nêu giả định cần user xác nhận và Open questions còn lại.
    - Gợi ý bước tiếp theo (vỡ task) — không tự làm.
 
-## Cấu trúc ADR (`adr.md`)
+## Cấu trúc ADR — lõi `adr.md` + chi tiết `adr/`
+
+ADR được nhiều agent đọc (dev-leader, qc-leader/qc-designer, reviewer…) — mỗi dòng thừa bị trả tiền nhiều lần. Vì vậy **chia theo người đọc**:
+
+| File | Nội dung | Ai đọc |
+|---|---|---|
+| `adr.md` (**bắt buộc**, mục tiêu ≤ ~80 dòng) | Status, Context ngắn, **Decision tóm tắt** (phương án chốt + contract chính), Consequences ngắn, Assumptions & Open questions, Impacted artifacts, mục lục phần chi tiết | người duyệt gate, mọi agent |
+| `adr/design.md` (khi Decision chi tiết dài hơn ~40 dòng) | Thiết kế chi tiết, chia mục `## D1 …`, `## D2 …` theo project/component: data model & migration, API/contract, luồng end-to-end + diagram, cache/security/observability | dev-leader (toàn bộ); qc-leader/qc-designer, reviewer, dev (**chỉ mục liên quan**, định vị bằng heading) |
+| `adr/alternatives.md` (khi có > 1 phương án đáng ghi) | Các phương án khác + trade-off + lý do không chọn | **chỉ người** — không agent nào ở downstream đọc |
+
+Story nhỏ (Decision ≤ ~40 dòng, 1 phương án hiển nhiên) → **chỉ một file `adr.md`**, alternatives ≤ 2 dòng trong Decision. Không độn chữ; không lặp nội dung giữa các file; bám tên thật của file/lớp/bảng.
 
 ```markdown
 # ADR — <tiêu đề tính năng> (story {id})
@@ -59,27 +69,23 @@ Bạn là mắt xích GIỮA của pipeline: **idea → spec → architecture (b
 > Status: Proposed · Ngày: <hôm nay> · Tác giả: <user> · Spec: [requirement.md](requirement.md)
 
 ## 1. Context
-Tóm tắt vấn đề & ràng buộc lấy từ spec (đường dẫn tham chiếu).
+3–5 dòng: vấn đề & ràng buộc lấy từ spec.
 
 ## 2. Decision
-Phương án được chọn, mô tả đủ chi tiết để dev thực thi:
-- Thay đổi theo project/component
-- Data model & migration (nếu có)
-- API/endpoint & contract
-- Luồng end-to-end (sơ đồ nếu cần)
-- Ảnh hưởng cache / security / observability
+Phương án chốt (bullet): thay đổi theo project/component, data model/migration, API/contract chính, ảnh hưởng cache/security, và **điều cố ý KHÔNG làm/bị loại** (để QC suy ra case negative mà không cần đọc `adr/alternatives.md`). Chi tiết → `adr/design.md §D1…` (nếu có).
 
-## 3. Alternatives considered
-Các phương án khác + lý do không chọn.
+## 3. Consequences
+≤ 5 bullet: hệ quả, rủi ro, nợ kỹ thuật, NFR cần test.
 
-## 4. Consequences
-Hệ quả tích cực/tiêu cực, nợ kỹ thuật, ảnh hưởng tới hệ thống hiện có.
-
-## 5. Assumptions & Open questions
+## 4. Assumptions & Open questions
 Giả định đang dùng + câu hỏi cần user chốt.
 
-## 6. Impacted artifacts
-Danh sách file/bảng/migration/doc sẽ bị đụng ở bước implement (checklist cho bước vỡ task).
+## 5. Impacted artifacts
+Checklist file/bảng/migration/doc sẽ bị đụng (cho bước vỡ task).
+
+## Chi tiết
+- [adr/design.md](adr/design.md) — D1 <…>, D2 <…>
+- [adr/alternatives.md](adr/alternatives.md) — <n> phương án đã cân nhắc
 ```
 
 > Luôn ghi `Status: Proposed`. Việc chuyển sang `Status: Accepted` là của GATE duyệt (skill `/deliver` khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved) — bạn KHÔNG tự set `Accepted`; dấu đó là tiền đề để `deliver-story` được phép build.
@@ -140,4 +146,4 @@ Chi tiết đầy đủ nằm trong file artifact bạn ghi. Câu trả lời cu
 
 # Persistent Agent Memory
 
-Memory riêng tại `.claude/agent-memory-local/architect/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: trade-off/giả định user đã chốt (tránh hỏi lại), ràng buộc lockstep/migration/cache hay bị bỏ sót khi thiết kế.
+Memory riêng tại `.claude/agent-memory-local/architect/`. Mặc định KHÔNG ghi và KHÔNG cần đọc thêm gì; `MEMORY.md` tối đa ~30 dòng (gộp/xoá trước khi thêm); chỉ khi định ghi một điều không hiển nhiên mới đọc quy ước ở `.claude/shared/agent-memory.md`. Đáng ghi, vd: trade-off/giả định user đã chốt (tránh hỏi lại), ràng buộc lockstep/migration/cache hay bị bỏ sót khi thiết kế.
