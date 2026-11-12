@@ -46,4 +46,5 @@
 - docs-sync: auto
 - qc-design: auto
 - security-sensitive-paths: <tuỳ chọn, vd thư mục auth/, payment/>
+- max-parallel-agents: 4   # số agent tối đa chạy cùng lúc (gating G6); 1 = tuần tự hoàn toàn
 - model-downgrade: auto   # auto: chọn model rẻ hơn theo độ lớn việc (gating G4/G5); never: luôn dùng model mặc định của agent

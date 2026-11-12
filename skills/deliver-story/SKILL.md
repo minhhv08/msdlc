@@ -24,13 +24,13 @@ Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` c
 
 ## Gating (đọc một lần trước Phase 1)
 
-Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test), G4 (model theo lần gọi cho `qc-executor`/`reviewer`/re-verify), G5 (model theo độ lớn việc cho `architect`/`dev-leader`/`qc-leader`) — chỉ gọi agent khi cần và dùng model vừa đủ, override được qua mục `## Pipeline` của profile. Áp **G3 và tính tier sau-ADR của G5 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce, và `dev-leader`/`qc-leader` chạy model nào.
+Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test), G4 (model theo lần gọi cho `qc-executor`/`reviewer`/re-verify), G5 (model theo độ lớn việc cho `architect`/`dev-leader`/`qc-leader`), G6 (giới hạn `max-parallel-agents`, mặc định 4 agent chạy cùng lúc — áp cho mọi chỗ phát song song bên dưới) — chỉ gọi agent khi cần và dùng model vừa đủ, override được qua mục `## Pipeline` của profile. Áp **G3 và tính tier sau-ADR của G5 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce, và `dev-leader`/`qc-leader` chạy model nào.
 
 ## Phase 1 — Plan + QC enumerate (song song)
 
 Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột InProgress.
 
-**Nhánh test nhỏ (G3):** chỉ phát `dev-leader` (truyền `model` theo G5), KHÔNG gọi `qc-leader`. **Nhánh map/reduce:** phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
+**Nhánh test nhỏ (G3):** chỉ phát `dev-leader` (truyền `model` theo G5), KHÔNG gọi `qc-leader`. **Nhánh map/reduce:** phát **hai Agent trong cùng một message** (G6: nếu `max-parallel-agents` = 1 thì tuần tự, `dev-leader` trước) — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
 
 - **Agent `dev-leader`** — vỡ task (mô tả ngay dưới); truyền `model` theo G5.
 - **Agent `qc-leader` (chế độ enumerate)** (truyền `model` theo G5) — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
@@ -56,11 +56,11 @@ Nếu dev-leader không trả task nào → dừng và báo user.
 Triển khai theo **wave topo**. Lặp tới khi mọi task xong:
 
 1. **Tập sẵn sàng** = các task chưa làm mà MỌI `dependsOn` đã xong (bỏ qua dep không tồn tại).
-2. **Chọn wave** — gom tối đa ~6 task sẵn sàng có **tập `touchesFiles` rời nhau**:
+2. **Chọn wave** — gom tối đa **N task** (N = `max-parallel-agents`, G6) sẵn sàng có **tập `touchesFiles` rời nhau**:
    - Hai task **khác project** → không bao giờ đụng file chung → luôn chạy song song được.
    - Hai task **cùng project** → song song được **chỉ khi** `touchesFiles` không giao nhau (so cả prefix thư mục). Nếu giao dù 1 file → để task sau sang wave kế.
    - Task không khai báo `touchesFiles` (rỗng) → thận trọng: chỉ chạy một mình trong project đó ở wave này.
-3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent thiết kế test** — nhánh nhỏ: **một `qc-designer` chế độ full** (theo G3); nhánh map/reduce: **một `qc-designer` design-subset cho mỗi bucket** mà `qc-leader` đã trả ở Phase 1 — vào cùng message để flesh-out test song song với dev (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
+3. **Chạy song song**: phát **nhiều lệnh Agent trong cùng một message** cho các task trong wave (mỗi task → đúng `agent` của nó). **Ở Wave 1 (đầu tiên), kèm thêm Agent thiết kế test** — nhánh nhỏ: **một `qc-designer` chế độ full** (theo G3); nhánh map/reduce: **một `qc-designer` design-subset cho mỗi bucket** mà `qc-leader` đã trả ở Phase 1 — vào cùng message để flesh-out test song song với dev — **tổng Agent trong message ≤ N (G6): dev ưu tiên, designer lấp slot còn trống, phần dư sang các wave sau và phải xong hết trước Phase 3** (xem "Thiết kế test song song" bên dưới). Chúng chỉ ghi vào các file `tests/testcases-part-*.md` rời nhau (rời hoàn toàn với `tasks/`/code), nên an toàn chạy chung. Đây là điểm tăng tốc chính so với chạy lần lượt.
 4. Mỗi dev agent nhận chỉ thị **idempotent check-before-write**:
    - Đọc `.claude/stories/{id}/tasks/{file}` (task spec, có mục **Context** chứa phần ADR/rule cần thiết và danh sách **Read first** — dev bắt đầu từ đó thay vì dò lại codebase). **Chỉ đọc `adr.md`** khi mục Context ghi rõ cần (`Read adr.md §N`) hoặc thiếu thông tin để làm.
    - Đối chiếu codebase với "Acceptance criteria": nếu đã đạt hết → KHÔNG sửa, báo `already-done`; thiếu một phần → chỉ bổ sung (`partial`); chưa có → làm đầy đủ (`implemented`); không làm được → `skipped` kèm lý do.
@@ -107,7 +107,7 @@ Gọi **Agent `reviewer`** với story id, **truyền kèm tập `filesChanged` 
 
 > Test case đã được thiết kế từ Wave 1 của Phase 2 (nhánh nhỏ: 1 `qc-designer` full; nhánh lớn: map/reduce) (ghi tại `.claude/stories/{id}/tests/`, tổng hợp ở `tests/README.md`). Việc này chạy trong lúc dev implement, nên đến Phase 3 đã có test suite + traceability sẵn. Phase này chạy test **và** audit bảo mật song song trên cùng phần code vừa implement.
 
-Phát **cùng một message** tất cả Agent sau song song — chúng chạy trên project/scope rời nhau nên không đụng file:
+Phát các Agent sau song song, **tối đa N mỗi message (G6)** — vượt N thì chia batch, `security-auditor` vào batch đầu, `qc-executor` còn lại vào batch sau; chúng chạy trên project/scope rời nhau nên không đụng file:
 
 1a. **Agent `qc-executor` × N project** — lấy danh sách project đã có task trong story này (từ structured task list của dev-leader, Phase 1). Với **mỗi project** có lệnh test trong `.claude/profile.md`, phát **một Agent `qc-executor` riêng** trong cùng message, chỉ định rõ project scope. Mỗi instance trả về `project`, `allPassed`, `infraMissing`, `failures[{test,message}]`, `report`.
 

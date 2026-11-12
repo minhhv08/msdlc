@@ -220,6 +220,7 @@ Gating tiết kiệm token (`skills/deliver-story/gating.md`, override qua mục
 - **`security-auditor`** chỉ chạy khi diff chạm vùng nhạy cảm (auth, crypto, secret, upload, endpoint, truy vấn động, deserialize, dependency…); còn lại `reviewer` kiêm checklist bảo mật nhanh (`securityLite`).
 - **`chronicler`** chỉ chạy khi thay đổi ảnh hưởng tài liệu (public API, config/CLI, build, hoặc docs đang nhắc tới thứ vừa đổi).
 - **`dev-leader`** gom task theo cụm việc (thường ≤ 3 task/project), mỗi task file có mục *Context* tự đủ nên dev không phải đọc lại cả ADR.
+- **Giới hạn song song (G6)** — số agent chạy cùng lúc tối đa `max-parallel-agents` (mặc định **4**, đặt trong mục `## Pipeline` của `.claude/msdlc.md`; `1` = tuần tự hoàn toàn). Mỗi message phát tối đa N Agent; dev ưu tiên, `qc-designer` lấp slot trống, `security-auditor` vào batch đầu của Phase 3.
 - **Model theo độ lớn việc (G5)** — agent lập kế hoạch không còn chạy model đắt nhất ở mọi việc: story tier S/M/L (đếm mục requirement + tín hiệu nặng như đổi lockstep/tích hợp ngoài/NFR nặng/≥3 project) → `architect` `sonnet`/`opus`/`fable`, `dev-leader` `sonnet` ở tier S, `qc-leader` `sonnet` ở tier M; task nhỏ/fixbug/ticket từ `log-triage` → `task-planner` `sonnet`. Người vẫn duyệt ADR/plan ở gate; chạy lại sau góp ý tự nâng một bậc. Tắt bằng `model-downgrade: never`. Model của **main agent** (chọn bằng `/model`) chỉ điều phối nên `sonnet` là đủ — đặt model đắt cho main tốn nhất vì context của main cộng dồn kết quả mọi agent.
 
 ## Hooks bảo mật

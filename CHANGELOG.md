@@ -7,6 +7,14 @@
 - `.deepseek-plugin/agent-models.toml`: routing hai tầng `deepseek-chat` / `deepseek-reasoner` theo agent.
 - `deliver`, `deliver-story`, `deliver-task`, `tracking-poll`, `log-triage`, `gating.md` (G4) và README có nhánh DeepSeek, theo mẫu Codex hiện có. `agents/*.md` không đổi.
 
+## [0.18.0] — 2026-11-12
+
+### Added — cấu hình số agent chạy cùng lúc (G6)
+
+- **`max-parallel-agents`** trong mục `## Pipeline` của `.claude/msdlc.md` (mặc định **4**; thiếu/không hợp lệ → 4; `1` = tuần tự). Trước đây wave dev gom tới ~6 task, cộng thêm `qc-designer` ở Wave 1 và `qc-executor` × project + `security-auditor` ở Phase 3 — có thể chạy 10+ agent cùng lúc.
+- Mỗi message phát tối đa N Agent (message kế tiếp sau khi message trước trả về; không dùng chạy nền để lách). Wave dev tối đa N subtask; Wave 1: dev ưu tiên, `qc-designer` lấp slot trống, phần dư sang wave sau và phải xong trước Phase 3; Phase 1 `dev-leader` ∥ `qc-leader` cần 2 slot (N = 1 → tuần tự); Phase 3 chia batch khi vượt N, `security-auditor` vào batch đầu. Áp cho cả `deliver-story` lẫn `deliver-task` (đọc `gating.md` ở đầu Phase 1). Report ghi `max-parallel`.
+- Chi tiết ở `gating.md` mục G6. Tổng token gần như không đổi; đổi lại pipeline chậm hơn khi hạ N, giảm đỉnh rate-limit/tải máy.
+
 ## [0.17.0] — 2026-11-12
 
 ### Changed — ADR phải chốt hết giả định/câu hỏi mới được duyệt

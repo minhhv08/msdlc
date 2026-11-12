@@ -29,7 +29,7 @@
 
 - security-auditor: ran | skipped (lý do)
 - docs (chronicler): ran | skipped (lý do)
-- tier (G5): <S|M|L> · models (G4/G5): planner=<model>, qc-executor=<model>, reviewer=<model>, …
+- tier (G5): <S|M|L> · models (G4/G5): planner=<model>, qc-executor=<model>, reviewer=<model>, … · max-parallel (G6): <N>
 - test design: small (1 qc-designer full) | map/reduce
 
 ## Security

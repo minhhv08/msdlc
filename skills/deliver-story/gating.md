@@ -13,6 +13,7 @@ Mục `## Pipeline` trong `.claude/msdlc.md` (dự án cũ chưa có file này �
 - qc-design: auto | always-mapreduce        # chỉ deliver-story
 - security-sensitive-paths: <glob/đường dẫn, tuỳ chọn>
 - model-downgrade: auto | never             # áp cho G4 + G5
+- max-parallel-agents: 4                    # số agent tối đa chạy cùng lúc (G6); mặc định 4, 1 = tuần tự
 ```
 
 `always` = hành vi cũ (luôn chạy). Mọi lần bỏ qua đều ghi một dòng `skipped (lý do)` vào report — không bỏ im lặng.
@@ -87,3 +88,16 @@ Cùng cơ chế tham số `model` như G4, áp cho các agent **lập kế hoạ
 - Ngoại lệ **rẻ hơn**: `task-planner` chế độ cập nhật ở Bước 2 của poll (chỉ fold câu trả lời Open question của người vào plan đã duyệt) luôn dùng `sonnet` — việc cơ học.
 - Tóm tắt gate ghi **tier + model đã dùng** để người biết ADR/plan do model nào lập; thấy yếu thì yêu cầu chạy lại.
 - Ghi `tier` và model từng agent vào mục `## Gating` của report.
+
+## G6 — số agent tối đa chạy cùng lúc
+
+Cấu hình `max-parallel-agents: <số nguyên ≥ 1>` trong mục `## Pipeline` (**mặc định 4**; thiếu hoặc không hợp lệ → 4; `1` = chạy tuần tự hoàn toàn). Gọi N = giá trị này.
+
+Các lệnh Agent phát trong **cùng một message** chạy song song và main chờ tất cả trả về rồi mới sang message kế, nên **mỗi message phát tối đa N Agent**. Không dùng chạy nền (`run_in_background`) để lách giới hạn. Áp cho mọi chỗ pipeline phát song song:
+
+- **Wave dev:** tối đa N subtask/task mỗi wave; thừa → sang wave kế (vẫn giữ quy tắc `touchesFiles` rời nhau).
+- **Wave 1 + thiết kế test:** dev task **ưu tiên** (đường găng); `qc-designer` lấp các slot còn trống của message (tổng Agent ≤ N). Designer chưa xếp được thì lấp slot trống của các wave sau; **mọi designer phải xong trước Phase 3**.
+- **Phase 1:** `dev-leader` ∥ `qc-leader` cần 2 slot; N = 1 → chạy tuần tự, `dev-leader` trước.
+- **Phase 3:** `qc-executor` × project + `security-auditor`; vượt N thì chia batch, **`security-auditor` vào batch đầu** (finding của nó quyết định vòng fix), `qc-executor` còn lại vào batch sau. Các lần re-run/verify ở vòng fix cũng ≤ N mỗi message.
+
+Hạ N làm pipeline chậm hơn nhưng giảm đỉnh token/rate-limit và tải máy; tổng token gần như không đổi. Ghi `max-parallel=<N>` vào mục `## Gating` của report.
