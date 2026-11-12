@@ -12,6 +12,8 @@ Story: `architect` → **[GATE duyệt ADR]** → skill `deliver-story`. Task: `
 
 Khi chạy trong Codex, đọc `.codex-plugin/agent-models.toml` của plugin trước mỗi lần dispatch agent. File này là nguồn sự thật cho model tier và reasoning effort; không tự nâng lên `gpt-6-astra` ngoài điều kiện escalation đã cấu hình.
 
+Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` của plugin trước mỗi lần dispatch agent (hai tầng: `deepseek-chat` / `deepseek-reasoner`); bỏ qua G4 và `model:` trong `agents/*.md`. Harness không có Agent tool kiểu Claude thì main đọc prompt `agents/{name}.md` và tự đóng vai (hoặc dùng subagent của harness nếu có); ràng buộc file-disjoint theo `touchesFiles` vẫn giữ nguyên.
+
 ## Input
 
 - Tham số là **story id** (vd `/deliver 001`) hoặc **taskid** (vd `/deliver T-003`, `/deliver PROJ-123`). Nếu user không đưa id → liệt kê `.claude/stories/` + các `.claude/tasks/*/request.md` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.

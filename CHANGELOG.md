@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added — tương thích DeepSeek harness
+
+- `.deepseek-plugin/agent-models.toml`: routing hai tầng `deepseek-chat` / `deepseek-reasoner` theo agent.
+- `deliver`, `deliver-story`, `deliver-task`, `tracking-poll`, `log-triage`, `gating.md` (G4) và README có nhánh DeepSeek, theo mẫu Codex hiện có. `agents/*.md` không đổi.
+
 ## [0.15.0] — 2026-11-09
 
 ### Changed — bỏ bước `qc-leader` merge trong pipeline

@@ -13,6 +13,7 @@ Thực thi đúng contract của command Claude `commands/log-triage.md`, nhưng
    - Nếu Codex có subagent phù hợp, gọi subagent bằng prompt đó.
    - Nếu không có subagent, main agent tự áp dụng prompt đó để phân cụm log và lọc noise.
    - Đọc `.codex-plugin/agent-models.toml` của plugin để chọn model/effort cho `bug-triage`; chỉ nâng tier khi log khó phân cụm hoặc cần truy vết sâu codebase.
+   - Trong DeepSeek harness: đọc `.deepseek-plugin/agent-models.toml` thay cho file Codex ở trên.
 4. Chỉ tạo ticket Bug ở intake/Todo và ghi ledger theo command.
 5. Không tự build, không tự duyệt, không tự chuyển Done. Luồng tiếp theo thuộc `msdlc-tracking-poll`.
 

@@ -55,3 +55,4 @@ Agent tool nhận tham số `model` để ghi đè model mặc định của age
 - Ghi model đã dùng cho mỗi agent vào mục `## Gating` của report.
 
 Trong Codex: bỏ qua G4, chọn model theo `.codex-plugin/agent-models.toml` như cũ.
+Trong DeepSeek harness: bỏ qua G4 (tên `haiku`/`sonnet` không tồn tại), chọn model theo `.deepseek-plugin/agent-models.toml`; việc nhẹ (`qc-executor`, review diff nhỏ, verify) dùng `deepseek-chat`.

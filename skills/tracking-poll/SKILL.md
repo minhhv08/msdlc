@@ -13,6 +13,7 @@ Thực thi đúng contract của command Claude `commands/tracking-poll.md`, nh�
    - Nếu Codex có công cụ subagent phù hợp, gọi subagent với nội dung prompt tương ứng trong `../../agents/*.md`.
    - Nếu không có subagent, main agent tự thực hiện vai trò đó nhưng phải đọc đúng file agent liên quan trước khi làm.
    - Trước khi dispatch, đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model và reasoning effort theo agent; chỉ escalation khi thỏa điều kiện ghi trong đó.
+   - Trong DeepSeek harness: đọc `.deepseek-plugin/agent-models.toml` thay cho file Codex ở trên.
 4. Khi command yêu cầu gọi skill msdlc khác, dùng skill tương ứng trong `../`.
 5. Giữ nguyên các bất biến:
    - Poll là one-shot, không tự tạo scheduler.

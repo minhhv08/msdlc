@@ -10,6 +10,8 @@ Main agent **tự điều phối** chuỗi agent có sẵn bằng **Agent tool**
 
 Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
 
+Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` của plugin trước mỗi lần dispatch agent (hai tầng: `deepseek-chat` / `deepseek-reasoner`); bỏ qua G4 và `model:` trong `agents/*.md`. Harness không có Agent tool kiểu Claude thì main đọc prompt `agents/{name}.md` và tự đóng vai (hoặc dùng subagent của harness nếu có); ràng buộc file-disjoint theo `touchesFiles` vẫn giữ nguyên.
+
 **Tiền đề:** `.claude/stories/{id}/adr.md` đã tồn tại **và header ghi `Status: Accepted`** — dấu duyệt do gate ghi lại (`/deliver` Bước B khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved). Kiểm tra thật sự, không tin lời gọi:
 - Chưa có `adr.md` → dừng, báo user chạy bước architect/`/deliver` trước. KHÔNG tự bịa.
 - `adr.md` còn `Status: Proposed` → dừng, báo user ADR chưa được duyệt — đi qua gate `/deliver` (hoặc kéo ticket sang Approved nếu dùng board).

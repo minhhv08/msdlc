@@ -10,6 +10,8 @@ Bản **nhẹ** của `deliver-story` cho task nhỏ trên board: bỏ bước v
 
 Khi chạy trong Codex, trước mỗi dispatch agent phải đọc `.codex-plugin/agent-models.toml` của plugin. Chọn model tier và reasoning effort theo agent trong file; chỉ escalation khi thỏa điều kiện cấu hình và ghi lý do vào report cuối.
 
+Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` của plugin trước mỗi lần dispatch agent (hai tầng: `deepseek-chat` / `deepseek-reasoner`); bỏ qua G4 và `model:` trong `agents/*.md`. Harness không có Agent tool kiểu Claude thì main đọc prompt `agents/{name}.md` và tự đóng vai (hoặc dùng subagent của harness nếu có); ràng buộc file-disjoint theo `touchesFiles` vẫn giữ nguyên.
+
 **Tiền đề:** `.claude/tasks/{taskid}/plan.md` đã tồn tại (do `task-planner` ghi, đã được người duyệt — qua board, hoặc qua gate duyệt plan của `/deliver` ở luồng TASK). Kiểm tra thật, không tin lời gọi:
 - Chưa có `plan.md` → dừng, báo cần chạy `task-planner`/`tracking-poll` trước. KHÔNG tự bịa plan.
 - Đã có `.claude/tasks/{taskid}/report.md` → task đã build xong (idempotent) → báo và dừng, không build lại.

@@ -1,0 +1,68 @@
+# Default model routing for msdlc when running in a DeepSeek harness.
+# Two tiers only:
+#   deepseek-chat      - fast, cheap; implementation, templated or repetitive work.
+#   deepseek-reasoner  - thinking model; architecture, planning, review, security.
+# Edit model names to match your harness/account (e.g. a newer V-series id).
+# If the harness lacks tool calling on the reasoner tier, set those agents to
+# deepseek-chat and keep escalate_to as a manual hint. Do not edit `model:` in
+# agents/*.md - that is Claude Code metadata.
+
+[agents.task-planner]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."
+
+[agents.bug-triage]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Logs are hard to cluster or require deep codebase tracing."
+
+[agents.qc-executor]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "A test failure has no clear cause."
+
+[agents.chronicler]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Documentation changes span a major architectural change."
+
+[agents.qc-designer]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "The workflow has high business or operational risk."
+
+[agents.qc-leader]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."
+
+[agents.dev-backend]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "The change includes a migration, concurrency, or core domain logic."
+
+[agents.dev-frontend]
+model = "deepseek-chat"
+escalate_to = "deepseek-reasoner"
+escalate_when = "The change needs a large refactor or complex stateful UX."
+
+[agents.dev-leader]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."
+
+[agents.architect]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."
+
+[agents.reviewer]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."
+
+[agents.security-auditor]
+model = "deepseek-reasoner"
+escalate_to = "deepseek-reasoner"
+escalate_when = "Never needed; already top tier."

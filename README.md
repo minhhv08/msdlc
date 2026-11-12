@@ -103,6 +103,13 @@ Lưu ý tương thích:
 - Hooks trong `.claude-plugin/plugin.json` là cơ chế riêng của Claude Code; Codex không đăng ký các hook đó qua manifest `.codex-plugin`.
 - Runtime artifact vẫn dùng convention `.claude/` trong dự án tiêu thụ (`profile.md`, `rules/`, `shared/agent-memory.md`, `stories/`, `tasks/`) để giữ một nguồn sự thật cho cả Claude và Codex.
 
+### Dùng với DeepSeek harness
+
+- Routing model nằm ở `.deepseek-plugin/agent-models.toml`, hai tầng: `deepseek-reasoner` cho architect/dev-leader/qc-leader/task-planner/reviewer/security-auditor, `deepseek-chat` cho dev/qc-designer/qc-executor/chronicler/bug-triage. Chỉnh tên model theo harness/account của mày; không sửa `model:` trong `agents/*.md` (metadata Claude).
+- Skill pipeline (`deliver`, `deliver-story`, `deliver-task`, `tracking-poll`, `log-triage`) tự đọc file này khi chạy trong DeepSeek harness; G4 (hạ model theo lần gọi) bị bỏ qua.
+- Harness không có Agent tool kiểu Claude thì main agent đọc `agents/*.md` và tự đóng vai; harness không có WebFetch/WebSearch thì `security-auditor` bỏ qua tra cứu web và audit dựa trên code.
+- Hooks bảo mật trong `.claude-plugin/plugin.json` chỉ Claude Code đọc; trong DeepSeek harness dùng cơ chế approval/policy của harness.
+
 ### Bước 1 — Cài plugin
 
 **Từ GitHub (khuyên dùng):** add marketplace trước, rồi install theo `plugin@marketplace`:
