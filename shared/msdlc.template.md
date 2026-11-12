@@ -46,4 +46,4 @@
 - docs-sync: auto
 - qc-design: auto
 - security-sensitive-paths: <tuỳ chọn, vd thư mục auth/, payment/>
-- model-downgrade: auto
+- model-downgrade: auto   # auto: chọn model rẻ hơn theo độ lớn việc (gating G4/G5); never: luôn dùng model mặc định của agent

@@ -12,7 +12,7 @@ Mục `## Pipeline` trong `.claude/msdlc.md` (dự án cũ chưa có file này �
 - docs-sync: auto | always | never
 - qc-design: auto | always-mapreduce        # chỉ deliver-story
 - security-sensitive-paths: <glob/đường dẫn, tuỳ chọn>
-- model-downgrade: auto | never
+- model-downgrade: auto | never             # áp cho G4 + G5
 ```
 
 `always` = hành vi cũ (luôn chạy). Mọi lần bỏ qua đều ghi một dòng `skipped (lý do)` vào report — không bỏ im lặng.
@@ -52,7 +52,38 @@ Agent tool nhận tham số `model` để ghi đè model mặc định của age
 - **`qc-executor` → `haiku`** cho lần chạy đầu và các lần re-run: việc chính là chạy lệnh test từ profile và đọc kết quả. Nếu lần chạy trả `failures` mà phần chẩn đoán không rõ nguyên nhân (message mơ hồ, nghi lỗi môi trường) → lần re-run sau dùng model mặc định.
 - **`reviewer` → `sonnet`** khi diff nhỏ: tổng ≤ ~150 dòng đổi **và** ≤ 5 file **và** G1 không thấy vùng nhạy cảm. Ngược lại giữ model mặc định. Chế độ `verify` (re-review sau fix) luôn có thể dùng `sonnet`.
 - **`security-auditor` chế độ `verify` → `sonnet`** (chỉ kiểm lại finding cũ). Lần audit đầu giữ model mặc định.
+- **`chronicler` → `haiku`** khi G2 quyết định chạy và `filesChanged` ≤ 5 file (đồng bộ vài đoạn README/docs/CHANGELOG từ diff nhỏ); diff lớn hơn giữ model mặc định.
 - Ghi model đã dùng cho mỗi agent vào mục `## Gating` của report.
 
-Trong Codex: bỏ qua G4, chọn model theo `.codex-plugin/agent-models.toml` như cũ.
-Trong DeepSeek harness: bỏ qua G4 (tên `haiku`/`sonnet` không tồn tại), chọn model theo `.deepseek-plugin/agent-models.toml`; việc nhẹ (`qc-executor`, review diff nhỏ, verify) dùng `deepseek-chat`.
+Trong Codex: bỏ qua G4 và G5, chọn model theo `.codex-plugin/agent-models.toml` như cũ.
+Trong DeepSeek harness: bỏ qua G4 và G5 (tên `haiku`/`sonnet` không tồn tại), chọn model theo `.deepseek-plugin/agent-models.toml`; việc nhẹ (`qc-executor`, review diff nhỏ, verify) dùng `deepseek-chat`.
+
+## G5 — model theo độ lớn việc (agent lập kế hoạch)
+
+Cùng cơ chế tham số `model` như G4, áp cho các agent **lập kế hoạch** — nơi model đắt nhất đang chạy ở mọi story/task dù việc nhỏ. Tắt bằng `model-downgrade: never`. Chỉ dùng số liệu rẻ để quyết định, không spawn agent để phân loại.
+
+**Tier S / M / L**
+
+- **Story** — N = số mục Functional requirements + Acceptance trong `requirement.md`. *Tín hiệu nặng*: (a) đổi hợp đồng/schema dùng chung theo lockstep của profile; (b) tích hợp hệ thống ngoài mới; (c) NFR nặng (bảo mật/phân quyền, hiệu năng, nhất quán dữ liệu, đồng thời); (d) đụng ≥ 3 project.
+  - **S**: N ≤ 8 và không có tín hiệu nặng. **L**: N ≥ 20, hoặc ≥ 2 tín hiệu nặng. **M**: còn lại.
+  - Tính **trước ADR** (cho `architect`) chỉ từ requirement; tính lại **sau ADR** (cho `dev-leader`, `qc-leader`) với số project/lockstep thật trong "Impacted artifacts" của ADR. Tier S sau ADR chính là "story nhỏ" của G3.
+- **Task** (cho `task-planner`) — **S** nếu là fixbug, hoặc mô tả ngắn (≤ ~15 dòng) với scope 1 project/vài file rõ và không có Open question, hoặc ticket do `log-triage` tạo (có marker `[bug-sig:` — đã có evidence + suspectedFiles). Còn lại **M**.
+
+**Bảng model** (ô "mặc định" = không truyền `model`, dùng model trong định nghĩa agent):
+
+| Agent | S | M | L |
+|---|---|---|---|
+| `architect` | `sonnet` | `opus` | mặc định (fable) |
+| `dev-leader` | `sonnet` | mặc định (opus) | mặc định (opus) |
+| `qc-leader` enumerate | (G3 đã bỏ qua) | `sonnet` | mặc định (opus) |
+| `task-planner` | `sonnet` | mặc định (opus) | — (task vượt tầm luồng nhẹ → nêu ở Open questions) |
+
+`dev-leader` không hạ ở tier M vì `touchesFiles` thiếu sót có thể làm hai dev sửa chồng một file.
+
+**Lưới an toàn — hạ model không được làm tụt chất lượng**
+
+- **Người vẫn duyệt** ADR/plan ở gate trước mọi bước build: kế hoạch yếu bị bắt ở đó, chưa tốn tiền build.
+- **Chạy lại sau góp ý của người → nâng một bậc** so với tier đã tính (S→M, M→L): `architect` chạy lại ở GATE, `task-planner` chế độ cập nhật khi reopen/revision ở Validate. Lần đầu bằng model rẻ chưa đạt thì lần sau không dùng lại model đó.
+- Ngoại lệ **rẻ hơn**: `task-planner` chế độ cập nhật ở Bước 2 của poll (chỉ fold câu trả lời Open question của người vào plan đã duyệt) luôn dùng `sonnet` — việc cơ học.
+- Tóm tắt gate ghi **tier + model đã dùng** để người biết ADR/plan do model nào lập; thấy yếu thì yêu cầu chạy lại.
+- Ghi `tier` và model từng agent vào mục `## Gating` của report.

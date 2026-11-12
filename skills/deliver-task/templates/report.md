@@ -25,7 +25,7 @@
 
 - security-auditor: ran | skipped (lý do)
 - docs (chronicler): ran | skipped (lý do)
-- models (G4): qc-executor=<model>, reviewer=<model>, …
+- tier (G5): <S|M|L> · models (G4/G5): planner=<model>, qc-executor=<model>, reviewer=<model>, …
 
 ## Security
 | Severity | Count | Status |

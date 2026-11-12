@@ -7,6 +7,17 @@
 - `.deepseek-plugin/agent-models.toml`: routing hai tầng `deepseek-chat` / `deepseek-reasoner` theo agent.
 - `deliver`, `deliver-story`, `deliver-task`, `tracking-poll`, `log-triage`, `gating.md` (G4) và README có nhánh DeepSeek, theo mẫu Codex hiện có. `agents/*.md` không đổi.
 
+## [0.16.0] — 2026-11-12
+
+### Changed — hạ chi phí model theo độ lớn việc (G5)
+
+- **G5 trong `gating.md`: chọn `model` cho agent lập kế hoạch theo tier S/M/L.** Story: N = mục Functional + Acceptance; tín hiệu nặng = đổi lockstep dùng chung / tích hợp ngoài mới / NFR nặng / ≥ 3 project; S = N ≤ 8 không tín hiệu, L = N ≥ 20 hoặc ≥ 2 tín hiệu. Task: S = fixbug / mô tả ngắn rõ scope / ticket từ `log-triage`.
+  - `architect`: S `sonnet`, M `opus`, L `fable` (mặc định); `dev-leader`: S `sonnet`; `qc-leader` enumerate: M `sonnet`; `task-planner`: S `sonnet`. Trước đây `architect` luôn `fable`, `dev-leader`/`task-planner` luôn `opus`.
+  - Tier tính trước ADR (cho architect) và sau ADR (cho dev-leader/qc-leader); tier S sau ADR = "story nhỏ" của G3.
+  - **Lưới an toàn:** người vẫn duyệt ADR/plan ở gate; chạy lại sau góp ý của người tự **nâng một bậc**; `task-planner` chế độ cập nhật ở Bước 2 của poll (chỉ fold câu trả lời) luôn `sonnet`; tóm tắt gate ghi tier + model đã dùng; `dev-leader` không hạ ở M vì `touchesFiles` thiếu có thể làm hai dev đè file.
+- **G4 thêm `chronicler` → `haiku`** khi diff ≤ 5 file (đã qua gating G2).
+- `deliver/story.md`, `deliver/task.md`, `deliver-story`, `qc-mapreduce.md`, `poll-run` truyền `model` theo G5; report ghi `tier` + model từng agent. `model-downgrade: never` tắt cả G4 lẫn G5. Không đổi định nghĩa agent hay contract JSON; Codex/DeepSeek bỏ qua G5.
+
 ## [0.15.0] — 2026-11-09
 
 ### Changed — bỏ bước `qc-leader` merge trong pipeline

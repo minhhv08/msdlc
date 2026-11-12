@@ -9,12 +9,12 @@
 
 ### Bước A — Thiết kế kiến trúc (architect)
 3. Gọi skill **`msdlc:tracking {id} planning`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột Planning.
-4. Nếu `.claude/stories/{id}/adr.md` **chưa có**: gọi **Agent `architect`** cho story đó (đọc requirement, ghi `adr.md` lõi + `adr/*.md` chi tiết khi cần + cập nhật `docs/architecture.md`).
-   Nếu `adr.md` **đã có**: hỏi user muốn dùng lại ADR cũ hay chạy lại architect để cập nhật.
+4. Nếu `.claude/stories/{id}/adr.md` **chưa có**: Read `../deliver-story/gating.md` mục **G5**, tính tier từ `requirement.md`, rồi gọi **Agent `architect`** cho story đó với tham số `model` theo bảng G5 (đọc requirement, ghi `adr.md` lõi + `adr/*.md` chi tiết khi cần + cập nhật `docs/architecture.md`).
+   Nếu `adr.md` **đã có**: hỏi user muốn dùng lại ADR cũ hay chạy lại architect để cập nhật. Chạy lại architect sau góp ý của user ở GATE → **nâng một bậc** tier (G5).
 
 ### GATE — Duyệt ADR (BẮT BUỘC dừng)
 5. Gọi skill **`msdlc:tracking {id} validate`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột Validate + comment link ADR.
-6. Tóm tắt phương án đã chọn + Open questions + đường dẫn `.claude/stories/{id}/adr.md`.
+6. Tóm tắt phương án đã chọn + Open questions + đường dẫn `.claude/stories/{id}/adr.md`; ghi kèm **tier + model architect đã dùng** (G5) — user thấy ADR yếu thì yêu cầu chạy lại.
 7. **DỪNG hẳn tại đây** và hỏi user có duyệt để build tiếp không. Tuyệt đối **không** tự chạy bước B khi chưa có xác nhận rõ ràng của user. Đây là cổng duyệt duy nhất của pipeline.
 
 ### Bước B — Build tự động (skill deliver-story)

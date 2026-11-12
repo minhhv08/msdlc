@@ -23,16 +23,16 @@ Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` c
 
 ## Gating (đọc một lần trước Phase 1)
 
-Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test), G4 (model theo lần gọi cho `qc-executor`/`reviewer`/re-verify) — chỉ gọi agent khi cần và dùng model vừa đủ, override được qua mục `## Pipeline` của profile. Áp **G3 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce.
+Read `gating.md` trong thư mục skill này: quy tắc G1 (security-auditor), G2 (chronicler), G3 (thiết kế test), G4 (model theo lần gọi cho `qc-executor`/`reviewer`/re-verify), G5 (model theo độ lớn việc cho `architect`/`dev-leader`/`qc-leader`) — chỉ gọi agent khi cần và dùng model vừa đủ, override được qua mục `## Pipeline` của profile. Áp **G3 và tính tier sau-ADR của G5 ngay bây giờ** để biết story đi nhánh test nhỏ (1 `qc-designer` full) hay map/reduce, và `dev-leader`/`qc-leader` chạy model nào.
 
 ## Phase 1 — Plan + QC enumerate (song song)
 
 Trước khi bắt đầu, gọi skill **`msdlc:tracking {id} in-progress`** (bỏ qua nếu tracker tắt — xem "Quy ước gọi tiết kiệm token" của `msdlc:tracking`) để đưa ticket sang cột InProgress.
 
-**Nhánh test nhỏ (G3):** chỉ phát `dev-leader`, KHÔNG gọi `qc-leader`. **Nhánh map/reduce:** phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
+**Nhánh test nhỏ (G3):** chỉ phát `dev-leader` (truyền `model` theo G5), KHÔNG gọi `qc-leader`. **Nhánh map/reduce:** phát **hai Agent trong cùng một message** — chúng đều chỉ đọc `adr.md` + `requirement.md` + `profile.md` + `rules/`, không phụ thuộc dữ liệu của nhau và không đụng file (dev-leader ghi `tasks/`, qc-leader enumerate không ghi file), nên chạy song song an toàn:
 
-- **Agent `dev-leader`** — vỡ task (mô tả ngay dưới).
-- **Agent `qc-leader` (chế độ enumerate)** — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
+- **Agent `dev-leader`** — vỡ task (mô tả ngay dưới); truyền `model` theo G5.
+- **Agent `qc-leader` (chế độ enumerate)** (truyền `model` theo G5) — liệt kê test-case stub + đề xuất bucket cân bằng + coverage (xem "Thiết kế test song song" ở Phase 2 cho JSON trả về). Chạy sớm ở đây để `buckets` sẵn sàng ngay khi vào Phase 2, cho phép fan-out `qc-designer` ngay từ Wave 1.
 
 Gọi **Agent `dev-leader`**: đọc ĐẦY ĐỦ `.claude/stories/{id}/adr.md` + `adr/design.md` (nếu có — **không** đọc `adr/alternatives.md`) + `.claude/stories/{id}/requirement.md`, vỡ thành task gọn theo cụm việc (ít task, mỗi task file có mục **Context** tự đủ — xem prompt dev-leader), GHI ra `.claude/stories/{id}/tasks/NN-slug.md` + `.claude/stories/{id}/tasks/README.md` (index + dependency graph), và **trả về danh sách task có cấu trúc**, mỗi task gồm:
 
