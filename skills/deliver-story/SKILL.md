@@ -15,6 +15,7 @@ Khi chạy trong DeepSeek harness, đọc `.deepseek-plugin/agent-models.toml` c
 **Tiền đề:** `.claude/stories/{id}/adr.md` đã tồn tại **và header ghi `Status: Accepted`** — dấu duyệt do gate ghi lại (`/deliver` Bước B khi user duyệt, hoặc `tracking-poll` khi người kéo ticket sang cột Approved). Kiểm tra thật sự, không tin lời gọi:
 - Chưa có `adr.md` → dừng, báo user chạy bước architect/`/deliver` trước. KHÔNG tự bịa.
 - `adr.md` còn `Status: Proposed` → dừng, báo user ADR chưa được duyệt — đi qua gate `/deliver` (hoặc kéo ticket sang Approved nếu dùng board).
+- `adr.md` còn mục chưa chốt (`- [ ]` trong *Giả định & câu hỏi cần chốt*, kiểm bằng Grep) → dừng kể cả khi header đã ghi `Accepted`: dấu duyệt không hợp lệ khi ADR còn giả định/câu hỏi mở — quay lại gate `/deliver` để làm rõ.
 - `adr.md` cũ không có dòng `Status:` (tạo trước khi có cơ chế dấu duyệt) → hỏi user xác nhận duyệt một lần; user đồng ý thì ghi `Status: Accepted` rồi tiếp tục (backward compat).
 
 **Input:** một story id (vd `002`). Nếu không có → liệt kê `.claude/stories/` và hỏi, hoặc dùng id duy nhất nếu chỉ có một.

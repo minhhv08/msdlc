@@ -67,7 +67,7 @@ Nếu nhiều cột cùng match và profile không override → chọn cột ưu
 1. **Transition**: gọi MCP tool của tracker để chuyển ticket sang cột đã resolve. Nếu ticket đã ở đúng cột → bỏ qua transition (idempotent), vẫn tiếp tục phần comment nếu có.
 2. **Comment** — chỉ ở hai mốc, nguồn nội dung theo `kind`:
    - `validate`:
-     - `kind=story`: comment link tới `.claude/stories/{id}/adr.md` (hoặc tóm tắt ADR + open questions), báo "ADR sẵn sàng, chờ người duyệt".
+     - `kind=story`: comment link tới `.claude/stories/{id}/adr.md` (hoặc tóm tắt ADR + các quyết định đã chốt), báo "ADR sẵn sàng, chờ người duyệt".
      - `kind=task`: comment **plan chi tiết** đọc từ `.claude/tasks/{id}/plan.md` (Vấn đề / Phương án / Files sẽ đụng / Acceptance / Open questions) để user đọc và duyệt. Nếu tracker giới hạn độ dài comment → cắt gọn có chủ đích các mục chính, giữ full ở `plan.md`. **Thêm dòng hướng dẫn cuối comment**: *"👉 Để sửa plan: comment yêu cầu rồi kéo thẻ về Todo. Để duyệt: trả lời các Open question (nếu có) rồi kéo sang Approved."*
    - `review`: comment tóm tắt từ report (số task/subtask, trạng thái test, số finding security theo severity) + nhắc "cần người review rồi chuyển Done thủ công". Nguồn: `kind=story` → `.claude/stories/{id}/report.md`; `kind=task` → `.claude/tasks/{id}/report.md`. **Nếu report có dòng `> MR:`/`> PR:`** (do `git-flow` ghi) → **đính kèm link MR vào comment** và nhắc "review MR rồi merge (máy không tự merge)".
    - Các phase khác (`todo`/`planning`/`approved`/`in-progress`): chỉ transition, **không** comment (tránh nhiễu ticket).

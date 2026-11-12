@@ -7,6 +7,16 @@
 - `.deepseek-plugin/agent-models.toml`: routing hai tầng `deepseek-chat` / `deepseek-reasoner` theo agent.
 - `deliver`, `deliver-story`, `deliver-task`, `tracking-poll`, `log-triage`, `gating.md` (G4) và README có nhánh DeepSeek, theo mẫu Codex hiện có. `agents/*.md` không đổi.
 
+## [0.17.0] — 2026-11-12
+
+### Changed — ADR phải chốt hết giả định/câu hỏi mới được duyệt
+
+- **Gate `/deliver` (story) có vòng làm rõ bắt buộc trước khi xin duyệt.** Main đếm mục chưa chốt trong mục *Giả định & câu hỏi cần chốt* của `adr.md` (Grep `- [ ]`); còn mục nào → **không xin duyệt**, hỏi user trực tiếp bằng `AskUserQuestion` (≤ 4 câu/lần; đề xuất của architect làm option đầu "(Recommended)", kèm phương án khác và "Đưa ra ngoài scope"; không có `AskUserQuestion` thì hỏi từng câu trong chat). Không để mục treo: "chưa biết" → chốt theo đề xuất kèm rủi ro hoặc đưa ra ngoài scope.
+  - Trả lời = đề xuất / xác nhận giả định / ngoài scope → main `Edit` thẳng ADR (`- [x] … → **Chốt:** …`), không tốn lượt architect. Trả lời đổi thiết kế (chọn phương án khác, thông tin mới) → chạy lại `architect` ở **chế độ cập nhật** (nâng một bậc model theo G5), lặp tới khi hết mục; tối đa 3 lần chạy lại/ADR.
+  - Ghi `Status: Accepted` (bước 9) và `deliver-story` (tiền đề) đều kiểm lại: còn `- [ ]` thì từ chối, kể cả header đã `Accepted`.
+- **`architect` tự chốt tối đa, chỉ để lại mục `- [ ]` khi thiếu thông tin chỉ user biết hoặc giả định thật sự chi phối thiết kế;** mỗi mục viết dạng hỏi được bằng lựa chọn (câu hỏi + đề xuất + phương án khác + ảnh hưởng). Mục 4 của ADR đổi thành checklist `- [ ]`/`- [x]`; thêm chế độ cập nhật (sửa tại chỗ bằng `Edit`). Architect không có công cụ hỏi user nên không tự đánh `[x]`.
+- ADR cũ (mục "Assumptions & Open questions" không có checkbox) vẫn chạy: main coi mục chưa có quyết định rõ là chưa chốt. Luồng task (`plan.md`) và poll không đổi.
+
 ## [0.16.0] — 2026-11-12
 
 ### Changed — hạ chi phí model theo độ lớn việc (G5)
