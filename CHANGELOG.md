@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed — bỏ `fable`, `architect` dùng `opus`
+
+- `architect` `fable` → `opus` (giảm chi phí); không còn agent nào dùng `fable`. G5: `architect` S `sonnet`, M/L `opus` (mặc định).
+
 ### Added — tương thích DeepSeek harness
 
 - `.deepseek-plugin/agent-models.toml`: routing hai tầng `deepseek-chat` / `deepseek-reasoner` theo agent.

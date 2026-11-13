@@ -2,7 +2,7 @@
 name: architect
 description: "Thiết kế kiến trúc từ requirement.md của một story: ghi .claude/stories/{id}/adr.md (Status: Proposed) và cập nhật docs/architecture.md. Dùng khi đã có spec/requirement và cần 'thiết kế kiến trúc', 'viết ADR', 'chốt phương án kỹ thuật' trước khi vỡ task."
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: fable
+model: opus
 color: purple
 memory: local
 ---

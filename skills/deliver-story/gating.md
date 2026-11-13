@@ -74,7 +74,7 @@ Cùng cơ chế tham số `model` như G4, áp cho các agent **lập kế hoạ
 
 | Agent | S | M | L |
 |---|---|---|---|
-| `architect` | `sonnet` | `opus` | mặc định (fable) |
+| `architect` | `sonnet` | `opus` | mặc định (opus) |
 | `dev-leader` | `sonnet` | mặc định (opus) | mặc định (opus) |
 | `qc-leader` enumerate | (G3 đã bỏ qua) | `sonnet` | mặc định (opus) |
 | `task-planner` | `sonnet` | mặc định (opus) | — (task vượt tầm luồng nhẹ → nêu ở Open questions) |
